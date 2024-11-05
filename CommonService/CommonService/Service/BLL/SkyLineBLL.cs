@@ -162,7 +162,8 @@ namespace CommonService.Service.BLL
                 }
                 else
                 {
-                    _logger.LogInformation($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
+                    oTPLog.Request_id = string.Empty;
+                    SentrySdk.CaptureMessage($"SkyLine - {custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}");
                     if (resultResp.status is -6 or -7 or -8 or -9)//號碼錯誤傳5002給前端
                     {
                         apiResult.ErrorCode = ErrorCode.PhoneError;
@@ -277,7 +278,8 @@ namespace CommonService.Service.BLL
                 }
                 else
                 {
-                    _logger.LogInformation($"SkyLine - {phoneNo},{custInfo.UserName},{otpNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
+                    oTPLog.Request_id = string.Empty;
+                    SentrySdk.CaptureMessage($"SkyLine - {phoneNo},{custInfo.UserName},{otpNum},status:{resultResp.status},reason:{resultResp.reason}");
                     if (resultResp.status is -6 or -7 or -8 or -9)//號碼錯誤傳5002給前端
                     {
                         apiResult.ErrorCode = ErrorCode.PhoneError;
