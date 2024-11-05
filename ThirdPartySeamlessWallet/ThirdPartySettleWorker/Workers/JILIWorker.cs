@@ -82,7 +82,6 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         var bettransData = bettrans.First();
-                        var transId = bettransData.TransId.ToString();
                         decimal stake = bettrans.Sum(x => x.Stake);
                         decimal validBet = bettrans.Sum(x => x.ValidBet);
                         decimal winLostAmount = bettrans.Sum(x => x.WinLostAmount);
@@ -94,7 +93,7 @@ namespace ThirdPartySettleWorker.Workers
                             Stake = stake,
                             ValidBet = validBet,
                             WinlostAmount = winLostAmount,
-                            TransId = transId,
+                            TransId = unsettled.TransId,
                             GameType = gameType,
                             TpUserName = bettransData.Account,
                             SettledTime = bettrans.Last().SettleTime,
