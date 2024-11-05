@@ -1,7 +1,9 @@
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.BLL.FaChai;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.FaChai;
 
 namespace ThirdPartyWager.Extensions
 {
@@ -19,6 +21,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Live22, AddLive22},
                 { Tp.FastSpin, AddFastSpin},
                 { Tp.Allbet, AddAllbet},
+                { Tp.FaChai, AddFaChai},
 
                 //Loki comment:
                 //{ Tp.JILI, AddJILI},
@@ -628,15 +631,9 @@ namespace ThirdPartyWager.Extensions
         private IServiceCollection AddFaChai(IServiceCollection services)
         {
             services.AddSingleton<WagerFaChaiService>();
+            services.AddSingleton<TicketFaChaiBLL>();
 
-            services.AddSingleton<ApiFaChaiBLL>();
-            services.AddSingleton<FinanceFaChaiBLL>();
-            services.AddSingleton<WagerFaChaiBLL>();
-
-            services.AddHostedService<WagerFaChai>();
-            services.AddHostedService<WagerRedoFaChai>();
-            services.AddHostedService<FinanceFaChai>();
-
+            services.AddHostedService<TicketFaChai>();
             return services;
         }
 

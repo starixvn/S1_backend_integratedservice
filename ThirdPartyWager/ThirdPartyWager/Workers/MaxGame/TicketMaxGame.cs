@@ -9,7 +9,7 @@ namespace ThirdPartyWager.Workers
 {
     public class TicketMaxGame : BackgroundService
     {
-        private Timer timer;
+        private Timer _timer;
         private readonly ILogger<TicketMaxGame> _logger;
         private readonly TicketMaxGameBLL _ticketMaxGameBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -17,7 +17,6 @@ namespace ThirdPartyWager.Workers
         private readonly string _tpName = Tp.MaxGame.ToString();
         private readonly int _tpType = (int)WagerTimerType.UnSettle;
         private readonly int _lockPeriod = -30;// 近30分資料不處理
-        private readonly int _deductTime = -1;
 
         public TicketMaxGame(IServiceProvider provider)
         {
@@ -28,7 +27,7 @@ namespace ThirdPartyWager.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoRefund, GameType.MaxGame_Poker, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoRefund, GameType.MaxGame_Poker, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -36,7 +35,6 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var task = true;
             var gameType = (GameType)state;
 
             try
@@ -49,11 +47,11 @@ namespace ThirdPartyWager.Workers
                 {
                     TpId = _tpId,
                     Type = _tpType,
-                    StartTime = (dataTpTimer == null) ? DateTime.Now.AddHours(-1) : dataTpTimer.StartTime,
+                    StartTime = dataTpTimer?.StartTime ?? DateTime.Now.AddHours(-1),
                 };
 
-                // get time 
-                TimeCast ticketTime = _ticketMaxGameBLL.GetTicketTime(execTime.StartTime, _lockPeriod, out bool exec);
+                // get time
+                var ticketTime = _ticketMaxGameBLL.GetTicketTime(execTime.StartTime, _lockPeriod, out bool exec);
                 if (exec)
                 {
                     var res = await ExecRefundAsync(gameType, ticketTime);
@@ -70,8 +68,8 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = (!task) ? TimeSpan.FromMinutes(3) : TimeSpan.FromMinutes(5);
-                timer.Change(dueTimeSpan, TimeSpan.Zero);
+                var dueTimeSpan = TimeSpan.FromMinutes(5);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
@@ -86,7 +84,7 @@ namespace ThirdPartyWager.Workers
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
 
                 // check tp status and only get first site to run
-                if (!siteList.Any(x => x.Status == 1))
+                if (siteList.All(x => x.Status != 1))
                 {
                     return true;
                 }
@@ -121,7 +119,7 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
