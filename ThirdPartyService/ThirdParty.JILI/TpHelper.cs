@@ -159,18 +159,6 @@ namespace ThirdParty.JILI
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
 
-            var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_JiLi_ResultId_Get", new { YYYYMM, TransId = getBetDetail.TransId }, DataBase.Main);
-            if (!detailList.Any() || detailList == null)
-            {
-                return new BaseDetail(getBetDetail.TpGameTypeOption)
-                {
-                    TransId = getBetDetail.TransId,
-                    TpCurrency = tpCurrency,
-                };
-            }
-            var resultId = detailList.FirstOrDefault()?.GetValueOrDefault("ResultId")?.ToString();
-
             var convert = new DateTimeOffset(getBetDetail.SettledTime);
             var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyy/MM/dd HH:mm:ss");
             var input = new
@@ -183,12 +171,7 @@ namespace ThirdParty.JILI
                     OperatorCustId = tpCustInfo.TpUserName,
                     TicketNo = getBetDetail.TransId,
                     SettleDate = time,
-                    ResultId = resultId,
-                    Language = "en-US",
-                    AgentInfo = new
-                    {
-                        AgentKey = tpCustInfo.TpCurrencyId
-                    }
+                    Language = "en-US"
                 }
             };
 
@@ -208,7 +191,7 @@ namespace ThirdParty.JILI
                 {
                     return new BaseDetail(getBetDetail.TpGameTypeOption)
                     {
-                        TransId = $"{getBetDetail.TransId} ({resultId})",
+                        TransId = getBetDetail.TransId,
                         DetailUrl = json.Payload.ReturnUrl,
                         TpCurrency = tpCurrency,
                     };
