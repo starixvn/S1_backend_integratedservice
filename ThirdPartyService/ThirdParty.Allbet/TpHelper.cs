@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
@@ -185,7 +186,30 @@ namespace ThirdParty.Allbet
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            return default;
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransLC_Allbet_TicketNo_Get", new { YYYYMM, TicketNo = betRecordInfo.TransId }, DataBase.Main);
+            if (!detailList.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var GameId = detailList.GetFirstStringValue("GameId");
+            var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
+            var IpAddress = detailList.GetFirstStringValue("IpAddress");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = GameId,
+                Game = GameId,
+                RefNo = GameRoundId,
+                Title = tpGameType.TypeName,
+                MatchID = string.Empty,
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = IpAddress,
+            };
         }
         
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)

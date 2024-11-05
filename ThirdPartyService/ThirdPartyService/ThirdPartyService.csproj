@@ -64,6 +64,7 @@
     <ProjectReference Include="..\ThirdParty.SabaPlay\ThirdParty.SabaPlay.csproj" />
     <ProjectReference Include="..\ThirdParty.SA\ThirdParty.SA.csproj" />
     <ProjectReference Include="..\ThirdParty.SBO\ThirdParty.SBO.csproj" />
+    <ProjectReference Include="..\ThirdParty.SBPLottery\ThirdParty.SBPLottery.csproj" />
     <ProjectReference Include="..\ThirdParty.SBSW\ThirdParty.SBSW.csproj" />
     <ProjectReference Include="..\ThirdParty.Sexy\ThirdParty.Sexy.csproj" />
     <ProjectReference Include="..\ThirdParty.SG\ThirdParty.SG.csproj" />
