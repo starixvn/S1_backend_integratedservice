@@ -1058,10 +1058,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return -1;
                 }
-            
+                
                 bettingDataLT_Eday.player = tpCustInfo.TpUserName;
                 bettingDataLT_Eday.amount *= -1;
                 var p = new DynamicParameters(bettingDataLT_Eday);
+                p.Add("ticketCount", 0);
                 p.Add("eventId", 0);
                 p.Add("betTotal", 0.00m);
                 p.Add("winTotal", 0.00m);

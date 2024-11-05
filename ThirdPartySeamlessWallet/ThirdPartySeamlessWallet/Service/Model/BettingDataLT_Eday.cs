@@ -52,14 +52,20 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int betType { get; set; }
     }
 
-    public class EdayBetRequestData : EdayBetRequest
+    public class EdayBetRequestData
     {
-        public new string billId { get; set; }
+        public string txId { get; set; }
+        public string token { get; set; }
+        public string player { get; set; }
+        public decimal amount { get; set; }
+        public string billId { get; set; }
+        public long timestamp { get; set; }
+        public string roundCode { get; set; }
+        public string gameCode { get; set; }
+        public int betType { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
-        
         public DateTime UTCBetTime { get; set; }
-        
     }
 
     public class EdayBetRequestResponse
