@@ -217,7 +217,8 @@ namespace ThirdParty.PP
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_PP_Detail_Get", new { YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
+            var spName = GetSPNameBasedOnTpGameType(betRecordInfo.GameType);
+            var detailList = TpBetRecordProvider.DbQuery(spName, new { YYYYMM, TicketNo = betRecordInfo.TransId }, DataBase.Main);
             if (!detailList.Any())
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
@@ -355,6 +356,16 @@ namespace ThirdParty.PP
             }
 
             return config.GameType;
+        }
+
+        private static string GetSPNameBasedOnTpGameType(int  gameType)
+        {
+            if (gameType.ToString() == PPLiveCasinoGameTypeId)
+            {
+                return "Service_BettransLC_PP_TicketNo_Get";
+            }
+
+            return "Service_BettransRng_PP_TicketNo_Get";
         }
     }
 }
