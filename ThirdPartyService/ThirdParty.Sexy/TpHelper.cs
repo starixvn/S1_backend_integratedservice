@@ -12,104 +12,42 @@ namespace ThirdParty.Sexy
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<int, Dictionary<string, string>> _siteIdConfigDic;
+        private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
+        private const int _utc = -4;
+        private const string _testCurrency = "UUS";
 
-        private readonly Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
-        {
-            {1,"Success成功"},
-            {200,"Success成功"},
-            {1001,"Not Authorized.未经授权。"},
-            {1002,"Balance is invalid. 余额无效。"},
-            {1003,"NoData没有数据"},
-            {1004,"Usename is invaid.无效的用户名。"},
-            {1005,"Update faled.更新失败。"},
-            {1006,"insufcient parameters.参数不足"},
-            {1007,"Not supported API.不支持APl"},
-            {1008,"invaid paameters.参数无效。"},
-            {1009,"Insufficient balance. 余额不足。"},
-            {1010,"Action already completed. 行动已经完成。"},
-            {1011,"User min bet or max bet violate agent bet setting. 用户最小下注或最大下注违反代理下注设置。"},
-            {1012,"Agent does not exist. 代理不存在。" },
-            {1013,"User currency type not match agent setting. 用户货币类型与代理商设置不匹配。" },
-            {1014,"Query too fast. Hit rate limit. 查询太快了。 命中率限制。"},
-            {1015,"Invalid URL. 无效的网址。"},
-            {1016,"Invalid Agent. 无效的代理。"},
-            {1017,"No Settlement. 没有解决方案。"},
-            {1018,"Account locked. 帐户被锁定。"},
-            {1019,"No event in this date. 此日期没有任何活动。"},
-            {1020,"Invalid single wallet action. 单个钱包操作无效。"},
-            {1021,"Overdue match status. 逾期匹配状态。"},
-            {1022,"Reach max win limit. 达到最大赢额限制。"},
-            {1023,"Invalid website. 网站无效。"},
-            {1024,"Invalid currency setting. 货币设置无效。"},
-            {1025,"Reach max credit limit. 达到最高信用额度。"},
-            {1026,"Account suspended. 帐户被暂停"},
-            {1027,"Account be re-login. 帐户重新登录。"},
-            {1028,"Agent incorrect. 代理不正确。"},
-            {1029,"Invalid parameters. Please check currency & betlimitid\" 参数无效。 请检查货币和限红\""},
-            {1030,"Invalid betlimitId setting. 限红设置无效。"},
-        };
+        private readonly Dictionary<int, SexyConfig> _siteConfigDic;
+        private readonly TemporaryLogSentryService temporaryLogSentryService;
 
         public TpHelper(IServiceProvider provider)
-        {            
-            _siteIdConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.Sexy.ToString());
-        }
-
-        private class SignupResponse
         {
-            public string status { get; set; }
-            public string desc { get; set; }
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SexyConfig>(TpEnum.Sexy.ToString());
+            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
-        private class LoginResponse
+
+        #region Response
+
+        public class LoginResp
         {
-            public string status { get; set; }
-            public string desc { get; set; }
-            public string url { get; set; }
+            public string Seq { get; set; }
+            public DateTime TimeStamp { get; set; }
+            public int ErrorCode { get; set; }
+            public string ErrorMessage { get; set; }
+            public Payload_Login Payload { get; set; }
         }
 
-        private class SexyConfig
+        public class Payload_Login
         {
-            public string ApiUrl { get; set; }
-
-            public string Cert { get; set; }
-
-            public string AgentId { get; set; }
-
-            public List<string> BetLimitIds
-            {
-                get
-                {
-                    return new List<string>()
-                  {
-                      BetLimitId,
-                      BetLimitId2
-                  }.Where(r => !string.IsNullOrEmpty(r)).ToList();
-                }
-                set { BetLimitIds = value; }
-            }
-
-            private string BetLimitId { get; }
-
-            private string BetLimitId2 { get; }
-
-            public SexyConfig(Dictionary<string, string> inputs, Dictionary<string, string> siteConfig, int siteId, string tpCurrencyId = "")
-            {
-                ApiUrl = siteConfig.ContainsKey("ApiUrl2") && !string.IsNullOrEmpty(siteConfig["ApiUrl2"]) ? siteConfig["ApiUrl2"] : throw new Exception("ApiUrl2");
-                Cert = siteConfig.ContainsKey("cert2") && !string.IsNullOrEmpty(siteConfig["cert2"]) ? siteConfig["cert2"] : throw new Exception("cert2");
-                AgentId = siteConfig.ContainsKey("AgentId") && !string.IsNullOrEmpty(siteConfig["AgentId"]) ? siteConfig["AgentId"] : throw new Exception("AgentId");
-
-                if (string.IsNullOrEmpty(tpCurrencyId)) return;
-                BetLimitId = siteConfig.ContainsKey($"BetLimitId{tpCurrencyId}") ? siteConfig[$"BetLimitId{tpCurrencyId}"] : string.Empty;
-                BetLimitId2 = siteConfig.ContainsKey($"BetLimitId2{tpCurrencyId}") ? siteConfig[$"BetLimitId2{tpCurrencyId}"] : string.Empty;
-            }
+            public string ReturnUrl { get; set; }
         }
 
-        private class SpecialBetLimitData
+        public class GetBetHistoryResp : LoginResp
         {
-            public int CustId { get; set; }
-            public string BetLimitId { get; set; }
         }
+
+        #endregion Response
+
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -118,59 +56,8 @@ namespace ThirdParty.Sexy
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var siteConfig = _siteIdConfigDic[tpCustInfo.SiteId];
-            var config = new SexyConfig(inputs, siteConfig, tpCustInfo.SiteId, tpCustInfo.TpCurrencyId);
-            var apiUrl = $"{config.ApiUrl}/wallet/createMember";
-            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
-
-            var signUp = new
-            {
-                cert = config.Cert,
-                agentId = config.AgentId,
-                userId = tpCustInfo.TpUserName,
-                currency = tpCustInfo.TpCurrencyId,
-                betLimit = JsonConvert.SerializeObject(new
-                {
-                    SEXYBCRT = new
-                    {
-                        LIVE = new
-                        {
-                            limitId = config.BetLimitIds
-                        }
-                    }
-                }),
-            };
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(signUp));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var result = HttpPost(
-                apiUrl,
-                sParam,
-                "application/x-www-form-urlencoded"
-            );
-
             ApiResult oApiResult = new ApiResult();
-
-            if (!IsJSON(result))
-            {
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                return oApiResult;
-            }
-
-            var json = JsonConvert.DeserializeObject<SignupResponse>(result);
-            if (json.status == "0000")
-            {
-                oApiResult.ErrorCode = ErrorCode.Success;
-            }
-            else
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = json.desc;
-                oApiResult.RawErrorCode = json.status;
-            }
-
+            oApiResult.ErrorCode = ErrorCode.Success;
             return oApiResult;
         }
 
@@ -188,84 +75,76 @@ namespace ThirdParty.Sexy
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var siteConfig = _siteIdConfigDic[tpCustInfo.SiteId];
-            var lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
-            var platform = siteConfig.GetValueOrDefault("Platform") ?? throw new Exception("Platform");
-            var gameType = siteConfig.GetValueOrDefault("GameType") ?? throw new Exception("GameType");
-            var specialBetLimit = siteConfig.GetValueOrDefault("SpecialBetLimit") ?? null;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
-            var config = new SexyConfig(inputs, siteConfig, tpCustInfo.SiteId, tpCustInfo.TpCurrencyId);
-            var apiUrl = $"{config.ApiUrl}/wallet/doLoginAndLaunchGame";
+            var key = ApplyToken(tpCustInfo);
 
-            if (specialBetLimit != null)
+            var input = new
             {
-                var specialBetLimitData = JsonConvert.DeserializeObject<IEnumerable<SpecialBetLimitData>>(specialBetLimit);
-                if (specialBetLimitData.Any(x => x.CustId == tpCustInfo.CustId))
+                Timestamp = GetCurrentTimeFormat(),
+                Seq = Guid.NewGuid().ToString(),
+                Payload = new
                 {
-                    var specialBetLimitCustId = specialBetLimitData.First(x => x.CustId == tpCustInfo.CustId);
-                    siteConfig[$"BetLimitId{tpCustInfo.TpCurrencyId}"] = specialBetLimitCustId.BetLimitId;
-                    siteConfig[$"BetLimitId2{tpCustInfo.TpCurrencyId}"] = "";
-                    config = new SexyConfig(inputs, siteConfig, tpCustInfo.SiteId, tpCustInfo.TpCurrencyId);
-                }
-            }
-
-            var login = new
-            {
-                cert = config.Cert,
-                agentId = config.AgentId,
-                userId = tpCustInfo.TpUserName,
-                isMobileLogin = (appType == AppType.Desktop) ? "false" : "true",
-                externalURL = lobbyUrl,
-                gameType = gameType,
-                gameCode = "MX-LIVE-001",
-                platform = platform,
-                language = TpLangId,
-                hall = "SEXY",
-                betLimit = JsonConvert.SerializeObject(new
-                {
-                    SEXYBCRT = new
+                    ProductInfo = new
                     {
-                        LIVE = new
-                        {
-                            limitId = config.BetLimitIds
-                        }
-                    }
-                }),
+                        GameType = config.GameType,
+                        GameId = gameId,
+                        AppType = (appType == AppType.Desktop) ? "D" : "M",
+                    },
+                    CustInfo = new
+                    {
+                        OperatorCustomerId = tpCustInfo.TpUserName,
+                        OperatorCustomerName = tpCustInfo.TpUserName,
+                        Language = TpLangId,
+                        Platform = (appType == AppType.Desktop) ? "D" : "M",
+                        CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustInfo.TpCurrencyId,
+                        IpAddress = inputs["ClientIP"],
+                        WalletSideToken = key,
+                    },
+                    HomeUrl = homeUrl,
+                }
+            };
+            var postdata = JsonConvert.SerializeObject(input, Formatting.None);
+            var header = new Dictionary<string, string>()
+            {
+                { "operator-pwd", config.OperatorPwd},
+                { "operator-sign", Encrypt(postdata, config)},
             };
 
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(login));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var result = HttpPost(
-                apiUrl,
-                sParam,
-                "application/x-www-form-urlencoded"
-            );
+            var result = HttpPost(ApiUrl, postdata, "application/json", header);
+
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(Sexy), ApiUrl, header, postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 
-            if (!IsJSON(result))
+            if (IsJSON(result))
+            {
+                var json = JsonConvert.DeserializeObject<LoginResp>(result);
+                if (json.ErrorCode == 0)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Message = json.Payload.ReturnUrl;
+                }
+                else
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = json.ErrorMessage;
+                    oApiResult.RawErrorCode = json.ErrorCode.ToString();
+                }
+            }
+            else
             {
                 oApiResult.RawMessage = "No Result";
                 oApiResult.RawErrorCode = "1";
                 oApiResult.ErrorCode = ErrorCode.Fail;
-                return oApiResult;
-            }
-
-            var json = JsonConvert.DeserializeObject<LoginResponse>(result);
-            if (json.status == "0000")
-            {
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = json.url;
-            }
-            else
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = json.desc;
-                oApiResult.RawErrorCode = json.status;
             }
 
             return oApiResult;
         }
+
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
@@ -276,34 +155,57 @@ namespace ThirdParty.Sexy
         {
             try
             {
-                var siteConfig = _siteIdConfigDic[tpCustInfo.SiteId];
-                var config = new SexyConfig(inputs, siteConfig, tpCustInfo.SiteId);
-                var apiUrl = config.ApiUrl;
-                var cert = config.Cert;
-                var agentId = config.AgentId;
-                //var platform = inputs.GetValueOrDefault("Platform") ?? throw new Exception();
-                var platform = siteConfig.GetValueOrDefault("Platform") ?? throw new Exception("Platform");
+                var config = _siteConfigDic[tpCustInfo.SiteId];
 
-                var url = $"{apiUrl}/wallet/getTransactionHistoryResult";
-                var sParam = $"cert={cert}&agentId={agentId}&userId={tpCustInfo.TpUserName}&platformTxId={getBetDetail.TransId}&platform={platform}";
-
-                var json = HttpPost(url, sParam, "application/x-www-form-urlencoded");
-                var result = FromJson<DetailResult>(json);
-
-                if (result.status != "0000")
+                var tpCurrency = new TpCurrency()
                 {
-                    throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status}");
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                };
+
+                var convert = new DateTimeOffset(getBetDetail.SettledTime);
+                var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyy/MM/dd HH:mm:ss");
+                var input = new
+                {
+                    Timestamp = GetCurrentTimeFormat(),
+                    Seq = Guid.NewGuid().ToString(),
+                    Payload = new
+                    {
+                        GameType = config.GameType,
+                        OperatorCustId = tpCustInfo.TpUserName,
+                        TicketNo = getBetDetail.TransId,
+                        SettleDate = time,
+                        Language = "en-US"
+                    }
+                };
+
+                var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/GetBetHistory";
+                var postdata = JsonConvert.SerializeObject(input, Formatting.None);
+                var header = new Dictionary<string, string>()
+            {
+                { "operator-pwd", config.OperatorPwd},
+                { "operator-sign", Encrypt(postdata, config)},
+            };
+
+                var result = HttpPost(ApiUrl, postdata, "application/json", header);
+                if (IsJSON(result))
+                {
+                    var json = JsonConvert.DeserializeObject<GetBetHistoryResp>(result);
+                    if (json.ErrorCode == 0)
+                    {
+                        return new BaseDetail(getBetDetail.TpGameTypeOption)
+                        {
+                            TransId = getBetDetail.TransId,
+                            DetailUrl = json.Payload.ReturnUrl,
+                            TpCurrency = tpCurrency,
+                        };
+                    }
                 }
 
                 return new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    DetailUrl = result.txnUrl,
-                    TpCurrency = new TpCurrency()
-                    {
-                        ExchangeRate = tpCustInfo.ExchangeRate,
-                        TpCurrencyId = tpCustInfo.TpCurrencyId,
-                    },
+                    TpCurrency = tpCurrency,
                 };
             }
             catch (Exception e)
@@ -314,26 +216,43 @@ namespace ThirdParty.Sexy
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_AWC_Sexy_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
-            var bet = JsonConvert.DeserializeObject<DetailSexy>(detail.GetStringValue("gameInfo"));
-            return tpGameType.CategoryId switch
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransLC_AWC_Sexy_Detail_Get", new { YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
+            if (!detailList.Any())
             {
-                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
-                {
-                    GameID = detail.GetStringValue("gameCode"),
-                    Game = detail.GetStringValue("gameName"),
-                    RefNo = detail.GetStringValue("refPlatformTxId"),
-                    Title = detail.GetStringValue("gameType"),
-                    MatchID = detail.GetStringValue("roundId"),
-                    BetType = string.Empty,
-                    BetChoice = detail.GetStringValue("betType"),
-                    Result = JsonConvert.SerializeObject(bet.result),
-                    Odds = decimal.TryParse(bet.odds, out var odds) ? odds : 0,
-                    DeviceType = DeviceType.None,
-                    IP = bet.ip ?? string.Empty,
-                },
-                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var GameId = detailList.GetFirstStringValue("GameId");
+            var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
+            var IpAddress = detailList.GetFirstStringValue("IpAddress");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = GameId,
+                Game = GameId,
+                RefNo = GameRoundId,
+                Title = tpGameType.TypeName,
+                MatchID = string.Empty,
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = IpAddress,
             };
+        }
+
+        private string Encrypt(string req, SexyConfig config)
+        {
+            var s = req + config.OperatorKey;
+            var sign = ToMD5(s);
+            return sign;
+        }
+
+        private static string GetCurrentTimeFormat()
+        {
+            var currentAt = new DateTimeOffset(DateTime.UtcNow);
+            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
 
         public class DetailResult
