@@ -73,6 +73,14 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<SabaOdds>();
             return services;
         }
+        
+        public static IServiceCollection AddSabaGameDetail(this IServiceCollection services)
+        {
+            services.AddSingleton<SabaGameDetailService>();
+            services.AddSingleton<SabaGameDetailBLL>();
+            services.AddHostedService<SabaGameDetail>();
+            return services;
+        }
 
         public static IServiceCollection AddLiveStreaming(this IServiceCollection services)
         {
