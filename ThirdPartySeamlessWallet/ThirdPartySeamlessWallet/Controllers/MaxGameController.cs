@@ -150,7 +150,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                _log2File.Error($"{ex.Message}", logName, ex);
+                SentrySdk.CaptureException(ex);
             }
             response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
             
