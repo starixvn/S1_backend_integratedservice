@@ -2109,7 +2109,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 // 檢查是否有注單
-                var bettrans = _partitionService.Query<BettransLTEday>(cancelData_Eday.UTCBetTime, GetSpName,
+                var bettrans = _partitionService.Query<BettransLTEdayDAL>(cancelData_Eday.UTCBetTime, GetSpName,
                     new { billId = cancelData_Eday.billId, player = tpCustInfo.TpUserName });
                 
                 if (!bettrans.Any(i => i.billId == cancelData_Eday.billId))
@@ -2195,10 +2195,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var partitionTime = DateTime.Now;
-                var bettransLTEday = _partitionService.Query<BettransLTEday>(partitionTime, GetSpName, 
+                var bettransLTEday = _partitionService.Query<BettransLTEdayDAL>(partitionTime, GetSpName, 
                     new { roundCode = settleData_Eday.roundCode , player = tpCustInfo.TpUserName });
 
-                if (bettransLTEday.Any())
+                if (!bettransLTEday.Any())
                 {
                     return -2;
                 }
@@ -2227,9 +2227,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     eventId = settleData_Eday.eventId,
                     betTotal = settleData_Eday.bet,
                     winTotal = settleData_Eday.win,
+                    ticketCount = 0,
                     //UTCBetTime 拿第一筆的UTCBetTime 當作下注時間
                     UTCBetTime = bettransLTEday.FirstOrDefault().UTCBetTime,
-                    UTCSettleBetTime = settleData_Eday.UTCSettleBetTime,
+                    UTCSettleTime = settleData_Eday.UTCSettleBetTime,
                     TicketStatus = settleData_Eday.TicketStatus,
                     TicketType = settleData_Eday.TicketType,
                     SettleFlag = settleData_Eday.SettleFlag
@@ -2242,7 +2243,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     var payoutAmount = 0.00m;
                     //Win = 總贏額，代表此次Round結算後要派給用戶的金額，用這個數字派發給用戶即可。
-                    if (settleData_Eday.win >= 0.00m)
+                    if (settleData_Eday.win > 0.00m)
                     {
                         payoutAmount = settleData_Eday.win;
                     }

@@ -245,7 +245,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     {
                         //Round draw 正常派彩
                         case 1:
-                            if (settleData.win >= 0)
+                            if (settleData.win > 0)
                             {
                                 settleData.TicketStatus = (int)TicketStatus.Win;
                                 settleData.TicketType = (int)BettransType.Payout;
