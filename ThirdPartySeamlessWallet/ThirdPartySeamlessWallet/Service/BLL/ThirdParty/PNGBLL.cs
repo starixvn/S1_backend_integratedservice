@@ -19,8 +19,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly AuthBLL _authBll;
         private readonly ConfigBLL _configBll;
         private readonly ILogger<PNGBLL> _logger;
-        private readonly Dictionary<string, string> defaultConfig;
         private readonly Dictionary<string, PNGConfig> _siteConfigDic;
+        private readonly PNGConfig _defaultConfig;
 
         public PNGBLL(IServiceProvider provider)
         {
@@ -34,7 +34,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             ThirdParty = Tp.PNG;
             GameType = GameType.PNG_RNG;
-            defaultConfig = _configBll.GetConfigValue<Dictionary<string, string>>(ThirdParty.ToString());
+            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<PNGConfig>(Tp.PNG.ToString());
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<PNGConfig>(Tp.PNG.ToString());
         }
 
@@ -280,7 +280,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private bool ValidToken(string inputAccessToken, string sitename)
         {
-            var pngConfig = sitename == null ? new PNGConfig(defaultConfig) : _siteConfigDic[sitename];
+            var pngConfig = sitename == null ? _defaultConfig : _siteConfigDic[sitename];
             if (!string.IsNullOrEmpty(pngConfig.AccessToken)) return pngConfig.AccessToken == inputAccessToken;
 
             _logger.LogError("thirdPartySetting not found");
