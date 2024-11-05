@@ -95,12 +95,12 @@ namespace ThirdPartySettleWorker.Workers
                         //    continue;
                         //}
 
-                        var winlostAmount = betData.Sum(x => x.NetWin);
+                        var winlostAmount = betData.Sum(x => x.Win);
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
                             Stake = betData.Sum(x => x.Bet),
-                            ValidBet = betData.Sum(x => x.Bet),
+                            ValidBet = betData.Sum(x => x.ValidBet),
                             WinlostAmount = winlostAmount,
                             TransId = tpUnsettle.TransId,
                             GameType = GameType.FaChai_RNG,

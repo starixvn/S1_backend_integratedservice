@@ -43,6 +43,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public string Currency { get; set; }
         public decimal Bet { get; set; }
+        public decimal ValidBet { get; set; }
         public decimal Win { get; set; }
         public decimal NetWin { get; set; }
         public string MemberAccount { get; set; }
