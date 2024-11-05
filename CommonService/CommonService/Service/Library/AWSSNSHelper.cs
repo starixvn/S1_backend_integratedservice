@@ -20,9 +20,11 @@ public class AWSSNSHelper
         var proxyHost = configuration.GetValue<string>("ProxyHost");
         var proxyPort = configuration.GetValue<int>("ProxyPort");
 
+        var region = configBLL.GetConfigValue("AWSRegion");
+
         var config = new AmazonSimpleNotificationServiceConfig
         {
-            RegionEndpoint = RegionEndpoint.APSoutheast1
+            RegionEndpoint = RegionEndpoint.GetBySystemName(region)
         };
 
         if (!string.IsNullOrEmpty(proxyHost))

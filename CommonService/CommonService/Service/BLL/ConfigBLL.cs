@@ -19,6 +19,24 @@ namespace CommonService.Service.BLL
             _siteIdConfigs = siteConfigs.ToDictionary(i => i.SiteId, i => i);
         }
 
+        public string GetConfigValue(string configKey, int siteId = 0)
+        {
+            var defaultResult = _defaultSiteConfig.TryGetValue(configKey, out var result) ? result : string.Empty;
+
+            if (siteId == 0)
+            {
+                return defaultResult;
+            }
+
+            if (_siteIdConfigs.TryGetValue(siteId, out var siteConfig))
+            {
+                return siteConfig.Config.TryGetValue(configKey, out var configValue) ? configValue : defaultResult;
+            }
+
+            return defaultResult;
+        }
+
+
         public TItem GetConfigValue<TItem>(string configKey, int siteId = 0)
         {
             var defaultItem = _defaultSiteConfig.TryGetValue(configKey, out var json)
