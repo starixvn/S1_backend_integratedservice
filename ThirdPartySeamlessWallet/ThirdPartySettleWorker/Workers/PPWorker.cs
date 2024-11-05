@@ -96,21 +96,20 @@ namespace ThirdPartySettleWorker.Workers
                         var gameId = bettran?.GameId;
                         var settledTime = bettranList.Max(x => x.SettleTime);
                         var transTime = bettranList.Min(x => x.TransTime);
+
+                        if (gametype == GameType.PP_LiveCasino)
+                        {
+                            if (winLostAmount >= 0 && winLostAmount < stake)
+                            {
+                                validBet = winLostAmount;
+                            }
+                            else if (winLostAmount < 0)
+                            {
+                                validBet = Math.Abs(winLostAmount);
+                            }
+                        }
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
 
-                        //if (gametype == GameType.PP_LiveCasino)
-                        //{
-                        //    if (winLostAmount >= 0 && winLostAmount < stake)
-                        //    {
-                        //        validBet = winLostAmount;
-                        //    }
-                        //    else if (winLostAmount < 0)
-                        //    {
-                        //        validBet = Math.Abs(winLostAmount);
-                        //    }
-                        //}
-
-      
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -128,15 +127,15 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = gameId
                         };
 
-                        //if (betRecordInfo.WinlostAmount == 0)
-                        //{
-                        //    betRecordInfo.TicketStatus = TicketStatus.Draw;
-                        //}
-                        //// check refund
-                        //if (unsettled.TicketStatus > 0)
-                        //{
-                        //    betRecordInfo.TicketStatus = TicketStatus.Refund;
-                        //}
+                        if (betRecordInfo.WinlostAmount == 0)
+                        {
+                            betRecordInfo.TicketStatus = TicketStatus.Draw;
+                        }
+                        // check refund
+                        if (bettran.TicketStatus > 0)
+                        {
+                            betRecordInfo.TicketStatus = TicketStatus.Refund;
+                        }
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
