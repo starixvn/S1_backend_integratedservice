@@ -23,8 +23,8 @@ namespace ThirdParty.SBPRNGKeno
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KenoConfig>(TpEnum.FaChai.ToString());
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.FaChai).ToDictionary(d => d.GameId, d => d.Name);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KenoConfig>(TpEnum.PNG.ToString());
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.PNG).ToDictionary(d => d.GameId, d => d.Name);
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
