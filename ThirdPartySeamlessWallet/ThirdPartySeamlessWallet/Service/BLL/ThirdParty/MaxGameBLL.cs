@@ -33,7 +33,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {"pragmaticplay",Tp.PP },
             {"pragmaticplaycasino",Tp.PP },
             {"fachai", Tp.FaChai },
-            {"lottery", Tp.SBPLottery }
+            {"lottery", Tp.SBPLottery },
+            { "sexycasino", Tp.Sexy }
         };
         private readonly Dictionary<int, WalletKind> _gameOfWalletKind = new()
         {
@@ -47,7 +48,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.PP_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PP_RNG, WalletKind.BonusWallet },
             { (int)GameType.FaChai_RNG, WalletKind.BalanceWallet },
-            { (int)GameType.SBP_Lottery, WalletKind.BonusWallet }
+            { (int)GameType.SBP_Lottery, WalletKind.BonusWallet },
+            { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet }
         };
         private readonly Dictionary<int, TpCategory> _gameOfTpCategory = new()
         {
@@ -61,7 +63,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.PP_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.PP_RNG, TpCategory.Slots },
             { (int)GameType.FaChai_RNG, TpCategory.Slots },
-            { (int)GameType.SBP_Lottery, TpCategory.Lottery }
+            { (int)GameType.SBP_Lottery, TpCategory.Lottery },
+            { (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino }
         };
 
         public MaxGameBLL(IServiceProvider provider)
@@ -761,6 +764,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     GetTicketNoSpName = "Service_BettransLC_PP_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransLC_PP_Ins";
                     CancelBettransSpName = "Service_BettransLC_PP_CancelBet_Set";
+                    break;
+                case (int)GameType.Sexy_LiveCasino:
+                    GetTicketNoSpName = "Service_BettransLC_Sexy_TicketNo_Get";
+                    InsertBettransSpName = "Service_BettransLC_Sexy_Ins";
+                    CancelBettransSpName = "Service_BettransLC_Sexy_CancelBet_Set";
                     break;
                 default:
                     // GameType.MaxGame_Poker
