@@ -160,7 +160,7 @@ namespace ThirdParty.JILI
             };
 
             var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_Live22_ResultId_Get", new { YYYYMM, TransId = getBetDetail.TransId }, DataBase.Main);
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_JiLi_ResultId_Get", new { YYYYMM, TransId = getBetDetail.TransId }, DataBase.Main);
             if (!detailList.Any() || detailList == null)
             {
                 return new BaseDetail(getBetDetail.TpGameTypeOption)
@@ -225,7 +225,7 @@ namespace ThirdParty.JILI
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_Live22_Detail_Get", new { YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_Jili_Detail_Get", new { YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
             if (!detailList.Any())
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
