@@ -91,7 +91,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<string> callSeamlessApi(string type, BettransDataOne789 bettransDataOne789)
+        public async Task<string> CallSeamlessApi(string type, BettransDataOne789 bettransDataOne789)
         {
             // param
             var url = $"{_seamlessUrl}One789";
