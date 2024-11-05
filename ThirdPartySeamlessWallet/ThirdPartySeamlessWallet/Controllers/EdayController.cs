@@ -133,7 +133,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("Content-Type", out var contentType);
                 
                 var signString = $"POST\n{md5}\n{contentType}\n/edApi/RoundUpdate";
-                 var parameters = JsonConvert.SerializeObject(request);
+                var parameters = JsonConvert.SerializeObject(request);
                 if (!CheckSign(signString, authorization, siteName,parameters))
                 {
                     baseResult = new EdayResponse<EdayErrorResponse>()

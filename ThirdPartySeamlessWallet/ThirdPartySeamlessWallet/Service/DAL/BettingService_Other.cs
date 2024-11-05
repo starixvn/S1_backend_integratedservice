@@ -1052,7 +1052,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 // 檢查是否重複
-                var bettrans = _partitionService.Query<BettransLTEday>(bettingDataLT_Eday.UTCBetTime, CheckSpName,
+                var bettrans = _partitionService.Query<BettransLTEdayDAL>(bettingDataLT_Eday.UTCBetTime, CheckSpName,
                     new { billId = bettingDataLT_Eday.billId, player = tpCustInfo.TpUserName });
                 if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.billId == bettingDataLT_Eday.billId))
                 {
