@@ -147,6 +147,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.FastSpin", "ThirdParty.FastSpin\ThirdParty.FastSpin.csproj", "{75DED446-2113-4EB3-804F-093B8C96E0B0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SBPLottery", "ThirdParty.SBPLottery\ThirdParty.SBPLottery.csproj", "{AD8E601E-8433-42A7-B8DF-21CAFDB47F62}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.SBPRNGKeno", "ThirdParty.SBPRNGKeno\ThirdParty.SBPRNGKeno.csproj", "{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -430,6 +431,10 @@ Global
 		{AD8E601E-8433-42A7-B8DF-21CAFDB47F62}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD8E601E-8433-42A7-B8DF-21CAFDB47F62}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD8E601E-8433-42A7-B8DF-21CAFDB47F62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -501,6 +506,7 @@ Global
 		{52738DF4-4F56-4EE6-B2BA-CFAD2E586867} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{75DED446-2113-4EB3-804F-093B8C96E0B0} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{AD8E601E-8433-42A7-B8DF-21CAFDB47F62} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
