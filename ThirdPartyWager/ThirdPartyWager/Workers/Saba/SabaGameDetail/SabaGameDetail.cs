@@ -29,7 +29,8 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", TpName);
             LogContext.PushProperty("JobName", nameof(DoSabaGameDetailAsync));
-
+            _logger.LogInformation($"{TpName} Start Get Saba Game Detail");
+            
             var isError = false;
             try
             {
