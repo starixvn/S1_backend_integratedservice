@@ -36,7 +36,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task ExecReportAsync(int tpId, int tpType, TimeCast reportTime)
         {
             var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
-
+            var reportList = new List<NextspinProfitLossInfo>();
             foreach (var site in siteList)
             {
                 if (site.TicketKey == 0)
@@ -48,18 +48,20 @@ namespace ThirdPartyWager.Service.BLL
                 var profitLoss = await _apiNextspinBll.RetrieveProfitLoss(reportTime.startTime, reportTime.endTime, 1, config);
                 if (profitLoss != null && profitLoss.List != null && profitLoss.List.Count > 0)
                 {
-                    var reportDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(reportTime.startUnix);
-                    // process
-                    var dailySummary = DealReport(tpId, reportDate, profitLoss.List);
-
-                    // write
-                    var result = _fincanceService.SetFinanceTpDailySummary(dailySummary);
-
-                    if (result > 0)
-                    {
-                        _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, reportTime.endUnix);
-                    }
+                    reportList.AddRange(profitLoss.List);
                 }
+            }
+
+            var reportDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(reportTime.startUnix);
+            // process
+            var dailySummary = DealReport(tpId, reportDate, reportList);
+
+            // write
+            var result = _fincanceService.SetFinanceTpDailySummary(dailySummary);
+
+            if (result > 0)
+            {
+                _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, reportTime.endUnix);
             }
         }
 
