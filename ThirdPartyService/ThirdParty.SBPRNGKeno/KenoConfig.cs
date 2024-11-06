@@ -1,6 +1,6 @@
 ﻿using ThirdPartyCore.Model;
 
-namespace ThirdParty.SBPRNGKeno;
+namespace ThirdParty.SBPKeno;
 
 internal class KenoConfig : TpSiteConfig
 {
