@@ -57,12 +57,9 @@ namespace ThirdPartyWager.Service.BLL
             var dailySummary = DealReport(tpId, reportDate, reportList);
 
             // write
-            var result = _fincanceService.SetFinanceTpDailySummary(dailySummary);
+            _fincanceService.SetFinanceTpDailySummary(dailySummary);
 
-            if (result > 0)
-            {
-                _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, reportTime.endUnix);
-            }
+            _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, reportTime.endUnix);
         }
 
         private IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, IList<NextspinProfitLossInfo> reportData)
