@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 using System.Text.Json;
@@ -17,6 +18,7 @@ namespace ThirdPartyService.Service.DAL
     {
         private static ConcurrentDictionary<int, IThirdPartyHelper> ThirdPartyHelperContainer = new();
         private static ConcurrentDictionary<string, ThirdPartyModel> ThirdPartyModelContainer = new();
+        private static ConcurrentDictionary<string, TPBetLimit> TPBetLimitContainer = new();
         private readonly ILogger<ThirdPartyHelper> _logger;
         private readonly IServiceProvider _provider;
         private readonly MySqlClient _mainDbClient;
@@ -38,6 +40,18 @@ namespace ThirdPartyService.Service.DAL
                     ThirdPartyModelContainer.TryAdd(sKet, thirdPartyModel);
             }
             return ThirdPartyModelContainer.ContainsKey(sKet) ? ThirdPartyModelContainer[sKet] : null;
+        }
+
+        public TPBetLimit GetTPBetLimit(int currencyId, int gameType = 0)
+        {
+            var sKet = $"{gameType}_{currencyId}";
+            if (!ThirdPartyModelContainer.ContainsKey(sKet))
+            {
+                var tpBetLimit = _mainDbClient.QueryFirst<TPBetLimit>("Admin_TpBetLimit_Get", new { _GameTypeId = gameType, _CurrencyId = currencyId });
+                if (tpBetLimit != null)
+                    TPBetLimitContainer.TryAdd(sKet, tpBetLimit);
+            }
+            return TPBetLimitContainer.ContainsKey(sKet) ? TPBetLimitContainer[sKet] : null;
         }
 
         public ThirdPartyModel GetThirdPartySetting(int tpId)

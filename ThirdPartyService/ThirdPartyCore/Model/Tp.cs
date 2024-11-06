@@ -83,6 +83,7 @@ namespace ThirdPartyCore.Model
         public string TpUserName { get; set; }
         public string TpPwd { get; set; }
         public string TpCurrencyId { get; set; }
+        public int CurrencyId { get; set; }
         public decimal ExchangeRate { get; set; }
         public bool IsTest { get; set; }
         public int ActStatus { get; set; }

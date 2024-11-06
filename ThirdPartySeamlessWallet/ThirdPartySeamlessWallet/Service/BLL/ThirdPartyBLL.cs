@@ -312,6 +312,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 case (int)Tp.SBPLottery:
                     gameType = GameType.SBP_Lottery;
                     break;
+                case (int)Tp.Sexy:
+                    gameType = GameType.Sexy_LiveCasino;
+                    break;
                 default:
                     break;
             }

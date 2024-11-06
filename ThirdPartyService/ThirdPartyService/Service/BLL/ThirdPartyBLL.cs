@@ -90,7 +90,6 @@ namespace ThirdPartyService.Service.BLL
         public ApiResult GotoGame(TpInfo tpInfo)
         {
             var apiResult = new ApiResult();
-
             var tpLangId = thirdPartyHelper.GetTpLanId(tpInfo.TpId, tpInfo.LangId);
 
             if (string.IsNullOrEmpty(tpLangId))
@@ -115,6 +114,7 @@ namespace ThirdPartyService.Service.BLL
                         inputs.Add(infoI.Key, infoI.Value);
                     }
                 }
+
 
                 TpCustInfo freeCustInfo = new TpCustInfo();
                 freeCustInfo.SiteId = tpInfo.SiteId;
@@ -142,6 +142,7 @@ namespace ThirdPartyService.Service.BLL
 
                 var configEnv = configuration.GetValue<string>("Environment");
 
+
                 // Test account only allow login for saba
                 // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
                 if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && configEnv == null &&
@@ -152,6 +153,15 @@ namespace ThirdPartyService.Service.BLL
                 }
                 else
                 {
+                    var tpGameType = tpInfo.inputs.ContainsKey("tpGameType") ? tpInfo.inputs["tpGameType"] : "0";
+                    var currencyId = tpCustInfoResult.Data.CurrencyId;
+                    var tpBetLimit = thirdPartyHelper.GetTPBetLimit(currencyId, int.Parse(tpGameType));
+
+                    if(tpBetLimit != null && tpBetLimit.DefaultGroup != null)
+                    {
+                        inputs.Add("betLimitGroup", tpBetLimit.DefaultGroup);
+                    }
+
                     apiResult = tpHelper.Login(tpCustInfoResult.Data, (AppType)tpInfo.AppType, tpLangId, inputs);
 
                     SentrySdk.CaptureMessage($"xxx {nameof(ThirdPartyBLL)} at {DateTime.Now}" +

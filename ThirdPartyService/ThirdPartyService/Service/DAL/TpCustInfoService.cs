@@ -74,6 +74,7 @@ namespace ThirdPartyService.Service.DAL
                     }
 
                     return CreateMember(customer, tpId, true , langId);
+
                 }
                 else if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
                          tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
@@ -221,7 +222,8 @@ namespace ThirdPartyService.Service.DAL
                 SiteId = customer.SiteId,
                 TpUserName = $"{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}",
                 IsoCode = GetCurrencyIsoCode(customer.CurrencyId),
-                MemberType = customer.MemberType
+                MemberType = customer.MemberType,
+                CurrencyId = customer.CurrencyId
             };
 
             if (_environment.EnvironmentName != "Production")

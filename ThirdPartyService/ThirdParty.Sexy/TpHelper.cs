@@ -79,6 +79,7 @@ namespace ThirdParty.Sexy
             var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
+            string betLimitGroup = inputs.ContainsKey("betLimitGroup") && !string.IsNullOrEmpty(inputs["betLimitGroup"]) ? inputs["betLimitGroup"] : "";
 
             var key = ApplyToken(tpCustInfo);
 
@@ -105,6 +106,10 @@ namespace ThirdParty.Sexy
                         WalletSideToken = key,
                     },
                     HomeUrl = homeUrl,
+                    Additional = new
+                    {
+                        BetLimit = betLimitGroup
+                    }
                 }
             };
             var postdata = JsonConvert.SerializeObject(input, Formatting.None);
