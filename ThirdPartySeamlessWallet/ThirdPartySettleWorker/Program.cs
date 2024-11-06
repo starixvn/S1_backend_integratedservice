@@ -114,6 +114,7 @@ builder.Services
     .AddHostedService<AllbetWorker>()
     .AddHostedService<SexyWorker>()
     //.AddHostedService<SBOWorker>()
+    .AddHostedService<SBPKenoWorker>()
     .AddHostedService<JILIWorker>()
     .AddHostedService<FaChaiWorker>()
     .AddHostedService<SabaPlayWorker>()

@@ -7,7 +7,6 @@
         Saba_NumberGame = 2,
         Saba_VirtualSport = 3,
         Saba_RNG = 4,
-        Keno_Lottery = 5,
         Allbet_LiveCasino = 6,
         PP_RNG = 7,
         AG_LiveCasino = 8,
@@ -113,5 +112,4 @@
         SBP_Lottery = 125,
         SBP_TableGame = 126
     }
-
 }
