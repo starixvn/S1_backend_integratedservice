@@ -87,7 +87,10 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 response.EnsureSuccessStatusCode();
-                return response.Content.ReadAsStringAsync().Result;
+                var result = response.Content.ReadAsStringAsync().Result;
+                _log2File.InsertResponseLog(_tpName, url, para, result);
+                
+                return result;
             }
             catch (HttpRequestException hrEx)
             {
