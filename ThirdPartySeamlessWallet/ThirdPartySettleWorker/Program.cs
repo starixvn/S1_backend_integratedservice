@@ -112,7 +112,7 @@ builder.Services
     //.AddHostedService<SGWorker>()
     .AddHostedService<PPWorker>()
     .AddHostedService<AllbetWorker>()
-    //.AddHostedService<SexyWorker>()
+    .AddHostedService<SexyWorker>()
     //.AddHostedService<SBOWorker>()
     .AddHostedService<JILIWorker>()
     .AddHostedService<FaChaiWorker>()
