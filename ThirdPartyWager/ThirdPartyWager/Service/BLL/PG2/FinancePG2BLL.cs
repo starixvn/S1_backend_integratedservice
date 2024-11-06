@@ -56,9 +56,9 @@ public class FinancePG2BLL : ITpReportBLL
                 SummaryDate = reportDate,
                 TpId = tpId,
                 CurrencyId = _currencyId[item.TpCurrencyId],
-                Stake = item.bet,
+                Stake = item.bet * -1,//對方bet都送負數
                 ValidBet = item.turnover,
-                Payout = item.bet + item.winlose,
+                Payout = item.bet * -1 + item.winlose,
                 WinlostAmount = item.winlose,
             });
         }
@@ -89,7 +89,7 @@ public class FinancePG2BLL : ITpReportBLL
                 var apiKey = default(dynamic);
                 try
                 {
-                    apiKey = setting.CurrencyData[currency].ApiKey; ;
+                    apiKey = setting.CurrencyData[currency].ApiKey;
                 }
                 catch
                 {

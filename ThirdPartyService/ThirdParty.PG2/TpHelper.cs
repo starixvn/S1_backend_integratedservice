@@ -196,9 +196,9 @@ namespace ThirdParty.PG2
             {
                 GameID = detailList.GetFirstStringValue("GameId"),
                 Game = detailList.GetFirstStringValue("gameName"),
-                RefNo = detailList.GetFirstStringValue("parentRounId"),
+                RefNo = detailList.GetFirstStringValue("roundId"),
                 Title = tpGameType.TypeName,
-                MatchID = detailList.GetFirstStringValue("RounId"),
+                MatchID = detailList.GetFirstStringValue("parentRoundId"),
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,

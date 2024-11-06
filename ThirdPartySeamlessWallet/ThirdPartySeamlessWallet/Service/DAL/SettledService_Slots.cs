@@ -7609,7 +7609,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public bool CancelBettrans_PG2(DateTime partitionTime, int sq, MySqlTransaction trans)
         {
             var query = new { SQ = sq, TicketType = BettransType.CancelBet, TicketStatus = TicketStatus.Refund };
-            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PG2_Set", query, trans);
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PG2_CancelBet_Set", query, trans);
 
             if (result == 0)
             {
@@ -7620,7 +7620,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public bool InsertBettrans_BetAndPayout_PG2(DateTime partitionTime, BettingDataRNG_PG2 data, MySqlTransaction trans)
         {
-            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PG2_Ins_V2", data, trans);
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PG2_BetAndPayout_Ins", data, trans);
             return result != 0;
         }
 
