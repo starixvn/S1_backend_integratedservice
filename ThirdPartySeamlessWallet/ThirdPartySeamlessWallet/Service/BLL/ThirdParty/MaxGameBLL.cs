@@ -47,7 +47,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.Allbet_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PP_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PP_RNG, WalletKind.BonusWallet },
-            { (int)GameType.FaChai_RNG, WalletKind.BalanceWallet },
+            { (int)GameType.FaChai_RNG, WalletKind.BonusWallet },
             { (int)GameType.SBP_Lottery, WalletKind.BonusWallet },
             { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet }
         };
