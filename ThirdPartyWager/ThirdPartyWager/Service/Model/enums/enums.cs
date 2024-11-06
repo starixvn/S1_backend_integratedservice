@@ -122,7 +122,9 @@
         SabaPlay_Poker = 119,
         UuSlots_RNG = 120,
         Live22_RNG = 121,
-        FastSpin_RNG = 122
+        FastSpin_RNG = 122,
+        PP_RNG = 7,
+        PP_LiveCasino = 16,
     }
     public enum SettlementType
     {
