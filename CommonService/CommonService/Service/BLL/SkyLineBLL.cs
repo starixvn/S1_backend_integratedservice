@@ -4,7 +4,6 @@ using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-
 using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL
@@ -18,6 +17,7 @@ namespace CommonService.Service.BLL
         private readonly ILogger<OTPSMSService> _logger;
         private readonly SiteLanguageBLL _siteLanguageBLL;
         private readonly OTPSMSBLL _oTPSMSBLL;
+        private readonly string _environment;
 
         public SkyLineBLL(IServiceProvider provider)
         {
@@ -28,6 +28,7 @@ namespace CommonService.Service.BLL
             _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SkyLineSMSServiceTypeConfig>("SkyLineSMS");
             _siteLanguageBLL = provider.GetRequiredService<SiteLanguageBLL>();
             _oTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
+            _environment = provider.GetRequiredService<IConfiguration>().GetSection("env").Get<string>();
         }
 
         public async Task<ApiResult> SendSMS(string PhoneNo, CustInfoProfile custInfo, string userLang, int custId)
@@ -146,6 +147,12 @@ namespace CommonService.Service.BLL
             using var result = await _httpHelper.HttpPost1Async(config.ResourceURL, headerParams, parameters, "application/json");
             _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
 
+            //TODO: Mock Sms SkyLine for Development and LOCAL environment
+            if (_environment == "Development" || _environment == "Local")
+            {
+                return MockSkyLineSendingSMS(apiResult, oTPLog, _environment);
+            }
+
             if (result.StatusCode == HttpStatusCode.OK)
             {
                 var response = result.Content.ReadAsStringAsync().Result;
@@ -259,6 +266,11 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(acknowledgeVerifySms);
+            //TODO: Mock Sms SkyLine for Development and LOCAL environment
+            if (_environment == "Development" || _environment == "Local")
+            {
+                return MockSkyLineSendingSMS(apiResult, oTPLog, _environment);
+            }
             using var result = await _httpHelper.HttpPost1Async(config.ResourceURL, headerParams, parameters, "application/json");
             _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
 
@@ -329,6 +341,16 @@ namespace CommonService.Service.BLL
             {
                 return string.Empty;
             }
+        }
+
+        private ApiResult MockSkyLineSendingSMS(ApiResult apiResult, OTPLog oTPLog, string env)
+        {
+            apiResult.ErrorCode = ErrorCode.Success;
+            oTPLog.OTPStatus = (int)OTPStatus.SendToProvider;
+            oTPLog.Request_id = string.Empty;
+            oTPLog.Content = $"[{env}] MOCK SMS {oTPLog.Content}";
+            _oTPSMSBLL.InsertOTPLog(oTPLog);
+            return apiResult;
         }
     }
 }

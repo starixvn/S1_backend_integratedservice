@@ -19,7 +19,8 @@ namespace CommonService.Controllers
         private readonly SkyLineBLL _skyLineBLL;
         private readonly Dictionary<OTPProvider, Func<OTPRequestObject, Task<ApiResult>>> _requestHandler;
         private readonly IEnumerable<ServerInfo> _serverInfo;
-       
+        private readonly string _environment;
+
         public OTPSMSController(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<OTPSMSController>>();
@@ -38,6 +39,7 @@ namespace CommonService.Controllers
                 { OTPProvider.AWS, provider.GetRequiredService<AWSBLL>().SendOTP},
                 { OTPProvider.SmsCloud, provider.GetRequiredService<SmsCloudBLL>().SendOTP},
             };
+            _environment = provider.GetRequiredService<IConfiguration>().GetSection("env").Get<string>();
         }
 
         [HttpPost]
@@ -75,7 +77,7 @@ namespace CommonService.Controllers
                 CustInfoProfile = custInfo,
                 OTPNum = _tools.GetRandomNumString(6)
             };
-            var otpProvider = GetSupportOTP(custInfo.SiteId ,custInfo.AreaCode ,null ,custInfo.CustId);
+            var otpProvider = GetSupportOTP(custInfo.SiteId, custInfo.AreaCode, null, custInfo.CustId);
             var otpProviderResult = await _requestHandler[otpProvider].Invoke(request);
             if (otpProviderResult.ErrorCode != ErrorCode.Success)
             {
@@ -161,6 +163,12 @@ namespace CommonService.Controllers
                 }
 
                 var GetOTPVerifyResult = _oTPSMSBLL.GetOTPVerifyInfo(verifyOTPReq.CustId);
+
+                // TODO: Mock SMS Verify for Development and Local Environment
+                if (_environment == "Development" || _environment == "Local")
+                {
+                    return _oTPSMSBLL.VerifyOPT(verifyOTPReq);
+                }
 
                 if (GetOTPVerifyResult.ErrorCode == 0)
                 {
