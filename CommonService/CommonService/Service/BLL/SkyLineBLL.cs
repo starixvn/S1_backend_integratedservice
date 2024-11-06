@@ -144,6 +144,11 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(acknowledgeVerifySms);
+            //TODO: Mock Sms SkyLine for Development and LOCAL environment
+            if (_environment == "Development" || _environment == "Local")
+            {
+                return MockSkyLineSendingSMS(apiResult, oTPLog, _environment);
+            }
             using var result = await _httpHelper.HttpPost1Async(config.ResourceURL, headerParams, parameters, "application/json");
             _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
 
