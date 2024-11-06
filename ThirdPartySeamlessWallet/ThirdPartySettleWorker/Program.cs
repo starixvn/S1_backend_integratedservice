@@ -121,7 +121,8 @@ builder.Services
     .AddHostedService<Live22Worker>()
     .AddHostedService<FastSpinWorker>()
     .AddHostedService<SBSWWorker>()
-    .AddHostedService<MaxGameWorker>();
+    .AddHostedService<MaxGameWorker>()
+    .AddHostedService<SBPLotteryWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
