@@ -108,7 +108,7 @@ namespace CommonService.Service.BLL
                         }
                         else
                         {
-                            _logger.LogInformation($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+                            SentrySdk.CaptureMessage($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid},{custInfo.SiteName}_OTP");
 
                             if (code.Equals("6"))
                             {
@@ -125,7 +125,7 @@ namespace CommonService.Service.BLL
                     else
                     {
                         var msg = $"NxCloud - Error HttpStatus:{httpResponse.StatusCode} || {content}";
-                        _logger.LogInformation(msg);
+                        SentrySdk.CaptureMessage(msg);
                         oTPLog.OTPResponse = msg;
                         apiResult.ErrorCode = ErrorCode.SMSProviderFail;
                         apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);

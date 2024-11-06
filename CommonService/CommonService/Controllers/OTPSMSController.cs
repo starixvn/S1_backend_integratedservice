@@ -164,12 +164,6 @@ namespace CommonService.Controllers
 
                 var GetOTPVerifyResult = _oTPSMSBLL.GetOTPVerifyInfo(verifyOTPReq.CustId);
 
-                // TODO: Mock SMS Verify for Development and Local Environment
-                if (_environment == "Development" || _environment == "Local")
-                {
-                    return _oTPSMSBLL.VerifyOPT(verifyOTPReq);
-                }
-
                 if (GetOTPVerifyResult.ErrorCode == 0)
                 {
                     apiResult = _oTPSMSBLL.VerifyOPT(verifyOTPReq);
