@@ -69,7 +69,10 @@
         UuSlots = 67,
         Live22 = 68,
         FastSpin = 69,
-        SBPKeno = 71
+        DragonGaming = 70,
+        SBPKeno = 71,
+        SBPLottery = 72,
+        SBPTableGame = 73
     }
 
     public enum GameType
@@ -127,6 +130,8 @@
         SBP_Keno = 124,
         PP_RNG = 7,
         PP_LiveCasino = 16,
+        SBP_Lottery = 125,
+        SBP_TableGame = 126
     }
     public enum SettlementType
     {

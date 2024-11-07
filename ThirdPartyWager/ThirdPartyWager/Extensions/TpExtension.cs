@@ -25,6 +25,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Allbet, AddAllbet},
                 { Tp.FaChai, AddFaChai},
                 { Tp.SBPKeno, AddKeno},
+                { Tp.SBPLottery, AddSBPLottery},
                // {Tp.PP, AddPragmaticPlay },
                 //Loki comment:
                 //{ Tp.JILI, AddJILI},
@@ -798,6 +799,17 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerWonCasino>();
             services.AddHostedService<WagerRedoWonCasino>();
             services.AddHostedService<FinanceWonCasino>();
+
+            return services;
+        }
+
+        private IServiceCollection AddSBPLottery(IServiceCollection services)
+        {
+            services.AddSingleton<WagerSBPLotteryService>();
+
+            services.AddSingleton<TicketSBPLotteryBLL>();
+
+            services.AddHostedService<BetResultCheckSBPLottery>();
 
             return services;
         }
