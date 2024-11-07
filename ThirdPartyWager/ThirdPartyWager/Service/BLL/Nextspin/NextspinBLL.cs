@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Security.Policy;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -14,12 +15,11 @@ namespace ThirdPartyWager.Service.BLL
     public class NextspinBLL : INextspinBLL
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly CommonBLL _commonBLL;
         private readonly INextspinApi _apiNextspinBll;
         private readonly IWagerNextspinService _wagerService;
         private readonly ILogger<NextspinBLL> _logger;
-        private readonly List<int> _siteList;
         private readonly Dictionary<int, NextspinConfig> _siteConfigDic;
+        private readonly int _tpId = (int)Tp.Nextspin;
 
         public NextspinBLL(IServiceProvider provider)
         {
@@ -27,8 +27,6 @@ namespace ThirdPartyWager.Service.BLL
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _wagerService = provider.GetRequiredService<IWagerNextspinService>();
             _apiNextspinBll = provider.GetRequiredService<INextspinApi>();
-            _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _siteList = _commonBLL.GetSiteByTpGameType((int)GameType.Nextspin_RNG).ToList();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(Tp.Nextspin.ToString());
         }
 
@@ -36,13 +34,19 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                foreach (var siteId in _siteList)
+                var _siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var site in _siteList)
                 {
-                    if (_siteConfigDic.TryGetValue(siteId, out var config))
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+
+                    if (_siteConfigDic.TryGetValue(site.SiteId, out var config))
                     {
                         if(config == null)
                         {
-                            _logger.LogError($"siteId={siteId}, siteConfigDic config={JsonConvert.SerializeObject(config)}");
+                            _logger.LogError($"siteId={site.SiteId}, siteConfigDic config={JsonConvert.SerializeObject(config)}");
                             continue;
                         }
 
