@@ -56,7 +56,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCheck = cache.Get<TpCheck>(key);
             if (tpCheck == null)
             {
-
                 tpCheck = ThirdPartyCheck(tpId, tpUserName);
                 cache.Set(key, tpCheck, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(40)));
             }
@@ -90,7 +89,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 gameType = GameType.PP_LiveCasino;
 
-                // Spaceman 
+                // Spaceman
                 if (tempGameId == 1301 || tempGameId == 1302)
                 {
                     gameType = GameType.PP_RNG;
@@ -132,6 +131,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 case (int)Tp.FaChai:
                     gameType = GameType.FaChai_RNG;
                     break;
+
                 case (int)Tp.One789:
                     if (gameId.StartsWith("0_", StringComparison.OrdinalIgnoreCase))
                     {
@@ -146,6 +146,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.One789_LiveCasino;
                     }
                     break;
+
                 case (int)Tp.Iconic:
                     if (gameId.StartsWith("cmf", StringComparison.OrdinalIgnoreCase))
                     {
@@ -160,6 +161,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.Iconic_RNG;
                     }
                     break;
+
                 case (int)Tp.CQ9:
                     gameType = GameType.CQ9_RNG;
                     if (gameId == "AB3" || gameId == "AT01" || gameId == "AT04" || gameId == "AT05" || gameId == "AT06")
@@ -172,14 +174,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.CQ9_WCC;
                     }
                     break;
+
                 case (int)Tp.PP:
                     gameType = GameType.PP_RNG;
-                    
+
                     if (gameId.Equals("pragmaticplaycasino", StringComparison.OrdinalIgnoreCase))
                     {
                         gameType = GameType.PP_LiveCasino;
                     }
                     break;
+
                 case (int)Tp.SG:
                     gameType = GameType.SG_RNG;
                     if (gameId.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
@@ -187,6 +191,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.SG_Fish;
                     }
                     break;
+
                 case (int)Tp.Joker:
                     gameType = GameType.Joker_RNG;
                     var jokerfish = new List<string>
@@ -200,6 +205,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.Joker_Fish;
                     }
                     break;
+
                 case (int)Tp.MG:
                     gameType = GameType.MG_RNG;
                     var casino = GetGameCasinoWithCache(tpId);
@@ -209,6 +215,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.MG_LiveCasino;
                     }
                     break;
+
                 case (int)Tp.EVO:
                     gameType = GameType.EVO_LiveCasino;
                     var netent = GetGameCasinoWithCache((int)Tp.Netent);
@@ -233,6 +240,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         return gameType;
                     }
                     break;
+
                 case (int)Tp.Skywind:
                     gameType = GameType.Skywind_RNG;
                     if (gameId == "0")
@@ -244,6 +252,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.Skywind_Fish;
                     }
                     break;
+
                 case (int)Tp.GPI:
                     gameType = GameType.GPI_RNG;
                     if (string.Equals(gameId, "keno", StringComparison.OrdinalIgnoreCase))
@@ -263,6 +272,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.GPI_Fast3;
                     }
                     break;
+
                 case (int)Tp.PlayTech:
                     gameType = GameType.PlayTech_RNG;
                     var casinoPlayTech = GetGameCasinoWithCache(tpId);
@@ -282,21 +292,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.PlayTech_LiveCasino;
                     }
                     break;
+
                 case (int)Tp.MaxGame:
                     gameType = GameType.MaxGame_Poker;
                     break;
+
                 case (int)Tp.SabaPlay:
                     gameType = GameType.SabaPlay_Poker;
                     break;
+
                 case (int)Tp.UuSlots:
                     gameType = GameType.UuSlots_RNG;
                     break;
+
                 case (int)Tp.Live22:
                     gameType = GameType.Live22_RNG;
                     break;
+
                 case (int)Tp.FastSpin:
                     gameType = GameType.FastSpin_RNG;
                     break;
+
                 case (int)Tp.JILI:
                     gameType = GameType.JILI_RNG;
 
@@ -306,15 +322,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     //    gameType = GameType.JILI_Fish;
                     //}
                     break;
+
                 case (int)Tp.Allbet:
                     gameType = GameType.Allbet_LiveCasino;
                     break;
+
+                case (int)Tp.SBPKeno:
+                    gameType = GameType.SBP_Keno;
+                    break;
+
                 case (int)Tp.SBPLottery:
                     gameType = GameType.SBP_Lottery;
                     break;
+
                 case (int)Tp.Sexy:
                     gameType = GameType.Sexy_LiveCasino;
                     break;
+
                 default:
                     break;
             }
