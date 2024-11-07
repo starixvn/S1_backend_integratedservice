@@ -63,12 +63,7 @@ namespace ThirdPartyWager.Workers
                     reportTime = _dateTimeHelper.GetTimeByDay(1440, 0, "yyyyMMddTHHmmss", dataTpTimer.StartTime.AddDays(-1));
                 }
 
-                var result = await _financBLL.ExecReportAsync(TpId, reportTime);
-                // update timer
-                if (result > 0)
-                {
-                    _thirdPartyBLL.SetThirdPartyTimer(TpId, _tpType, reportTime.endUnix);
-                }
+                await _financBLL.ExecReportAsync(TpId, _tpType, reportTime);
 
                 var diffDay = (int)(DateTime.Now.Date - dataTpTimer.StartTime).TotalDays;
                 if (diffDay >= _beyond)

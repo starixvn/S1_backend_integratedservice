@@ -28,15 +28,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("[controller]/authenticate")]
+        [Route("[controller]/{sitename}/authenticate")]
         [Produces("application/xml")]
         [HttpPost]
-        public async Task<dynamic> Authenticate()
+        public async Task<dynamic> Authenticate([FromRoute] string sitename = null)
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var body = await reader.ReadToEndAsync();
 
             var authenticateRequest = _tools.XMLDeserialize<PNG_AuthenticateRequest>(body);
-            var authenticateResponse = _pngBll.Authenticate(authenticateRequest);
+            var authenticateResponse = _pngBll.Authenticate(authenticateRequest, sitename);
             var xmlString = XmlHelper.SerializeToXmlString(authenticateResponse);
 
             return Content(xmlString, "application/xml");
@@ -48,15 +49,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("[controller]/balance")]
+        [Route("[controller]/{sitename}/balance")]
         [Produces("application/xml")]
         [HttpPost]
-        public async Task<dynamic> GetBalance()
+        public async Task<dynamic> GetBalance([FromRoute] string sitename = null)
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var body = await reader.ReadToEndAsync();
 
             var balanceRequest = _tools.XMLDeserialize<PNG_BalanceRequest>(body);
-            var balanceResponse = _pngBll.Balance(balanceRequest);
+            var balanceResponse = _pngBll.Balance(balanceRequest, sitename);
             var xmlString = XmlHelper.SerializeToXmlString(balanceResponse);
 
             return Content(xmlString, "application/xml");
@@ -67,15 +69,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("[controller]/reserve")]
+        [Route("[controller]/{sitename}/reserve")]
         [Produces("application/xml")]
         [HttpPost]
-        public async Task<dynamic> Reserve()
+        public async Task<dynamic> Reserve([FromRoute] string sitename = null)
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var body = await reader.ReadToEndAsync();
 
             var reserveRequest = _tools.XMLDeserialize<PNG_ReserveRequest>(body);
-            var reserveResponse = await _pngBll.Reserve(reserveRequest);
+            var reserveResponse = await _pngBll.Reserve(reserveRequest, sitename);
             var xmlString = XmlHelper.SerializeToXmlString(reserveResponse);
             return Content(xmlString, "application/xml");
 
@@ -86,15 +89,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("[controller]/cancelReserve")]
+        [Route("[controller]/{sitename}/cancelReserve")]
         [Produces("application/xml")]
         [HttpPost]
-        public async Task<dynamic> CancelReserve()
+        public async Task<dynamic> CancelReserve([FromRoute] string sitename = null)
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var body = await reader.ReadToEndAsync();
 
             var cancelReserveRequest = _tools.XMLDeserialize<PNG_CancelReserveRequest>(body);
-            var cancelReserveResponse = await _pngBll.CancelReserve(cancelReserveRequest);
+            var cancelReserveResponse = await _pngBll.CancelReserve(cancelReserveRequest, sitename);
             var xmlString = XmlHelper.SerializeToXmlString(cancelReserveResponse);
 
             return Content(xmlString, "application/xml");
@@ -105,15 +109,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("[controller]/release")]
+        [Route("[controller]/{sitename}/release")]
         [Produces("application/xml")]
         [HttpPost]
-        public async Task<dynamic> Release()
+        public async Task<dynamic> Release([FromRoute] string sitename = null)
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var body = await reader.ReadToEndAsync();
 
             var releaseRequest = _tools.XMLDeserialize<PNG_ReleaseRequest>(body);
-            var releaseResponse = await _pngBll.Release(releaseRequest);
+            var releaseResponse = await _pngBll.Release(releaseRequest, sitename);
             var xmlString = XmlHelper.SerializeToXmlString(releaseResponse);
 
             return Content(xmlString, "application/xml");
