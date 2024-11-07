@@ -174,7 +174,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/{sitename}/Bonus")]
         public async Task<dynamic> Bonus(string sitename)
         {
-            // 尚未支援 (如要使用要請測試)
             string logName = $"{_thisTp}_Bonus";
 
             try
