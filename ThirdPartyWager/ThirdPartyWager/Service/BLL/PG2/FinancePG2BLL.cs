@@ -43,8 +43,8 @@ public class FinancePG2BLL : ITpReportBLL
         var data = getReportData.GroupBy(i => i.TpCurrencyId).Select(g => new
         {
             TpCurrencyId = g.Key,
-            bet = g.Sum(s => s.bet),
-            turnover = g.Sum(s => s.bet),
+            bet = g.Sum(s => s.bet *-1),//對方bet都送負數
+            turnover = g.Sum(s => s.bet * -1),
             winlose = g.Sum(s => s.winlose),
         });
 
@@ -56,9 +56,9 @@ public class FinancePG2BLL : ITpReportBLL
                 SummaryDate = reportDate,
                 TpId = tpId,
                 CurrencyId = _currencyId[item.TpCurrencyId],
-                Stake = item.bet * -1,//對方bet都送負數
+                Stake = item.bet,
                 ValidBet = item.turnover,
-                Payout = item.bet * -1 + item.winlose,
+                Payout = item.bet + item.winlose,
                 WinlostAmount = item.winlose,
             });
         }
