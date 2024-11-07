@@ -92,20 +92,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var getReq = JsonConvert.DeserializeObject<GetPlayerInfoReq_MaxGame>(request);
 
-            if (string.IsNullOrEmpty(getReq.Payload.WalletSideToken))
+            if (string.IsNullOrEmpty(getReq?.Payload?.WalletSideToken))
             {
                 return new BaseResp(ErrorCodeOfMaxGame.OpSideTokenInvalid);
             }
 
-            if (string.IsNullOrEmpty(getReq.Payload.GameType) || !_gameOfTpId.ContainsKey(getReq.Payload.GameType.ToLower()))
+            if (string.IsNullOrEmpty(getReq?.Payload?.GameType) || !_gameOfTpId.ContainsKey(getReq?.Payload?.GameType.ToLower() ?? ""))
             {
                 return new BaseResp(ErrorCodeOfMaxGame.OpSideGameNotFound);
             }
 
             var tpId = _gameOfTpId[getReq.Payload.GameType.ToLower()];
             var gameType = _thirdPartyBLL.GetGameType((int)tpId, getReq.Payload.GameType.ToLower());
-
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)tpId, getReq.Payload.OperatorCustId);
+            var operatorCustId = getReq?.Payload?.OperatorCustId ?? "";
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)tpId, operatorCustId);
             if (tpCheck == null)
             {
                 return new BaseResp(ErrorCodeOfMaxGame.OpSideLoginFailed);
@@ -115,13 +115,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new BaseResp(ErrorCodeOfMaxGame.OpSideAccountLocked);
             }
 
-            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)tpId, getReq.Payload.OperatorCustId);
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)tpId, operatorCustId);
             if (tpCustInfo.CustId == 0)
             {
                 return new BaseResp(ErrorCodeOfMaxGame.OpSideDbError);
             }
 
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)tpId, operatorCustId, (int)gameType);
 
             // 取出對方支援的Min/Max預設設定
             var limit = JsonConvert.DeserializeObject<Limit>(_tpBetLimitData.Where(i => i.GameType == (int)gameType).FirstOrDefault(item => item.CurrencyId == tpCustInfo.CurrencyId).LimitGroup);
@@ -130,8 +130,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 Payload = new Payload_GetPlayerInfoResp()
                 {
-                    OperatorCustId = getReq.Payload.OperatorCustId,
-                    UserName = getReq.Payload.OperatorCustId,
+                    OperatorCustId = operatorCustId,
+                    UserName = operatorCustId,
                     CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustBalance.TpCurrencyId,
                     Currency = tpCustInfo.IsTest ? _testCurrency : tpCustBalance.TpCurrencyId,
                     Balance = _tools.Floor(tpCustBalance.Balance, 2),
@@ -147,13 +147,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public dynamic GetBalance(string request)
         {
             var getReq = JsonConvert.DeserializeObject<GetBalanceReq_MaxGame>(request);
-
-            if (string.IsNullOrEmpty(getReq.Payload.GameType) || !_gameOfTpId.ContainsKey(getReq.Payload.GameType.ToLower()))
+            var gameTypeFromPayload = getReq.Payload?.GameType?.ToLower() ?? "";
+            if (string.IsNullOrEmpty(getReq?.Payload?.GameType) || !_gameOfTpId.ContainsKey(gameTypeFromPayload))
             {
                 return new BaseResp(ErrorCodeOfMaxGame.OpSideGameNotFound);
             }
-            var tpId = _gameOfTpId[getReq.Payload.GameType.ToLower()];
-            var gameType = _thirdPartyBLL.GetGameType((int)tpId, getReq.Payload.GameType.ToLower());
+            var tpId = _gameOfTpId[gameTypeFromPayload];
+            var gameType = _thirdPartyBLL.GetGameType((int)tpId, gameTypeFromPayload);
 
             // check player account exist
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)tpId, getReq.Payload.OperatorCustId);
@@ -177,13 +177,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             string logName = $"{_commonTp}_PlaceBet";
             var getReq = JsonConvert.DeserializeObject<BettingData_MaxGame>(request);
+            var gameTypeFromPayload = getReq.Payload?.GameType?.ToLower() ?? "";
 
-            if (string.IsNullOrEmpty(getReq.Payload.GameType) || !_gameOfTpId.ContainsKey(getReq.Payload.GameType.ToLower()))
+            if (string.IsNullOrEmpty(getReq?.Payload?.GameType) || !_gameOfTpId.ContainsKey(gameTypeFromPayload))
             {
                 return new BaseResp(ErrorCodeOfMaxGame.OpSideGameNotFound);
             }
-            var tpId = _gameOfTpId[getReq.Payload.GameType.ToLower()];
-            var gameType = _thirdPartyBLL.GetGameType((int)tpId, getReq.Payload.GameType.ToLower());
+            var tpId = _gameOfTpId[gameTypeFromPayload];
+            var gameType = _thirdPartyBLL.GetGameType((int)tpId, gameTypeFromPayload);
 
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)tpId, getReq.Payload.OperatorCustId);
             if (tpCheck == null)
