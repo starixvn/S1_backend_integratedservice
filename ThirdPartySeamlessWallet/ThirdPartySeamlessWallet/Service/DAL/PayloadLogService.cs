@@ -63,7 +63,7 @@ public class PayloadLogService
 
         try {
             var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
-            var payload = getReq.Payload.ToString();
+            var payload = getReq?.Payload?.ToString() ?? "{}";
             
             var gameType = meta?.GameType
                 ?? JsonConvert.DeserializeObject<DetailedRequestBodyPayload>(payload)?.GameType

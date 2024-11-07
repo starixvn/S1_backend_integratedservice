@@ -56,7 +56,7 @@ public class PayloadLogService: IPayloadLogger
             var gameType = meta?.GameType
                 ?? "Unknown"; 
             var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
-            var payload = getReq.Payload.ToString();
+            var payload = getReq?.Payload?.ToString() ?? "";
             var environment = _environmentName;
 
             var logParams = new DynamicParameters(new {
@@ -67,7 +67,7 @@ public class PayloadLogService: IPayloadLogger
                 GameType = gameType,
                 Environment = environment,
             });
-            
+
             ExecuteWithPartition(
                 getReq.TimeStamp,
                 InsertDetailedPayloadSpName,
