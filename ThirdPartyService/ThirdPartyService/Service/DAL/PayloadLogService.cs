@@ -51,22 +51,23 @@ public class PayloadLogService: IPayloadLogger
             ?? "Unknown";
          if (_config.ExcludedActions.Contains(action)) return;
 
-        var gameType = meta?.GameType
-            ?? "Unknown"; 
-        var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
-        var payload = getReq.Payload.ToString();
-        var environment = _environmentName;
-
-        var logParams = new DynamicParameters(new {
-            getReq.Seq,
-            getReq.TimeStamp,
-            Payload = payload,
-            Action = action,
-            GameType = gameType,
-            Environment = environment,
-        });
-
         try {
+            
+            var gameType = meta?.GameType
+                ?? "Unknown"; 
+            var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
+            var payload = getReq.Payload.ToString();
+            var environment = _environmentName;
+
+            var logParams = new DynamicParameters(new {
+                getReq.Seq,
+                getReq.TimeStamp,
+                Payload = payload,
+                Action = action,
+                GameType = gameType,
+                Environment = environment,
+            });
+            
             ExecuteWithPartition(
                 getReq.TimeStamp,
                 InsertDetailedPayloadSpName,

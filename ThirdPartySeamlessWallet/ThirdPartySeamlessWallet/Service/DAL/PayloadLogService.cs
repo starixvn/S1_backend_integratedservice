@@ -59,28 +59,26 @@ public class PayloadLogService
         var action = meta?.Action 
             ?? (new StackTrace().GetFrame(1).GetMethod().Name)
             ?? "Unknown";
-
         if (_config.ExcludedActions.Contains(action)) return;
 
-        var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
-        var payload = getReq.Payload.ToString();
-        
-        var gameType = meta?.GameType
-            ?? JsonConvert.DeserializeObject<DetailedRequestBodyPayload>(payload)?.GameType
-            ?? "Unknown"; 
-
-        var environment = _environmentName;
-
-        var logParams = new DynamicParameters(new {
-            getReq.Seq,
-            getReq.TimeStamp,
-            Payload = payload,
-            Action = action,
-            GameType = gameType,
-            Environment = environment,
-        });
-
         try {
+            var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
+            var payload = getReq.Payload.ToString();
+            
+            var gameType = meta?.GameType
+                ?? JsonConvert.DeserializeObject<DetailedRequestBodyPayload>(payload)?.GameType
+                ?? "Unknown"; 
+
+            var environment = _environmentName;
+
+            var logParams = new DynamicParameters(new {
+                getReq.Seq,
+                getReq.TimeStamp,
+                Payload = payload,
+                Action = action,
+                GameType = gameType,
+                Environment = environment,
+            });
 
             _partitionService.Execute(
                 getReq.TimeStamp,
