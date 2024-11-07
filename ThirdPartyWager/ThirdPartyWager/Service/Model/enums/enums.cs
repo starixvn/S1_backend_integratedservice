@@ -68,7 +68,8 @@
         SabaPlay = 66,
         UuSlots = 67,
         Live22 = 68,
-        FastSpin = 69
+        FastSpin = 69,
+        SBPKeno = 71
     }
 
     public enum GameType
@@ -123,6 +124,7 @@
         UuSlots_RNG = 120,
         Live22_RNG = 121,
         FastSpin_RNG = 122,
+        SBP_Keno = 124,
         PP_RNG = 7,
         PP_LiveCasino = 16,
     }

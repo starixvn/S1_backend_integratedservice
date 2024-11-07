@@ -24,6 +24,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.FastSpin, AddFastSpin},
                 { Tp.Allbet, AddAllbet},
                 { Tp.FaChai, AddFaChai},
+                { Tp.SBPKeno, AddKeno},
                // {Tp.PP, AddPragmaticPlay },
                 //Loki comment:
                 //{ Tp.JILI, AddJILI},
@@ -702,6 +703,14 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<TicketMaxGame>();
 
+            return services;
+        }
+
+        private IServiceCollection AddKeno(IServiceCollection services)
+        {
+            services.AddSingleton<WageSBPKenoService>();
+            services.AddSingleton<TicketSBPKenoBLL>();
+            services.AddHostedService<TicketKeno>();
             return services;
         }
 
