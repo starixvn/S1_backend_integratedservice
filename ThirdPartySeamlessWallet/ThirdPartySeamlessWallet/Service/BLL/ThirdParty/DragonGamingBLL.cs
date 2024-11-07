@@ -78,7 +78,7 @@ public class DragonGamingBLL : IDragonGamingBLL
             var gameType = _thirdPartyBll.GetGameType((int)_thisTp, tpGameType);
             var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
 
-            return new BalanceResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.account_id, request.token, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
+            return new BalanceResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, request.account_id, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
         }
         catch (Exception ex)
         {
@@ -103,7 +103,7 @@ public class DragonGamingBLL : IDragonGamingBLL
             }
 
             var gameType = GetGameType(request.game_type);
-            if(gameType is GameType.None) 
+            if (gameType is GameType.None)
                 return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.GameTypeInvalid, request.token);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             int result = PlaceBet(request, tpCustInfo, gameType, out decimal tpAffterAmount);
