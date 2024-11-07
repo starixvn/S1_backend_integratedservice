@@ -12,7 +12,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiPegasusBLL _apiPegasusBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly int _timeZone = 0;
-        private readonly List<TpCurrencyConfig> _currencyConfigList = new();
         private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
 
         public FinancePegasusBLL(IServiceProvider provider)
@@ -37,9 +36,9 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 setting = _siteConfigDic[siteData.SiteId];
-                PegasusConfig(setting);
+                PegasusConfig(setting, out List<TpCurrencyConfig> currencyConfigList);
 
-                foreach (var currencyConfig in _currencyConfigList)
+                foreach (var currencyConfig in currencyConfigList)
                 {
                     var getWagerSummary = await _apiPegasusBll.GetBetSummaryByTime(setting["ApiUrl"], currencyConfig.SecretKey, currencyConfig.MerchantID, reportTime.startTime, reportTime.endTime);
 
@@ -100,18 +99,18 @@ namespace ThirdPartyWager.Service.BLL
             return reportTime;
         }
 
-        private void PegasusConfig(IReadOnlyDictionary<string, string> inputs)
+        private void PegasusConfig(Dictionary<string, string> inputs, out List<TpCurrencyConfig> currencyConfigList)
         {
-            foreach (var tpCurrencyId in _commonBll.GetTpCurrencyList((int)Tp.Pegasus))
+            var currencyData = _commonBll.GetTpCurrencyList((int)Tp.Pegasus);
+            currencyConfigList = new List<TpCurrencyConfig>();
+
+            foreach (var tpCurrencyId in currencyData)
             {
-                if (inputs.ContainsKey($"Currency_{tpCurrencyId.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"Currency_{tpCurrencyId.TpCurrencyId}"]))
+                var currencyConfig = JsonConvert.DeserializeObject<TpCurrencyConfig>(inputs[$"Currency_{tpCurrencyId.TpCurrencyId}"]);
+                if (currencyConfig is not null)
                 {
-                    var currencyConfig = JsonConvert.DeserializeObject<TpCurrencyConfig>(inputs[$"Currency_{tpCurrencyId.TpCurrencyId}"]);
-                    if (currencyConfig is not null)
-                    {
-                        currencyConfig.Currency = tpCurrencyId.TpCurrencyId;
-                        _currencyConfigList.Add(currencyConfig);
-                    }
+                    currencyConfig.Currency = tpCurrencyId.TpCurrencyId;
+                    currencyConfigList.Add(currencyConfig);
                 }
             }
         }
