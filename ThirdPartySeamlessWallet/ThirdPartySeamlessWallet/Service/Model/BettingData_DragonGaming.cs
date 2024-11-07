@@ -90,12 +90,12 @@ public class CommonErrorResponse_DragonGaming : CommonResponse_DragonGaming
     public string error_code { get; set; }
     public string error_message { get; set; }
 
-    public CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming errorId)
+    public CommonErrorResponse_DragonGaming(int errorId)
     {
         status = (int)StatusOfDragonGaming.Fail;
-        this.error_id = (int)errorId;
-        this.error_code = ((int)errorId).ToString();
-        this.error_message = errorId.GetEnumDescription();
+        this.error_id = errorId;
+        this.error_code = errorId.GetErrorIdInfo().Code;
+        this.error_message = errorId.GetErrorIdInfo().Message;
     }
 }
 

@@ -44,13 +44,13 @@ public class DragonGamingBLL : IDragonGamingBLL
 
             if (!_authBll.Authenticate(token, out TpCustInfoAuth tpCustInfoAuth))
             {
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.PlayerInvalid);
+                return new CommonErrorResponse_DragonGaming(2012);
             }
 
             var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpCustInfoAuth.TpUserName);
             if (tpCheck == null || tpCheck.Locked)
             {
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.PlayerFrozen);
+                return new CommonErrorResponse_DragonGaming(2024);
             }
 
             var gameType = _thirdPartyBll.GetGameType((int)_thisTp, tpGameType);
@@ -60,7 +60,7 @@ public class DragonGamingBLL : IDragonGamingBLL
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming GetSession Exception:{ex.Message}");
-            return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.InternalError);
+            return new CommonErrorResponse_DragonGaming(2035);
         }
     }
 
@@ -71,7 +71,7 @@ public class DragonGamingBLL : IDragonGamingBLL
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             if (tpCustInfo is null)
             {
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.PlayerInvalid);
+                return new CommonErrorResponse_DragonGaming(2014);
             }
 
             var (token, tpUserName, tpGameType) = GetToken(request.token);
@@ -83,7 +83,7 @@ public class DragonGamingBLL : IDragonGamingBLL
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming GetBalance Exception:{ex.Message}");
-            return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.InternalError);
+            return new CommonErrorResponse_DragonGaming(2035);
         }
     }
 
@@ -95,16 +95,16 @@ public class DragonGamingBLL : IDragonGamingBLL
 
             if (tpCheck == null)
             {
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.PlayerInvalid);
+                return new CommonErrorResponse_DragonGaming(2014);
             }
             if (tpCheck.Locked)
             {
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.PlayerFrozen);
+                return new CommonErrorResponse_DragonGaming(2024);
             }
 
             var gameType = GetGameType(request.game_type);
             if (gameType is GameType.None)
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.GameTypeInvalid);
+                return new CommonErrorResponse_DragonGaming(2018);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             int result = PlaceBet(request, tpCustInfo, gameType, out decimal tpAffterAmount);
             if (result > 0)
@@ -125,15 +125,15 @@ public class DragonGamingBLL : IDragonGamingBLL
             else if (tpAffterAmount < 0)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.Insufficient);
+                return new CommonErrorResponse_DragonGaming(2028);
             }
-
-            return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.DebitInternalError);
+            _logger.LogInformation($"DragonGaming-Debit Internal Error. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount}");
+            return new CommonErrorResponse_DragonGaming(2035);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming Debit Exception:{ex.Message}");
-            return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.InternalError);
+            return new CommonErrorResponse_DragonGaming(2035);
         }
     }
 
@@ -143,7 +143,7 @@ public class DragonGamingBLL : IDragonGamingBLL
         {
             var gameType = GetGameType(request.game_type);
             if (gameType is GameType.None)
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.GameTypeInvalid);
+                return new CommonErrorResponse_DragonGaming(2018);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             int result = 0;
             decimal tpAffterAmount = 0m;
@@ -168,15 +168,16 @@ public class DragonGamingBLL : IDragonGamingBLL
             else if (result == -2)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.NoExistVaildBet);
+                _logger.LogInformation($"DragonGaming-not exist vaild bet. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount}");
+                return new CommonErrorResponse_DragonGaming(2035);
             }
-
-            return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.CreditInternalError);
+            _logger.LogInformation($"DragonGaming-Credit Internal Error. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount}");
+            return new CommonErrorResponse_DragonGaming(2035);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming Credit Exception:{ex.Message}");
-            return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.InternalError);
+            return new CommonErrorResponse_DragonGaming(2035);
         }
     }
 
@@ -186,7 +187,7 @@ public class DragonGamingBLL : IDragonGamingBLL
         {
             var gameType = GetGameType(request.game_type);
             if (gameType is GameType.None)
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.GameTypeInvalid);
+                return new CommonErrorResponse_DragonGaming(2018);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
 
             int result = CancelBet(request, tpCustInfo, out decimal tpAffterAmount);
@@ -205,13 +206,13 @@ public class DragonGamingBLL : IDragonGamingBLL
                 _logger.LogInformation($"DragonGaming-Refund Duplicate Request. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount},original_transaction_id={request.original_transaction_id}");
                 return new DebitCreditRefundResponse_DragonGaming(request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
-
-            return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.RefundInternalError);
+            _logger.LogInformation($"DragonGaming-Refund Internal Error. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount}");
+            return new CommonErrorResponse_DragonGaming(2035);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming Refund Exception:{ex.Message}");
-            return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.InternalError);
+            return new CommonErrorResponse_DragonGaming(2035);
         }
     }
 
