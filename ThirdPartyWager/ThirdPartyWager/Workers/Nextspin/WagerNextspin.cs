@@ -94,6 +94,7 @@ namespace ThirdPartyWager.Workers
 
                 if (thisTime < DateTime.UtcNow)
                 {
+                    thisTime = thisTime.AddMinutes(dataRangeMins);
                     var timeCast = _dateTimeHelper.GetTimeByMinuteRevert(dataRangeMins, TimeZone, "yyyyMMddTHHmmss", thisTime);
                     var isSuccess = await _nextspinBLL.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
