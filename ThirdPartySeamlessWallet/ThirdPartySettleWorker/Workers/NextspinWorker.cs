@@ -57,7 +57,7 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 1000);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 5000);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
