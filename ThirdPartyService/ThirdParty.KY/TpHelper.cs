@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
@@ -11,8 +12,6 @@ namespace ThirdParty.KY
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, KYConfig> _siteConfigDic;
-        private const string _formatOfTime = "yyyyMMddHHmmssfff";
-        private const int _utc = -4;
 
         public TpHelper(IServiceProvider provider)
         {
@@ -22,39 +21,39 @@ namespace ThirdParty.KY
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var config = _siteConfigDic[tpCustInfo.SiteId];
-            var currentAt = new DateTimeOffset(DateTime.UtcNow);
 
             string ApiUrl = config.ApiUrl;
             string Agent = config.Agent;
             string OperateSubtype = config.OperateSubtype;
-            string timestamp = currentAt.ToUnixTimeMilliseconds().ToString();
-            var Md5key = config.Md5Key;
-            var DesKey = config.DesKey;
+            string Md5key = config.Md5Key;
+            string DesKey = config.DesKey;
 
-            string account = inputs.ContainsKey("account") && !string.IsNullOrEmpty(inputs["account"]) ? inputs["account"] : "";
-            string money = inputs.ContainsKey("money") && !string.IsNullOrEmpty(inputs["money"]) ? inputs["money"] : "";
-            // TODO: How to not exceed 100 characters?
-            string orderId = $"{Agent}{currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime)}{account}";
-            string ip = inputs.ContainsKey("ip") && !string.IsNullOrEmpty(inputs["ip"]) ? inputs["ip"] : "";
-            string lineCode = inputs.ContainsKey("lineCode") && !string.IsNullOrEmpty(inputs["lineCode"]) ? inputs["lineCode"] : "";
-            string kindId = inputs.ContainsKey("kindId") && !string.IsNullOrEmpty(inputs["kindId"]) ? inputs["kindId"] : "0";
+            var currentAt = new DateTimeOffset(DateTime.UtcNow);
+            var timestamp = currentAt.ToUnixTimeMilliseconds().ToString();
+            var timecnv = currentAt.ToString("yyyyMMddHHmmssfff");
+
+            string account = tpCustInfo.TpUserName;
+            string orderId = $"{Agent}{timecnv}{account}";
+            string ip = inputs.ContainsKey("ClientIP") && !string.IsNullOrEmpty(inputs["ClientIP"]) ? inputs["ClientIP"] : "";
+            string lineCode = tpCustInfo.SiteId.ToString();
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
 
             var parameters = new Dictionary<string, string>()
             {
                 { "s", OperateSubtype },
                 { "account", account },
-                { "money", money },
+                { "money", "0" },
                 { "orderid", orderId },
                 { "ip", ip },
                 { "lineCode", lineCode },
-                { "KindID", kindId }
+                { "KindID", gameId }
             };
 
             var sParams = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
             string eParams = AesEncrypt(sParams, DesKey);
             string postParams = $"agent={Agent}&timestamp={timestamp}param={sParams}&key={ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()}";
 
-            var result = HttpGet($"{ApiUrl}channelHandle", postParams, "application/json");
+            var result = HttpGet(ApiUrl, postParams);
 
             ApiResult oApiResult = new ApiResult();
             if (string.IsNullOrEmpty(result) || !IsJSON(result))
@@ -62,30 +61,41 @@ namespace ThirdParty.KY
                 oApiResult.ErrorCode = ErrorCode.Fail;
                 oApiResult.RawMessage = "No Result";
                 oApiResult.RawErrorCode = "1";
-                return oApiResult;
-            }
-
-            var json = JsonConvert.DeserializeObject<LoginResult>(result);
-            ErrorCodeEnum errorMessage = (ErrorCodeEnum)(json.DataResult.Code);
-
-            if (errorMessage == ErrorCodeEnum.Success)
-            {
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = json.DataResult.Url;
             }
             else
             {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = errorMessage.ToString();
-                oApiResult.RawErrorCode = ((int)errorMessage).ToString();
-            }
+                var json = JsonConvert.DeserializeObject<LoginResult>(result);
+                ErrorCodeEnum errorMessage = (ErrorCodeEnum)(json.d.code);
 
+                if (json.d.code == (int)ErrorCodeEnum.Success)
+                {
+                    var uri = new Uri(json.d.url);
+                    var forward = json.d.url;
+                    string pLang = HttpUtility.ParseQueryString(uri.Query).Get("lang");
+                    if (pLang != TpLangId)
+                    {
+                        forward = forward.Replace($"lang={pLang}", $"lang={TpLangId}");
+                    }
+
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Message = json.d.url;
+                }
+                else
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = errorMessage.ToString();
+                    oApiResult.RawErrorCode = json.d.code.ToString();
+                }
+            }
             return oApiResult;
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            return new()
+            {
+                ErrorCode = ErrorCode.Success
+            };
         }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

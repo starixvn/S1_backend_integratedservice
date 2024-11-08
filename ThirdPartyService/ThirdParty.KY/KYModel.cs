@@ -13,22 +13,14 @@ namespace ThirdParty.KY
 
     public class LoginResult
     {
-        [JsonProperty("s")]
-        public int SuboperationType { get; set; }
-
-        [JsonProperty("m")]
-        public string MainOperationType { get; set; }
-
-        [JsonProperty("d")]
-        public LoginData DataResult { get; set; }
+        public int s { get; set; }
+        public string m { get; set; }
+        public LoginData d { get; set; }
     }
 
     public class LoginData
     {
-        [JsonProperty("code")]
-        public int Code { get; set; }
-
-        [JsonProperty("url")]
-        public string Url { get; set; }
+        public int code { get; set; }
+        public string url { get; set; }
     }
 }
