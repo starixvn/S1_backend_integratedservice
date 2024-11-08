@@ -20,11 +20,6 @@ namespace ThirdPartyWager.Service.DAL
             return _mainDbClient.QueryFirst<ThirdPartyModel>("Tp_Get", new { TpId = tpId });
         }
 
-        public ThirdPartyModel GetThirdPartyBySite(int tpId, int siteId)
-        {
-            return _mainDbClient.QueryFirst<ThirdPartyModel>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId });
-        }
-
         public int SetThirdPartySetting(int tpId, string setting)
         {
             return _mainDbClient.Execute("Service_Tp_Set", new { TpId = tpId, Setting = setting });

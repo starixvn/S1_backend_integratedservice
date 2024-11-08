@@ -37,15 +37,24 @@ namespace ThirdPartyWager.Service.BLL
 
             var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
+            
+            var getReportData = JsonConvert.DeserializeObject<List<TransactionDetails>>(JsonConvert.SerializeObject(reportData));
+            var data = getReportData.GroupBy(i => i.CurrencyName).Select(g => new
+            {
+                Currency = g.Key,
+                TotalBet = g.Sum(s => s.TotalBet),
+                TotalRolling = g.Sum(s => s.TotalRolling),
+                Winlose = g.Sum(s => s.Winlose),
+            });
 
-            foreach (var item in reportData)
+            foreach (var item in data)
             {
                 dailyData.Add(new FincanceDailySummary()
                 {
                     SummaryType = SummaryType.TpBetRecord,
                     SummaryDate = reportDate,
                     TpId = tpId,
-                    CurrencyId = _currencyId[item.CurrencyName],
+                    CurrencyId = _currencyId[item.Currency],
                     Stake = item.TotalBet,
                     ValidBet = item.TotalRolling,
                     Payout = item.TotalBet + item.Winlose,

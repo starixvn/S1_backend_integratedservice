@@ -10,8 +10,8 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
-    [Route("[controller]/[action]")]
     [ApiController]
+    [Produces("application/xml")]
     public class SimplePlayController : ControllerBase
     {
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -25,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _gameType = 0;
         private readonly string _tpName = Tp.SimplePlay.ToString();
         private readonly SimplePlayConfig _siteConfig;
+        private readonly Dictionary<string, SimplePlayConfig> _siteConfigDic;
 
         public SimplePlayController(IServiceProvider provider)
         {
@@ -38,6 +39,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _thisTp = (int)Tp.SimplePlay;
             _gameType = (int)GameType.SimplePlay_RNG;
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SimplePlayConfig>(_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<SimplePlayConfig>(_tpName);
         }
 
         #region Request
@@ -61,13 +63,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<CommonResp> GetUserBalanceAsync()
+        [Route("[controller]/GetUserBalance")]
+        [Route("[controller]/{sitename}/GetUserBalance")]
+        public async Task<CommonResp> GetUserBalanceAsync(string sitename = "")
         {
             var resp = new CommonResp();
             try
             {
-                var Content = await getRequestParamAsync();
+                var Content = await GetRequestParamAsync();
                 var getReq = JsonConvert.DeserializeObject<BalanceData_SimplePlay>(JsonConvert.SerializeObject(Content));
 
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache(_thisTp, getReq.username);
@@ -103,8 +106,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<CommonResp> PlaceBetAsync()
+        [Route("[controller]/PlaceBet")]
+        [Route("[controller]/{sitename}/PlaceBet")]
+        public async Task<CommonResp> PlaceBetAsync(string sitename = "")
         {
             string logName = $"{_tpName}_PlaceBet";
             /*
@@ -114,11 +118,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             var resp = new CommonResp();
             try
             {
-                var Content = await getRequestParamAsync();
+                var Content = await GetRequestParamAsync();
                 var getReq = JsonConvert.DeserializeObject<BettingData_SimplePlay>(JsonConvert.SerializeObject(Content));
 
                 // 檢查系統長度的單號
-                if (!checkTransIdLength(getReq.TransId))
+                if (!CheckTransIdLength(getReq.TransId))
                 {
                     resp.error = (int)SimplePlayErrorCode.Error;
                     _log2File.Error($"TransId length error {getReq.TransId}", logName);
@@ -197,8 +201,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<CommonResp> PlayerWinAsync()
+        [Route("[controller]/PlayerWin")]
+        [Route("[controller]/{sitename}/PlayerWin")]
+        public async Task<CommonResp> PlayerWinAsync(string sitename = "")
         {
             string logName = $"{_tpName}_PlayerWin";
             /*
@@ -215,11 +220,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             var resp = new CommonResp();
             try
             {
-                var Content = await getRequestParamAsync();
+                var Content = await GetRequestParamAsync();
                 var getReq = JsonConvert.DeserializeObject<PayoutData_SimplePlay>(JsonConvert.SerializeObject(Content));
 
                 // 檢查系統長度的單號
-                if (!checkTransIdLength(getReq.TransId))
+                if (!CheckTransIdLength(getReq.TransId))
                 {
                     resp.error = (int)SimplePlayErrorCode.Error;
                     _log2File.Error($"TransId length error {getReq.TransId}", logName);
@@ -284,8 +289,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<CommonResp> PlayerLostAsync()
+        [Route("[controller]/PlayerLost")]
+        [Route("[controller]/{sitename}/PlayerLost")]
+        public async Task<CommonResp> PlayerLostAsync(string sitename = "")
         {
             string logName = $"{_tpName}_PlayerLost";
             /*
@@ -301,11 +307,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             var resp = new CommonResp();
             try
             {
-                var Content = await getRequestParamAsync();
+                var Content = await GetRequestParamAsync();
                 var getReq = JsonConvert.DeserializeObject<PayoutData_SimplePlay>(JsonConvert.SerializeObject(Content));
 
                 // 檢查系統長度的單號
-                if (!checkTransIdLength(getReq.TransId))
+                if (!CheckTransIdLength(getReq.TransId))
                 {
                     resp.error = (int)SimplePlayErrorCode.Error;
                     _log2File.Error($"TransId length error {getReq.TransId}", logName);
@@ -361,8 +367,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<CommonResp> PlaceBetCancelAsync()
+        [Route("[controller]/PlaceBetCancel")]
+        [Route("[controller]/{sitename}/PlaceBetCancel")]
+        public async Task<CommonResp> PlaceBetCancelAsync(string sitename = "")
         {
             string logName = $"{_tpName}_PlaceBetCancel";
             /*
@@ -373,7 +380,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var resp = new CommonResp();
             try
             {
-                var Content = await getRequestParamAsync();
+                var Content = await GetRequestParamAsync();
                 var getReq = JsonConvert.DeserializeObject<CancelBetData_SimplePlay>(JsonConvert.SerializeObject(Content));
 
                 if (!string.Equals(getReq.gametype, "slot", StringComparison.OrdinalIgnoreCase))
@@ -393,7 +400,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
 
                 // 超出系統長度的單號，回傳成功避免對方重複CALL
-                if (!checkTransIdLength(getReq.TransId))
+                if (!CheckTransIdLength(getReq.TransId))
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, getReq.username, _gameType);
                     resp.error = (int)SimplePlayErrorCode.Success;
@@ -444,20 +451,20 @@ namespace ThirdPartySeamlessWallet.Controllers
             return resp;
         }
 
-        private async Task<Dictionary<string, string>> getRequestParamAsync()
+        private async Task<Dictionary<string, string>> GetRequestParamAsync(string sitename = "")
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
             var content = HttpUtility.UrlDecode(Content);
 
-            var config = _siteConfig;
+            var config = sitename == "" ? _siteConfig : _siteConfigDic[sitename];
             var uriQuery = _tools.DESDecrypt(content, config.EncryptKey);
             Dictionary<string, string> p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
             _log2File.Info($"{JsonConvert.SerializeObject(p)}", "SimplePlay_RequsetDecrypt");
             return p;
         }
 
-        private bool checkTransIdLength(string TransId)
+        private static bool CheckTransIdLength(string TransId)
         {
             return TransId.Length > 50 ? false : true;
         }

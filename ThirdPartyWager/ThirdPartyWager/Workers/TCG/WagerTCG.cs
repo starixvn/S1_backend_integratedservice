@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model;
@@ -13,6 +15,9 @@ namespace ThirdPartyWager.Workers
         private readonly TCGBLL _tcgBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
+        private readonly IEnumerable<TpCurrency> _tpCurrency;
+        private readonly IEnumerable<ServerInfo> _serverInfoList;
+        private readonly IEnumerable<TpListModel> _siteList;
 
         private Timer _timer;
         private Timer _unSettleTimer;
@@ -29,6 +34,9 @@ namespace ThirdPartyWager.Workers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tcgBLL = provider.GetRequiredService<TCGBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(tpId);
+            _serverInfoList = _commonBLL.GetSiteList();
+            _siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -46,20 +54,22 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("WagerTimerType", WagerTimerType.Wager.ToString());
             var quick = 0;
             var failed = 0;
-            var tasks = new List<Task>();
             var intervalMins = 2;
             try
-            {
-                var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-
-                foreach (var item in tpCurrencyList)
+            {               
+                foreach (var site in _siteList)
                 {
-                    var currency = item.TpCurrencyId;
-                    tasks.Add(Task.Run(() =>
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+                    
+                    var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(_serverInfoList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                    foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)).Select(i => i.TpCurrencyId))
                     {
                         try
                         {
-                            var res = Main(currency);
+                            var res = Main(currency, site.SiteId);
                             if (res.Result == 1)
                             {
                                 quick = 1;
@@ -70,10 +80,8 @@ namespace ThirdPartyWager.Workers
                             _logger.LogError(ex, $"WagerTCG.DoSettle.{currency}.Exception");
                             Interlocked.Increment(ref failed);
                         }
-                    }));
+                    }
                 }
-                var t = Task.WhenAll(tasks);
-                t.Wait();
 
             }
             catch (Exception ex)
@@ -87,7 +95,7 @@ namespace ThirdPartyWager.Workers
             }
         }
 
-        private async Task<int> Main(string currency)
+        private async Task<int> Main(string currency, int siteId)
         {
             var quick = 0;
             var timerType = WagerTimerType.Wager;
@@ -101,8 +109,8 @@ namespace ThirdPartyWager.Workers
                 var batchTime = new DateTimeOffset(thisTime);
                 var timezoneBatchTime = batchTime.ToOffset(new TimeSpan(TimeZone, 0, 0));
                 var isSuccess = currency == "VNDK" ?
-                    await _tcgBLL.GetWagersAsync<TCGVNWagerData>(timezoneBatchTime, currency, timerType) :
-                    await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(timezoneBatchTime, currency, timerType);
+                    await _tcgBLL.GetWagersAsync<TCGVNWagerData>(timezoneBatchTime, currency, timerType, siteId) :
+                    await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(timezoneBatchTime, currency, timerType, siteId);
                 if (isSuccess)
                 {
                     _logger.LogInformation($"TCG {currency} Get {timezoneBatchTime:yyyyMMddHHmm} batch file success.");
@@ -125,19 +133,22 @@ namespace ThirdPartyWager.Workers
 
             var quick = 0;
             var failed = 0;
-            var tasks = new List<Task>();
             var intervalMins = 5;
             try
             {
-                var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-
-                foreach (var currency in tpCurrencyList.Select(i => i.TpCurrencyId))
+                foreach (var site in _siteList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+
+                    var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(_serverInfoList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                    foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)).Select(i => i.TpCurrencyId))
                     {
                         try
                         {
-                            var res = MainUnsettle(currency);
+                            var res = MainUnsettle(currency, site.SiteId);
                             if (res.Result == 1)
                             {
                                 quick = 1;
@@ -148,10 +159,8 @@ namespace ThirdPartyWager.Workers
                             _logger.LogError(ex, $"WagerTCG.DoUnsettle.{currency}.Exception");
                             Interlocked.Increment(ref failed);
                         }
-                    }));
+                    }
                 }
-                var t = Task.WhenAll(tasks);
-                t.Wait();
             }
             catch (Exception ex)
             {
@@ -164,7 +173,7 @@ namespace ThirdPartyWager.Workers
             }
         }
 
-        private async Task<int> MainUnsettle(string currency)
+        private async Task<int> MainUnsettle(string currency, int siteId)
         {
             var quick = 0;
             var timerType = (int)WagerTimerType.UnSettle;
@@ -184,7 +193,7 @@ namespace ThirdPartyWager.Workers
             if (currency == "VNDK" && batchTime.Is15Minute())
             {
                 //15分鐘一個批次
-                isSuccess = await _tcgBLL.GetUnsettleAsync<TCGVNWagerData>(timezoneBatchTime, currency);
+                isSuccess = await _tcgBLL.GetUnsettleAsync<TCGVNWagerData>(timezoneBatchTime, currency, siteId);
                 if (!isSuccess)
                 {
                     return quick;
@@ -192,7 +201,7 @@ namespace ThirdPartyWager.Workers
             }
 
             //其餘類型5分鐘一個批次
-            isSuccess = await _tcgBLL.GetUnsettleAsync<TCGSEAWagerData>(timezoneBatchTime, currency);
+            isSuccess = await _tcgBLL.GetUnsettleAsync<TCGSEAWagerData>(timezoneBatchTime, currency, siteId);
             if (isSuccess)
             {
                 _logger.LogInformation($"TCG {currency} Get Unsettle {timezoneBatchTime:yyyyMMddHHmm} batch file success.");
@@ -219,10 +228,11 @@ namespace ThirdPartyWager.Workers
                 foreach (var redo in _commonBLL.GetTpWagerRedo(tpId))
                 {
                     var time = redo.Time;
-                    var currency = JsonConvert.DeserializeObject<TCGRedoObj>(redo.Parameter).TpCurrencyId;
+                    var redoObj = JsonConvert.DeserializeObject<TCGRedoObj>(redo.Parameter);
+                    var currency = redoObj.TpCurrencyId;
                     var isSuccess = currency == "VNDK" ?
-                         await _tcgBLL.GetWagersAsync<TCGVNWagerData>(time, currency, timerType) :
-                         await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(time, currency, timerType);
+                         await _tcgBLL.GetWagersAsync<TCGVNWagerData>(time, currency, timerType, redoObj.SiteId) :
+                         await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(time, currency, timerType, redoObj.SiteId);
 
                     if (isSuccess)
                     {
@@ -249,18 +259,21 @@ namespace ThirdPartyWager.Workers
 
             var quick = 0;
             var failed = 0;
-            var tasks = new List<Task>();
             var intervalMins = 5;
+
             try
-            {
-                var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-                var currency = tpCurrencyList.FirstOrDefault(x => x.TpCurrencyId == "VNDK")?.TpCurrencyId;
-                
-                tasks.Add(Task.Run(() =>
+            {           
+                foreach (var site in _siteList)
                 {
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+
+                    var currency = _tpCurrency.FirstOrDefault(x => x.TpCurrencyId == "VNDK")?.TpCurrencyId;                  
                     try
                     {
-                        var res = MainCancel(currency);
+                        var res = MainCancel(currency, site.SiteId);
                         if (res.Result == 1)
                         {
                             quick = 1;
@@ -271,10 +284,7 @@ namespace ThirdPartyWager.Workers
                         _logger.LogError(ex, $"WagerTCG.DoCancel.{currency}.Exception");
                         Interlocked.Increment(ref failed);
                     }
-                }));
-                
-                var t = Task.WhenAll(tasks);
-                t.Wait();
+                }
             }
             catch (Exception ex)
             {
@@ -287,7 +297,7 @@ namespace ThirdPartyWager.Workers
             }
         }
         
-        private async Task<int> MainCancel(string currency)
+        private async Task<int> MainCancel(string currency, int siteId)
         {
             var quick = 0;
             var timerType = WagerTimerType.Cancel;
@@ -300,7 +310,7 @@ namespace ThirdPartyWager.Workers
             {
                 var batchTime = new DateTimeOffset(thisTime);
                 var timezoneBatchTime = batchTime.ToOffset(new TimeSpan(TimeZone, 0, 0));
-                var isSuccess = await _tcgBLL.GetWagersAsync<TCGVNCancelWagerData>(timezoneBatchTime, currency, timerType);
+                var isSuccess = await _tcgBLL.GetWagersAsync<TCGVNCancelWagerData>(timezoneBatchTime, currency, timerType, siteId);
                 if (isSuccess)
                 {
                     _logger.LogInformation($"TCG {currency} Get Cancel {timezoneBatchTime:yyyyMMddHHmm} batch file success.");

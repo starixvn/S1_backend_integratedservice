@@ -1177,7 +1177,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         return -2;
                     }
                     // 檢查是否有派彩過
-                    if (bettrans.Any(i => i.TicketType == BettransType.Payout))
+                    if (bettrans.Any(i => i.TicketType == BettransType.Payout && i.Seq == payoutData_MaxGame.Seq))
                     {
                         return -1;
                     }
@@ -1614,7 +1614,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 gameType,
                                 tpCategory,
                                 betDataSet.TicketNo,
-                                TransType.Payout,
+                                TransType.Prize,
                                 null,
                                 out afterAmount,
                                 "Payout",
@@ -1632,7 +1632,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 tpCustInfo.UserName,
                                 betDataSet.Payout,
                                 tpId,
-                                TransType.Payout,
+                                TransType.Prize,
                                 $"Payout: {betDataSet.Payout:#,##0.##}",
                                 betDataSet.TicketNo,
                                 out afterAmount,

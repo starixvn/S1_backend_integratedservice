@@ -138,5 +138,6 @@
     public class TFGBettrans
     {
         public string currency { get; set; }
+        public string loginName { get; set; }
     }
 }

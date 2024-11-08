@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
@@ -9,6 +10,7 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiAMBBLL
     {
+        private readonly IConfiguration _configuration;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly Log2File _log2File;
@@ -18,6 +20,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public ApiAMBBLL(IServiceProvider provider)
         {
+            _configuration = provider.GetRequiredService<IConfiguration>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
@@ -118,7 +121,7 @@ namespace ThirdPartyWager.Service.BLL
             request.Headers.Add(headerKey, _common.HMACSHA512(param, secretKey));
             _log2File.InsertRequestLog(_tpName, url, $"{param}\r\n{JsonConvert.SerializeObject(request.Headers)}", "1");
 
-            var response = await _httpHelper.GetClient().SendAsync(request);
+            var response = await _httpHelper.GetClientWithHandler(CreateHandler()).SendAsync(request);
             var result = response.Content.ReadAsStringAsync().Result;
 
             if (!response.IsSuccessStatusCode)
@@ -144,6 +147,22 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             return result;
+        }
+
+        private HttpClientHandler CreateHandler()
+        {
+            var handler = new HttpClientHandler()
+            {
+                AutomaticDecompression = DecompressionMethods.GZip,
+            };
+            if (!string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost")))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
+                    _configuration.GetValue<int>("ProxyPort"));
+            }
+
+            return handler;
         }
     }
 }

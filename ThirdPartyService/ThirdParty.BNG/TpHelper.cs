@@ -15,11 +15,11 @@ namespace ThirdParty.BNG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly BNGConfig _siteBNGConfig;
+        private readonly Dictionary<int, BNGConfig> _allSiteConfig;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteBNGConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<BNGConfig>(TpEnum.BNG.ToString());
+            _allSiteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<BNGConfig>(TpEnum.BNG.ToString());
         }
         public class BNGConfig : TpSiteConfig
         {
@@ -104,6 +104,7 @@ namespace ThirdParty.BNG
         {
             ApiResult oApiResult = new ApiResult();
 
+            var _siteBNGConfig = _allSiteConfig[tpCustInfo.SiteId];
             string apiUrl = _siteBNGConfig.ApiUrl;
             string projectName = _siteBNGConfig.ProjectName;
             string apiToken = _siteBNGConfig.ApiToken;

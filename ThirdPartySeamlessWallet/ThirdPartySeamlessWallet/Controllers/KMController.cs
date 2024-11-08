@@ -9,7 +9,6 @@ using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 namespace ThirdPartySeamlessWallet.Controllers
 {
     [ApiController]
-    [Route("[controller]/wallet")]
     [ServiceFilter(typeof(KMHeaderFilter))]
     public class KMController : ControllerBase
     {
@@ -23,15 +22,17 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpGet]
-        [Route("Ping")]
-        public string Ping() => "Pong";
+        [Route("[controller]/{sitename}/wallet/Ping")]
+        [Route("[controller]/wallet/Ping")]
+        public string Ping([FromRoute] string sitename = null) => "Pong";
 
         /// <summary>
         /// 扣錢
         /// </summary>
         [HttpPost]
-        [Route("debit")]
-        public async Task<BaseResult> Debit()
+        [Route("[controller]/{sitename}/wallet/debit")]
+        [Route("[controller]/wallet/debit")]
+        public async Task<BaseResult> Debit([FromRoute] string sitename = null)
         {
             try
             {
@@ -64,8 +65,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// 加錢
         /// </summary>
         [HttpPost]
-        [Route("credit")]
-        public async Task<BaseResult> Credit()
+        [Route("[controller]/{sitename}/wallet/credit")]
+        [Route("[controller]/wallet/credit")]
+        public async Task<BaseResult> Credit([FromRoute] string sitename = null)
         {
             try
             {
@@ -99,8 +101,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// 取得餘額
         /// </summary>
         [HttpPost]
-        [Route("balance")]
-        public async Task<BaseResult> Balance(KMBalanceRequest request)
+        [Route("[controller]/{sitename}/wallet/balance")]
+        [Route("[controller]/wallet/balance")]
+        public async Task<BaseResult> Balance([FromBody] KMBalanceRequest request, [FromRoute] string sitename = null)
         {
             try
             {
@@ -130,8 +133,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// 奖励
         /// </summary>
         [HttpPost]
-        [Route("reward")]
-        public async Task<BaseResult> Reward()
+        [Route("[controller]/{sitename}/wallet/reward")]
+        [Route("[controller]/wallet/reward")]
+        public async Task<BaseResult> Reward([FromRoute] string sitename = null)
         {
             try
             {

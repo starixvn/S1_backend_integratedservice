@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Service.BLL
             _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
         }
 
-        public async Task<WagerAGModel> GetBetListByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime, int page, string guid)
+        public async Task<WagerAGModel> GetBetListByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime, int page)
         {
             // param
             var httpMethod = "Post";
@@ -42,7 +42,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<WagerAGModel> GetBetSummaryByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime, string guid)
+        public async Task<WagerAGModel> GetBetSummaryByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime)
         {
             // param
             var httpMethod = "Post";
@@ -75,8 +75,10 @@ namespace ThirdPartyWager.Service.BLL
         {
             _log2File.InsertRequestLog(_tpName, url, param, "1");
             var httpMethod = (method == "Get") ? HttpMethod.Get : HttpMethod.Post;
-            var request = new HttpRequestMessage(httpMethod, url);
-            request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
+            var request = new HttpRequestMessage(httpMethod, url)
+            {
+                Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded")
+            };
 
             var response = await _httpHelper.GetClient().SendAsync(request);
             var result = response.Content.ReadAsStringAsync().Result;

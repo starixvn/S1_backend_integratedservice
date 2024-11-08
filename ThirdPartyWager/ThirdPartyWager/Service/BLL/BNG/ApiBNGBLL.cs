@@ -3,6 +3,7 @@ using System.Text;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -20,13 +21,13 @@ namespace ThirdPartyWager.Service.BLL
             _log2File = provider.GetRequiredService<Log2File>();
         }
 
-        public async Task<TransactionData> GetRecordListAsync(Dictionary<string, string> setting, string startTime, string endTime)
+        public async Task<TransactionData> GetRecordListAsync(BNGConfig config, string startTime, string endTime)
         {
-            var url = $"{setting["ApiUrl"]}/{setting["ProjectName"]}/api/v1/transaction/list/";
+            var url = $"{config.ApiUrl}/{config.ProjectName}/api/v1/transaction/list/";
 
             var sParam = new
             {
-                api_token = setting["ApiToken"],
+                api_token = config.ApiToken,
                 start_date = startTime,
                 end_date = endTime
             };

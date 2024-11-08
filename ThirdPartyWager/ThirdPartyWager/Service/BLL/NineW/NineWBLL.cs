@@ -1,9 +1,12 @@
-﻿using ThirdPartyWager.Extensions;
+﻿using Newtonsoft.Json;
+
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.NineW;
+
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -15,13 +18,14 @@ namespace ThirdPartyWager.Service.BLL
         private readonly MySqlClient _wagerDbClient;
         private readonly int _tpId = (int)Tp.NineW;
         private readonly string _tpName = Tp.NineW.ToString();
-        private readonly NineWConfig _siteConfig;
         private readonly FincanceService _fincanceService;
         private readonly IEnumerable<TpCurrency> _currencyList;
         private readonly int _timeZone = 8;
         private readonly List<int> _reportType = new() { 0, 2, 3, 7 };
-        private string _domain;
         private readonly Log2File _log2File;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly Dictionary<int, NineWConfig> _siteConfigDic;
+        private readonly IEnumerable<ServerInfo> _serverInfoList;
 
         public NineWBLL(IServiceProvider provider)
         {
@@ -30,16 +34,33 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NineWConfig>(Tp.NineW.ToString());
+            _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);  
             _log2File = provider.GetRequiredService<Log2File>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NineWConfig>(_tpName);
+            _serverInfoList = provider.GetRequiredService<CommonBLL>().GetSiteList();
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
             try
             {
-                var result = await QuerySettleBetHistoryAsync(_siteConfig, startTime, endTime);
+                var result = new List<SettleBet>();
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+
+                // 分Site取得結果
+                foreach (var site in siteList)
+                {
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+
+                    var siteConfig = _siteConfigDic[site.SiteId];
+                    var siteResult = await QuerySettleBetHistoryAsync(site.SiteId, siteConfig, startTime, endTime);
+                    result.AddRange(siteResult);
+                }
+                    
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
 
@@ -56,7 +77,22 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var result = await QueryUnSettleSummaryTransactionAsync(_siteConfig, startTime);
+                var result = new List<SettleBet>();
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+
+                // 分Site取得結果
+                foreach (var site in siteList)
+                {
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+                   
+                    var siteConfig = _siteConfigDic[site.SiteId];
+                    var siteResult = await QueryUnSettleSummaryTransactionAsync(site.SiteId, siteConfig, startTime);
+                    result.AddRange(siteResult);
+                }
+
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
                 return true;
@@ -72,7 +108,22 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var result = await QueryReSettleSummaryTransactionAsync(_siteConfig, startTime, endTime);
+                var result = new List<SettleBet>();
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+
+                // 分Site取得結果
+                foreach (var site in siteList)
+                {
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+
+                    var siteConfig = _siteConfigDic[site.SiteId];
+                    var siteResult = await QueryReSettleSummaryTransactionAsync(site.SiteId, siteConfig, startTime, endTime);
+                    result.AddRange(siteResult);
+                }
+
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
 
                 // update resettledDate to TpReport9W
@@ -100,7 +151,22 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var dailySummary = await CountSummaryTransactionByHourAsync(_siteConfig, date);
+                var dailySummary = new List<FincanceDailySummary>();
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+
+                // 分Site取得結果
+                foreach (var site in siteList)
+                {
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+
+                    var siteConfig = _siteConfigDic[site.SiteId];
+                    var siteResult = await CountSummaryTransactionByHourAsync(site.SiteId, siteConfig, date);
+                    dailySummary.AddRange(siteResult);
+                }
+
                 if (!dailySummary.Any())
                 {
                     return true;
@@ -119,7 +185,22 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var summaryTransaction = await QuerySummaryTransactionAsync(_siteConfig, date);
+                var summaryTransaction = new List<SummaryTransaction>();
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+
+                // 分Site取得結果
+                foreach (var site in siteList)
+                {
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+
+                    var siteConfig = _siteConfigDic[site.SiteId];
+                    var siteResult = await QuerySummaryTransactionAsync(site.SiteId, siteConfig, date);
+                    summaryTransaction.AddRange(siteResult);
+                }
+
                 var tasks = summaryTransaction.Select(item => Task.Run(() => InsertReport(item))).ToArray();
                 await Task.WhenAll(tasks);
                 return true;
@@ -132,11 +213,12 @@ namespace ThirdPartyWager.Service.BLL
 
         }
 
-        private async Task<List<SettleBet>> QuerySettleBetHistoryAsync(NineWConfig config, string startTime, string endTime)
+        private async Task<List<SettleBet>> QuerySettleBetHistoryAsync(int siteId, NineWConfig config, string startTime, string endTime)
         {
             var result = new List<SettleBet>();
-            var agents = GetAgents();
-            var wagerUrl = $"{_domain}/{config.WebSite}/querySettleBetHistory";
+            var agents = GetAgents(siteId);
+            var domain = await GetDomain(siteId);
+            var wagerUrl = $"{domain}/{config.WebSite}/querySettleBetHistory";
 
             foreach (var type in _reportType)
             {
@@ -179,11 +261,12 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private async Task<List<SettleBet>> QueryReSettleSummaryTransactionAsync(NineWConfig config, string startTime, string endTime)
+        private async Task<List<SettleBet>> QueryReSettleSummaryTransactionAsync(int siteId, NineWConfig config, string startTime, string endTime)
         {
             var result = new List<SettleBet>();
-            var apiUrl = $"{_domain}/{config.WebSite}/queryReSettleSummaryTransaction";
-            var agents = GetAgents();
+            var agents = GetAgents(siteId);
+            var domain = await GetDomain(siteId);
+            var apiUrl = $"{domain}/{config.WebSite}/queryReSettleSummaryTransaction";
 
             foreach (var type in _reportType)
             {
@@ -231,11 +314,12 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private async Task<List<SettleBet>> QueryUnSettleSummaryTransactionAsync(NineWConfig config, long startTime)
+        private async Task<List<SettleBet>> QueryUnSettleSummaryTransactionAsync(int siteId, NineWConfig config, long startTime)
         {
             var result = new List<SettleBet>();
-            var apiUrl = $"{_domain}/{config.WebSite}/queryCurrentBetsByLastUpdateDate";
-            var agents = GetAgents();
+            var agents = GetAgents(siteId);
+            var domain = await GetDomain(siteId);
+            var apiUrl = $"{domain}/{config.WebSite}/queryCurrentBetsByLastUpdateDate";
 
             foreach (var type in _reportType)
             {
@@ -284,16 +368,19 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private async Task<List<FincanceDailySummary>> CountSummaryTransactionByHourAsync(NineWConfig config, DateTime date)
+        private async Task<List<FincanceDailySummary>> CountSummaryTransactionByHourAsync(int siteId, NineWConfig config, DateTime date)
         {
             var result = new List<FincanceDailySummary>();
-            var apiUrl = $"{_domain}/{config.WebSite}/countSummaryTransactionByHour";
-            if (string.IsNullOrEmpty(_domain) || _domain == "")
+            var domain = await GetDomain(siteId);
+            var apiUrl = $"{domain}/{config.WebSite}/countSummaryTransactionByHour";
+
+            if (string.IsNullOrEmpty(domain) || domain == "")
             {
-                throw new Exception($"_domain is {_domain}");
+                throw new Exception($"_domain is {domain}");
             }
 
-            foreach (var currency in _currencyList)
+            var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(_serverInfoList.First(x => x.SiteId == siteId).CurrencyList);                    
+            foreach (var currency in _currencyList.Where(x => currencyList.Contains(x.CurrencyId)))
             {
                 var checkDataList = new List<Checkdata>();
                 foreach (var type in _reportType)
@@ -360,18 +447,19 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private async Task<List<SummaryTransaction>> QuerySummaryTransactionAsync(NineWConfig config, DateTime date)
+        private async Task<List<SummaryTransaction>> QuerySummaryTransactionAsync(int siteId, NineWConfig config, DateTime date)
         {
             var result = new List<SummaryTransaction>();
+            var agents = GetAgents(siteId);
+            var domain = await GetDomain(siteId);
             var range = date.DateToTimeRange(_timeZone);
-            var apiUrl = $"{_domain}/{config.WebSite}/querySummaryTransaction";
-            if (string.IsNullOrEmpty(_domain) || _domain == "")
+            var apiUrl = $"{domain}/{config.WebSite}/querySummaryTransaction";
+
+            if (string.IsNullOrEmpty(domain) || domain == "")
             {
-                throw new Exception($"_domain is {_domain}");
+                throw new Exception($"_domain is {domain}");
             }
-
-            var agents = GetAgents();
-
+      
             foreach (var type in _reportType)
             {
                 var page = 1;
@@ -435,37 +523,41 @@ namespace ThirdPartyWager.Service.BLL
             return _wagerDbClient.ExecuteAsync("Service_TpReport9W_Ins", data);
         }
 
-        private List<string> GetAgents()
+        private List<string> GetAgents(int siteId)
         {
+            var siteConfig = _siteConfigDic[siteId];
             var data = new List<string>();
-            foreach (var rows in _siteConfig.CurrencyData)
+            foreach (var rows in siteConfig.CurrencyData)
             {
                 data.Add(rows.Value.Agent);
             }
             return data;
         }
 
-        public async Task QueryDomain()
+        public async Task<string> GetDomain(int siteId)
         {
-            var apiUrl = $"{_siteConfig.DomainUrl}/{_siteConfig.WebSite}/queryDomain";
+            var siteConfig = _siteConfigDic[siteId];
+            var apiUrl = $"{siteConfig.DomainUrl}/{siteConfig.WebSite}/queryDomain";
             var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { "cert", _siteConfig.Cert }
+                { "cert", siteConfig.Cert }
             });
 
             var response = await _httpHelper.GetClient().PostAsync(apiUrl, httpContent);
             var json = response.Content.ReadAsStringAsync().Result;
             var result = _common.FromJson<QueryDomainResponse>(json);
 
+            string url = string.Empty;
             if (result.status == "1")
             {
-                var url = $"{_siteConfig.ApiUrl}.{result.Domains?.FirstOrDefault(x => x.priority == 1)?.domain}/api/apiWallet";
-                _domain = url;
+                url = $"{siteConfig.ApiUrl}.{result.Domains?.FirstOrDefault(x => x.priority == 1)?.domain}/api/apiWallet";          
             }
             else
             {
                 throw new Exception($"9w Query Domain error status is : {result.status}");
             }
+
+            return url;
         }
     }
 }

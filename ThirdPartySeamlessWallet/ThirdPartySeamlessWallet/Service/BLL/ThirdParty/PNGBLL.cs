@@ -19,7 +19,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly AuthBLL _authBll;
         private readonly ConfigBLL _configBll;
         private readonly ILogger<PNGBLL> _logger;
-        private readonly Dictionary<string, string> defaultConfig;
+        private readonly Dictionary<string, PNGConfig> _siteConfigDic;
+        private readonly PNGConfig _defaultConfig;
 
         public PNGBLL(IServiceProvider provider)
         {
@@ -33,10 +34,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             ThirdParty = Tp.PNG;
             GameType = GameType.PNG_RNG;
-            defaultConfig = _configBll.GetConfigValue<Dictionary<string, string>>(ThirdParty.ToString());
+            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<PNGConfig>(Tp.PNG.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<PNGConfig>(Tp.PNG.ToString());
         }
 
-        public PNG_AuthenticateResponse Authenticate(PNG_AuthenticateRequest authenticateRequest)
+        public PNG_AuthenticateResponse Authenticate(PNG_AuthenticateRequest authenticateRequest, string sitename)
         {
             // 檢查 AuthToken
             if (!_authBll.Authenticate(authenticateRequest.AuthToken, out TpCustInfoAuth tpCustInfoAuth))
@@ -48,7 +50,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            var checkResult = CheckTpUserWithAccessToken(tpCustInfoAuth.TpUserName, authenticateRequest.AccessToken, true);
+            var checkResult = CheckTpUserWithAccessToken(tpCustInfoAuth.TpUserName, authenticateRequest.AccessToken, sitename, true);
             if (!checkResult.IsVaild)
                 return new PNG_AuthenticateResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
@@ -69,10 +71,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
-        public PNG_BalanceResponse Balance(PNG_BalanceRequest balanceRequest)
+        public PNG_BalanceResponse Balance(PNG_BalanceRequest balanceRequest, string sitename)
         {
             // check playNGo accessToken
-            var checkResult = CheckTpUserWithAccessToken(balanceRequest.TpUserName, balanceRequest.AccessToken, true);
+            var checkResult = CheckTpUserWithAccessToken(balanceRequest.TpUserName, balanceRequest.AccessToken, sitename, true);
             if (!checkResult.IsVaild)
                 return new PNG_BalanceResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
@@ -108,12 +110,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
-        public async Task<PNG_ReserveResponse> Reserve(PNG_ReserveRequest reserveRequest)
+        public async Task<PNG_ReserveResponse> Reserve(PNG_ReserveRequest reserveRequest, string sitename)
         {
             var bettingData = new BettingDataRNG_PNG();
             try
             {
-                var checkResult = CheckTpUserWithAccessToken(reserveRequest.TpUserName, reserveRequest.AccessToken, isTpCheck: true);
+                var checkResult = CheckTpUserWithAccessToken(reserveRequest.TpUserName, reserveRequest.AccessToken, sitename, isTpCheck: true);
                 if (!checkResult.IsVaild)
                     return new PNG_ReserveResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
@@ -159,12 +161,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        public async Task<PNG_CancelReserveResponse> CancelReserve(PNG_CancelReserveRequest cancelReserveRequest)
+        public async Task<PNG_CancelReserveResponse> CancelReserve(PNG_CancelReserveRequest cancelReserveRequest, string sitename)
         {
             var bettingData = new BettingDataRNG_PNG();
             try
             {
-                var checkResult = CheckTpUserWithAccessToken(cancelReserveRequest.TpUserName, cancelReserveRequest.AccessToken);
+                var checkResult = CheckTpUserWithAccessToken(cancelReserveRequest.TpUserName, cancelReserveRequest.AccessToken, sitename);
                 if (!checkResult.IsVaild)
                     return new PNG_CancelReserveResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
@@ -209,12 +211,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        public async Task<PNG_ReleaseResponse> Release(PNG_ReleaseRequest releaseRequest)
+        public async Task<PNG_ReleaseResponse> Release(PNG_ReleaseRequest releaseRequest, string sitename)
         {
             var bettingData = new BettingDataRNG_PNG();
             try
             {
-                var checkResult = CheckTpUserWithAccessToken(releaseRequest.TpUserName, releaseRequest.AccessToken);
+                var checkResult = CheckTpUserWithAccessToken(releaseRequest.TpUserName, releaseRequest.AccessToken, sitename);
                 if (!checkResult.IsVaild)
                     return new PNG_ReleaseResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
@@ -276,19 +278,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         #region private method
 
-        private bool ValidToken(string inputAccessToken)
+        private bool ValidToken(string inputAccessToken, string sitename)
         {
-            var pngConfig = new PNGConfig(defaultConfig);
+            var pngConfig = sitename == null ? _defaultConfig : _siteConfigDic[sitename];
             if (!string.IsNullOrEmpty(pngConfig.AccessToken)) return pngConfig.AccessToken == inputAccessToken;
 
             _logger.LogError("thirdPartySetting not found");
             return false;
         }
 
-        private (bool IsVaild, PNG_BaseResponse response) CheckTpUserWithAccessToken(string tpUserName, string accessToken, bool isTpCheck = false)
+        private (bool IsVaild, PNG_BaseResponse response) CheckTpUserWithAccessToken(string tpUserName, string accessToken, string sitename, bool isTpCheck = false)
         {
             // 檢查 PlayNGo AccessToken
-            if (!ValidToken(accessToken))
+            if (!ValidToken(accessToken, sitename))
             {
                 return (false, new PNG_BaseResponse()
                 {

@@ -99,6 +99,7 @@ builder.Services
     .AddHostedService<NTConnectWorker>()
     .AddHostedService<GAWorker>()
     .AddHostedService<WonCasinoWorker>()
+    .AddHostedService<DragonGamingWorker>()
     .AddHostedService<EdayWorker>()
     ;
 

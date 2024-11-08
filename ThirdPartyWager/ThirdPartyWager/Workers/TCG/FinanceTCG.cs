@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceTCG>>();
             _financTCGBLL = provider.GetRequiredService<FinanceTCGBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _fincanceService = provider.GetRequiredService<FincanceService>();            
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -72,9 +72,6 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
@@ -92,7 +89,8 @@ namespace ThirdPartyWager.Workers
 
                 // report
                 DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financTCGBLL.GetReport(_tpId, setting, reportTime);
+                var reportData = await _financTCGBLL.GetReport(_tpId, null ,reportTime);          
+                   
                 int result;
                 if (reportData.Count > 0)
                 {
