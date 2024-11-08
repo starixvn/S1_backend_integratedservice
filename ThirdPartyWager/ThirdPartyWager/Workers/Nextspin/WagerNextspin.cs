@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Workers
                     var isSuccess = await _nextspinBLL.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"{tpType} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _logger.LogInformation($"{Tp.Nextspin} {tpType} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
                         _thirdPartyBLL.SetThirdPartyTimer(TpId, (int)tpType, timeCast.endUnix);
                     }
                 }
