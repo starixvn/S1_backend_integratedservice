@@ -71,5 +71,11 @@ namespace ThirdPartyWager.Workers
                 _rngWagerTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
+
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            _rngWagerTimer?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
+        }
     }
 }
