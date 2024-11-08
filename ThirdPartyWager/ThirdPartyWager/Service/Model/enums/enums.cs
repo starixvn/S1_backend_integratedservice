@@ -68,7 +68,8 @@
         SabaPlay = 66,
         UuSlots = 67,
         Live22 = 68,
-        FastSpin = 69
+        FastSpin = 69,
+        Eday = 72,
     }
 
     public enum GameType
@@ -122,7 +123,10 @@
         SabaPlay_Poker = 119,
         UuSlots_RNG = 120,
         Live22_RNG = 121,
-        FastSpin_RNG = 122
+        FastSpin_RNG = 122,
+        DragonGaming_RNG = 123,
+        PG2_RNG = 124,
+        Eday_Lottery = 125,
     }
     public enum SettlementType
     {
