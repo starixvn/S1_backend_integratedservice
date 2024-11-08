@@ -1,11 +1,12 @@
-﻿using System.Globalization;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Eday
@@ -144,26 +145,71 @@ namespace ThirdParty.Eday
             }
             return oApiResult;
         }
-
-        public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
         
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo,
             Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            //拿Bettrans，Eday無注單明細API，注單明細為Json不是Url，若需要再改
+            var spName = "Service_BettransLT_Eday_Detail_Get";
+            var db = DataBase.Main;
+            var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
+
+            TpCurrency tpCurrency = new()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst(spName, new { YYYYMM, getBetDetail.TransId }, db);
+            var detail = ToJson(wagerDetail);
+            
+            return new LotteryDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                Detail = detail,
+                TpCurrency = tpCurrency,
+                RefTransId = getBetDetail.TransId,
+                TpUserName = wagerDetail.GetValueOrDefault("player")?.ToString(),
+                UTCBetTime = DateTime.Parse(wagerDetail.GetValueOrDefault("UTCBetTime")?.ToString()),
+                UTCSettledTime = DateTime.Parse(wagerDetail.GetValueOrDefault("UTCSettledTime")?.ToString()),
+                Stake = (decimal)wagerDetail.GetValueOrDefault("amount"),
+                WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winTotal") 
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType,
             TpCustInfo tpCustInfo,
             Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Eday_Get", new { id = betRecordInfo.TransId }, DataBase.Wager);
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+            
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detail.GetStringValue("gameCode"),
+                Game = tpGameType.TypeName,
+                RefNo = detail.GetStringValue("roundCode"),
+                Title = tpGameType.TypeName,
+                MatchID = betRecordInfo.TransId,
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
         }
         
         #region UnUse
+        
+        public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
+            oApiResult.ErrorCode = ErrorCode.Fail;
+            return oApiResult;
+        }
         
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs,
             decimal Amount, Direction direction, string TransID,
