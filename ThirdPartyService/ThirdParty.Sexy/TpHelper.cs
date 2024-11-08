@@ -222,7 +222,7 @@ namespace ThirdParty.Sexy
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransLC_AWC_Sexy_Detail_Get", new { YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransLC_Sexy_TicketNo_Get", new { YYYYMM, TicketNo = betRecordInfo.TransId }, DataBase.Main);
             if (!detailList.Any())
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
