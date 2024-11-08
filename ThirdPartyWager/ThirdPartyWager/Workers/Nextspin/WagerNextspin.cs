@@ -80,7 +80,7 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("Tp", Tp.Nextspin.ToString());
             var doQuickly = false;
             var tpType = WagerTimerType.RedoWager;
-            const int dataRangeMins = 120; //查詢區間120分鐘內的資料
+            const int dataRangeMins = 90; //查詢90分鐘內的資料
             const int intervalMins = 15;   //每次查詢間隔15分鐘
             const int intervalSec = 5;    //doQuickly 每次查詢間隔5秒
             try
