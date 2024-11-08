@@ -1,4 +1,5 @@
 using Serilog;
+using Serilog.Events;
 using Serilog.Exceptions;
 using ThirdPartyWager;
 using ThirdPartyWager.Extensions;
@@ -22,7 +23,16 @@ builder.Host.UseSerilog((context, Configuration) =>
                 excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails()
-        .WriteTo.MySQL(builder.Configuration.GetValue<string>("connectionStrings:worker_LogDB"), "LogInfo");
+        .WriteTo.MySQL(builder.Configuration.GetValue<string>("connectionStrings:worker_LogDB"), "LogInfo")
+        .WriteTo.Sentry(o =>
+        {
+            // Debug and higher are stored as breadcrumbs (default is Information)
+            o.MinimumBreadcrumbLevel = LogEventLevel.Debug;
+            // Warning and higher is sent as event (default is Error)
+            o.MinimumEventLevel = LogEventLevel.Error;
+            o.Dsn = builder.Configuration.GetValue<string>("Sentry:Dsn");
+            o.Environment = builder.Configuration.GetValue<string>("Sentry:Environment");
+        });
 });
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
