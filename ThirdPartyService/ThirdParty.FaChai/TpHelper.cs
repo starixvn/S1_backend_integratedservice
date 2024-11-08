@@ -145,18 +145,19 @@ namespace ThirdParty.FaChai
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
             }
 
+            // No need MatchId
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = detail.GetStringValue("gameID"),
                 Game = GetGameName(detail.GetStringValue("gameID")),
                 RefNo = string.Empty,
                 Title = tpGameType.TypeName,
-                MatchID = betRecordInfo.TransId,
                 BetType = detail.GetStringValue("gametype"),
                 BetChoice = string.Empty,
                 Result = string.Empty,
                 DeviceType = DeviceType.None,
                 IP = string.Empty,
+                MatchID = string.Empty
             };
         }
 
