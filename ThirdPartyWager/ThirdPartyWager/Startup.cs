@@ -71,8 +71,8 @@ namespace ThirdPartyWager
 
             services.AddTpList();
 
-            services.AddLiveStreaming();
-            services.AddLatestHighlightVideo();
+            //services.AddLiveStreaming();
+            //services.AddLatestHighlightVideo();
 
             //Loki comment:
             //services.AddSabaOdds();
