@@ -47,7 +47,7 @@ namespace ThirdPartyWager.Workers
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, (int)tpType);
                 var thisTime = lastTime?.StartTime ?? DateTime.UtcNow;
 
-                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > 3)
+                if ((int)DateTime.UtcNow.Subtract(thisTime).TotalMinutes > 3)
                 {
                     doQuickly = true;
                 }
@@ -78,19 +78,18 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", Tp.Nextspin.ToString());
-            var doQuickly = false;
             var tpType = WagerTimerType.RedoWager;
-            const int dataRangeMins = 90; //查詢90分鐘內的資料
-            const int intervalMins = 15;   //每次查詢間隔15分鐘
-            const int intervalSec = 5;    //doQuickly 每次查詢間隔5秒
+            const int dataRangeMins = 90; //查詢90分鐘內的資料  
+            var nextTimeSpan = TimeSpan.FromMinutes(15);//每次查詢間隔15分鐘
+            
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, (int)tpType);
                 var thisTime = lastTime?.StartTime ?? DateTime.UtcNow.AddDays(-2);
 
-                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                if ((int)DateTime.UtcNow.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
-                    doQuickly = true;
+                    nextTimeSpan = TimeSpan.FromSeconds(15);//do Quickly 每次查詢間隔15秒
                 }
 
                 if (thisTime < DateTime.UtcNow)
@@ -106,11 +105,11 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{tpType} WagerNextspin.QueryWager.Exception");
+                _logger.LogError(ex, $"{tpType} WagerNextspin.RedoWager.Exception");
+                nextTimeSpan = TimeSpan.FromMinutes(1);
             }
             finally
             {
-                var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(intervalSec) : TimeSpan.FromMinutes(intervalMins);
                 _rngRedoWagerTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
