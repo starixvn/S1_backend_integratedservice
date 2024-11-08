@@ -43,7 +43,7 @@ namespace ThirdPartyWager.Service.BLL
             
             var tasks = new List<Task<IEnumerable<FincanceDailySummary>>>
             {
-                _commonBLL.GetWagerSummary("Finance_TpWager_93Connect_Summary_Get", reportTime.startUnix, reportTime.endUnix),
+                _commonBLL.GetWagerSummary("Finance_TpWager_Eday_Summary_Get", reportTime.startUnix, reportTime.endUnix),
             };
 
             await Task.WhenAll(tasks);
