@@ -261,13 +261,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 roundUpdateDAL = CreateRoundUpdateDAL(settleData, request.roundCode, request.timestamp,
                                     request.txType,request.txId,request.gameCode);
                             }
-                            result = RoundUpdate_Eday(roundUpdateDAL, out decimal afterAmount);
+                            result = RoundUpdate_Eday(roundUpdateDAL, out var afterAmount);
                             break;
                         //Void draw 
                         case 2:
+                            settleData.TicketStatus = (int)TicketStatus.Refund;
+                            settleData.TicketType = (int)BettransType.Payout;
+                            settleData.SettleFlag = (int)SettleFlag.Running;
+                            roundUpdateDAL = CreateRoundUpdateDAL(settleData, request.roundCode, request.timestamp,
+                                request.txType,request.txId,request.gameCode);
+                            result = RoundUpdateVoidDraw_Eday(roundUpdateDAL, out afterAmount);
                             break;
                         //Void round
                         case 3:
+                            settleData.TicketStatus = (int)TicketStatus.Refund;
+                            settleData.TicketType = (int)BettransType.CancelBet;
+                            settleData.SettleFlag = (int)SettleFlag.EndGame;
+                            roundUpdateDAL = CreateRoundUpdateDAL(settleData, request.roundCode, request.timestamp,
+                                request.txType,request.txId,request.gameCode);
+                            result = RoundUpdateVoidRound_Eday(roundUpdateDAL, out afterAmount);
                             break;
                     }
                 }
@@ -298,6 +310,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     _log2File.Info($"Eday BetRequestCancel : {request.roundCode} , Already CancelBet , Please check with Eday", logName);
                     return new EdayResponse<EdayRoundUpdateResponse>()
                     { 
+                        resultCode = (int)EdayResultCode.InvalidStatus,
+                        message = EdayResultCode.InvalidStatus.GetEnumDescription(),
+                    };
+                }
+
+                if (result == -4)
+                {
+                    return new EdayResponse<EdayRoundUpdateResponse>()
+                    { 
+                        //還沒結算不給動
                         resultCode = (int)EdayResultCode.InvalidStatus,
                         message = EdayResultCode.InvalidStatus.GetEnumDescription(),
                     };
@@ -379,6 +401,48 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             
             result = _settledService.RoundUpdate_Eday(tpCustInfo, settleDataLT_Eday, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+        
+        private int RoundUpdateVoidRound_Eday(BettransLTEdayRoundUpdateDAL voidRoundDataLT_Eday, out decimal afterAmount)
+        {
+            var result = 0;
+            
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, voidRoundDataLT_Eday.player);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
+            
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                voidRoundDataLT_Eday.bet *= tpCurrency.ExchangeRate;
+                voidRoundDataLT_Eday.win *= tpCurrency.ExchangeRate;
+            }
+            
+            result = _settledService.RoundUpdateVoidRound_Eday(tpCustInfo, voidRoundDataLT_Eday, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        private int RoundUpdateVoidDraw_Eday(BettransLTEdayRoundUpdateDAL voidDrawDataLT_Eday, out decimal afterAmount)
+        {
+            var result = 0;
+            
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, voidDrawDataLT_Eday.player);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
+            
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                voidDrawDataLT_Eday.bet *= tpCurrency.ExchangeRate;
+                voidDrawDataLT_Eday.win *= tpCurrency.ExchangeRate;
+            }
+            
+            result = _settledService.RoundUpdateVoidDraw_Eday(tpCustInfo, voidDrawDataLT_Eday, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
