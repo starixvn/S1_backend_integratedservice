@@ -153,6 +153,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int SettleFlag { get; set; }
         public DateTime UTCSettleBetTime { get; set; }
     }
+    
+    public class BettransLTEdayRoundCancelBet
+    {
+        public string roundCode { get; set; }
+        public string player { get; set; }
+        public int TicketType { get; set; } 
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
+    }
 
     public class BettransLTEdayPayoutRequest : EdayBetRequest
     {

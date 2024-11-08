@@ -2293,6 +2293,196 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         
+        public int RoundUpdateVoidRound_Eday(TpCustInfo tpCustInfo, BettransLTEdayRoundUpdateDAL voidRoundData_Eday, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpId = Tp.Eday;
+            var tpGameType = GameType.Eday_Lottery;
+            var tpCategory = TpCategory.Lottery;
+            var CancelSpName = "Service_BettransLT_Eday_CancelBet_Set";
+            var GetSpName = "Service_BettransLT_Eday_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            
+            try
+            {
+                //針對派彩單
+                var settledRoundId = $"{voidRoundData_Eday.roundCode}_{voidRoundData_Eday.player}";
+                
+                // 檢查是否有注單
+                var bettrans = _partitionService.Query<BettransLTEdayDAL>(voidRoundData_Eday.UTCSettleBetTime, 
+                    CancelSpName, new { billId = settledRoundId, player = tpCustInfo.TpUserName });
+                
+                //沒注單無法取消
+                if (!bettrans.Any())
+                {
+                    return -2;
+                }
+                
+                //全取消就不用動了
+                if (bettrans.All(i => i.TicketType == (int)BettransType.CancelBet))
+                {
+                    return -3;
+                }
+                
+                var cancelData = new BettransLTEdayRoundCancelBet()
+                {
+                    roundCode = voidRoundData_Eday.roundCode,
+                    player = tpCustInfo.TpUserName,
+                    TicketType = voidRoundData_Eday.TicketType,
+                    TicketStatus = voidRoundData_Eday.TicketStatus,
+                    SettleFlag = (int)SettleFlag.EndGame
+                };
+                
+                var p = new DynamicParameters(cancelData);
+                result = _partitionService.Execute(voidRoundData_Eday.UTCSettleBetTime,CancelSpName, p, trans);
+                
+                if (result > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        //此function為把payout金額收回
+                        voidRoundData_Eday.win * -1,
+                        (int)tpId,
+                        voidRoundData_Eday.roundCode,
+                        (int)tpGameType,
+                        tpCategory,
+                        voidRoundData_Eday.roundCode,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "VoidRound",
+                        out bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+                }
+
+                if (result > 0)
+                {
+                    //CancelBet 不送TpUnSettle 等Wager抓單回來一起處理即可
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+        
+        public int RoundUpdateVoidDraw_Eday(TpCustInfo tpCustInfo, BettransLTEdayRoundUpdateDAL voidDrawData_Eday, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpId = Tp.Eday;
+            var tpGameType = GameType.Eday_Lottery;
+            var tpCategory = TpCategory.Lottery;
+            var CancelRoundSpName = "Service_BettransLT_Eday_Round_CancelBet_Set";
+            var GetRoundSpName = "Service_BettransLT_Eday_Round_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            
+            try
+            {
+                // 檢查是否有注單
+                var bettrans = _partitionService.Query<BettransLTEdayDAL>(voidDrawData_Eday.UTCSettleBetTime, 
+                    GetRoundSpName, new { roundCode = voidDrawData_Eday.roundCode, player = tpCustInfo.TpUserName });
+                
+                //沒注單無法取消
+                if (!bettrans.Any())
+                {
+                    return -2;
+                }
+                
+                //全取消就不用動了
+                if (bettrans.All(i => i.TicketType == (int)BettransType.CancelBet))
+                {
+                    return -3;
+                }
+                
+                //未結算不給動
+                if (!bettrans.Any(i => i.SettleFlag == (int)SettleFlag.Settled))
+                {
+                    return -4;
+                }
+                
+                var cancelData = new BettransLTEdayRoundCancelBet()
+                {
+                    roundCode = voidDrawData_Eday.roundCode,
+                    player = tpCustInfo.TpUserName,
+                    TicketType = voidDrawData_Eday.TicketType,
+                    TicketStatus = voidDrawData_Eday.TicketStatus,
+                    SettleFlag = (int)SettleFlag.EndGame
+                };
+                
+                var p = new DynamicParameters(cancelData);
+                result = _partitionService.Execute(voidDrawData_Eday.UTCSettleBetTime,CancelRoundSpName, p, trans);
+                
+                if (result > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        voidDrawData_Eday.bet,
+                        (int)tpId,
+                        voidDrawData_Eday.roundCode,
+                        (int)tpGameType,
+                        tpCategory,
+                        voidDrawData_Eday.roundCode,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "VoidDraw",
+                        out bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+                }
+
+                if (result > 0)
+                {
+                    //CancelBet 不送TpUnSettle 等Wager抓單回來一起處理即可
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+        
         #endregion
     }
 }
