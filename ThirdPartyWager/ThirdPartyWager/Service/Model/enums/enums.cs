@@ -71,7 +71,8 @@
         Live22 = 68,
         FastSpin = 69,
         DragonGaming = 70,
-        PG2 = 71
+        PG2 = 71,
+        Eday = 72,
     }
 
     public enum GameType
@@ -128,6 +129,7 @@
         FastSpin_RNG = 122,
         DragonGaming_RNG = 123,
         PG2_RNG = 124,
+        Eday_Lottery = 125,
     }
     public enum SettlementType
     {

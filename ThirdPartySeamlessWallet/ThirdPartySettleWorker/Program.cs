@@ -100,8 +100,9 @@ builder.Services
     .AddHostedService<GAWorker>()
     .AddHostedService<WonCasinoWorker>()
     .AddHostedService<DragonGamingWorker>()
-    .AddHostedService<PG2Worker>();
-    
+    .AddHostedService<PG2Worker>()
+    .AddHostedService<EdayWorker>()
+    ;
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
