@@ -16,6 +16,7 @@ namespace ThirdPartyWager.Workers
         private const int TpId = (int)Tp.Nextspin;
         private const int TimeZone = 8;
         private Timer _rngWagerTimer;
+        private Timer _rngRedoWagerTimer;
 
         public WagerNextspin(ThirdPartyBLL thirdPartyBll, DateTimeHelper dateTimeHelper, INextspinBLL nextspinBLL, ILogger<WagerNextspin> logger)
         {
@@ -28,6 +29,7 @@ namespace ThirdPartyWager.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _rngWagerTimer = new Timer(QueryWager, GameType.Nextspin_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            _rngRedoWagerTimer = new Timer(RedoWager, GameType.Nextspin_RNG, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -72,9 +74,51 @@ namespace ThirdPartyWager.Workers
             }
         }
 
+        private async void RedoWager(object? state)
+        {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", Tp.Nextspin.ToString());
+            var doQuickly = false;
+            var tpType = WagerTimerType.RedoWager;
+            const int dataRangeMins = 120; //查詢區間120分鐘內的資料
+            const int intervalMins = 15;   //每次查詢間隔15分鐘
+            const int intervalSec = 5;    //doQuickly 每次查詢間隔5秒
+            try
+            {
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, (int)tpType);
+                var thisTime = lastTime?.StartTime ?? DateTime.UtcNow.AddDays(-2);
+
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                {
+                    doQuickly = true;
+                }
+
+                if (thisTime < DateTime.UtcNow)
+                {
+                    var timeCast = _dateTimeHelper.GetTimeByMinuteRevert(dataRangeMins, TimeZone, "yyyyMMddTHHmmss", thisTime);
+                    var isSuccess = await _nextspinBLL.GetWagersAsync(timeCast.startTime, timeCast.endTime);
+                    if (isSuccess)
+                    {
+                        _logger.LogInformation($"{Tp.Nextspin} {tpType} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _thirdPartyBLL.SetThirdPartyTimer(TpId, (int)tpType, timeCast.endUnix);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{tpType} WagerNextspin.QueryWager.Exception");
+            }
+            finally
+            {
+                var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(intervalSec) : TimeSpan.FromMinutes(intervalMins);
+                _rngRedoWagerTimer.Change(nextTimeSpan, TimeSpan.Zero);
+            }
+        }
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _rngWagerTimer?.Change(Timeout.Infinite, 0);
+            _rngRedoWagerTimer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
