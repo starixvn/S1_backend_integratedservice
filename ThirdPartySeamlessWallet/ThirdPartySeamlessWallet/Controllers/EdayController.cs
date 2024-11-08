@@ -47,24 +47,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 Request.Headers.TryGetValue("Authorization", out var authorization);
                 
-                // var parameters = new
-                // {
-                //     player = username,
-                // };
-                //
-                // var json = JsonConvert.SerializeObject(parameters);
-                // //var testtest = Base64Md5(json);
-                //
-                // var signString = $"GET\n\n\n/edApi/GetPlayerBalance/{username}";
-                // if (!CheckSign(signString, authorization, siteName,json))
-                // {
-                //     baseResult = new EdayResponse<EdayErrorResponse>()
-                //     {
-                //         resultCode = (int)EdayResultCode.InvalidSignature,
-                //         message = EdayResultCode.InvalidSignature.GetEnumDescription()
-                //     };
-                //     return Ok(baseResult);
-                // }
+                var parameters = new
+                {
+                    player = username,
+                };
+                
+                var json = JsonConvert.SerializeObject(parameters);
+                
+                var signString = $"GET\n\n\n/edApi/GetPlayerBalance/{username}";
+                if (!CheckSign(signString, authorization, siteName,json))
+                {
+                    baseResult = new EdayResponse<EdayErrorResponse>()
+                    {
+                        resultCode = (int)EdayResultCode.InvalidSignature,
+                        message = EdayResultCode.InvalidSignature.GetEnumDescription()
+                    };
+                    return Ok(baseResult);
+                }
                 
                 var getBalanceResult = _EdayBLL.GetBalance(username);
                 return Ok(getBalanceResult);
