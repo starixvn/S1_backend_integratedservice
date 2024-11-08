@@ -79,7 +79,7 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", Tp.Nextspin.ToString());
             var tpType = WagerTimerType.RedoWager;
-            const int dataRangeMins = 90; //查詢90分鐘內的資料  
+            const int dataRangeMins = 60; //查詢60分鐘內的資料  
             var nextTimeSpan = TimeSpan.FromMinutes(15);//每次查詢間隔15分鐘
             
             try
