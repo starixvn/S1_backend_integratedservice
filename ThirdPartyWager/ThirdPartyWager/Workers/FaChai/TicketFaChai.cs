@@ -91,15 +91,24 @@ public class TicketFaChai : BackgroundService
             }
 
             var pendingList = _ticketFaChaiBLL.GetPendingList((int)gameType, ticketTime);
+           
             if (pendingList == null)
             {
                 _logger.LogInformation($"Refund Worker Execute End {_tpId}, Count=0");
                 return true;
             }
 
+            
+
             // process
             foreach (var pending in pendingList)
             {
+                if (pending is null)
+                {
+                    _logger.LogInformation($"[FaChai] ticket pending is null");
+                    continue;
+                }
+
                 var check = await _ticketFaChaiBLL.CheckTicketStatus(pending, (int)gameType);
                 if (!check)
                 {
