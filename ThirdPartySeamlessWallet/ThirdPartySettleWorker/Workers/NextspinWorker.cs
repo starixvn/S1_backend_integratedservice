@@ -81,6 +81,7 @@ namespace ThirdPartySettleWorker.Workers
                             _logger.LogWarning($"transId: {tpUnsettle.TransId} is not equal " +
                                              $"settle: {JsonConvert.SerializeObject(unsettleData)} " +
                                              $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, isSuccess: false);
                             continue;
                         }
                         var betRecordInfo = new BetRecordInfo
