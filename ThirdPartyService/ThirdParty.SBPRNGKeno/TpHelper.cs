@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Net;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -182,31 +183,30 @@ namespace ThirdParty.SBPKeno
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            return default;
-            //var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            //var detailList = TpBetRecordProvider.DbQuery("Service_BettransPK_MaxGame_Detail_Get", new { YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
-            //if (!detailList.Any())
-            //{
-            //    return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
-            //}
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detail = TpBetRecordProvider.DbQuery("Service_BettransRng_Keno_TicketNo_Get", new { YYYYMM, TicketNo = betRecordInfo.TransId }, DataBase.Main);
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
 
-            //var GameId = detailList.GetFirstStringValue("GameId");
-            //var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
-            //var IpAddress = detailList.GetFirstStringValue("IpAddress");
+            var gameId = detail.GetFirstStringValue("GameId");
+            var gameRoundId = detail.GetFirstStringValue("GameRoundId");
+            var ipAddress = detail.GetFirstStringValue("IpAddress");
 
-            //return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
-            //{
-            //    GameID = GameId,
-            //    Game = GameId,
-            //    RefNo = GameRoundId,
-            //    Title = tpGameType.TypeName,
-            //    MatchID = string.Empty,
-            //    BetType = string.Empty,
-            //    BetChoice = string.Empty,
-            //    Result = string.Empty,
-            //    DeviceType = DeviceType.None,
-            //    IP = IpAddress,
-            //};
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameId,
+                Game = gameId,
+                RefNo = gameRoundId,
+                Title = tpGameType.TypeName,
+                MatchID = string.Empty,
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = ipAddress,
+            };
         }
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
