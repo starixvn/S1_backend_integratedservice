@@ -57,7 +57,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.SBP_Lottery, WalletKind.BonusWallet },
             { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PG_RNG, WalletKind.BonusWallet },
-            { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.EBet_LiveCasino, WalletKind.BonusWallet }
         };
 
@@ -77,7 +76,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.SBP_Lottery, TpCategory.Lottery },
             { (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.PG_RNG, TpCategory.Slots },
-            { (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.EBet_LiveCasino, TpCategory.LiveCasino }
         };
 
