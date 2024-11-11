@@ -57,8 +57,8 @@ namespace ThirdPartySettleWorker.Workers
             int thisTp = (int)Tp;
             var gameType = (GameType)state;
             var category = TpCategory.Slots;
-            var bettransGet = "Service_BettransRng_JILI_Settle_Round_Get";
-            var bettransSet = "Service_BettransRng_JILI_Settle_Round_Set";
+            var bettransGet = "Service_BettransRng_JILI_Settle_Get";
+            var bettransSet = "Service_BettransRng_JILI_Settle_Set";
             string logName = "Settle_BettransRng_JILI_Round";
 
             try

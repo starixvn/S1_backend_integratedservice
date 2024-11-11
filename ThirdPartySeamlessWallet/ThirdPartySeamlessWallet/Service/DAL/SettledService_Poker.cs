@@ -1427,7 +1427,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         SettleDate = betDataSet.SettleDate,
                         TicketNo = betDataSet.TicketNo,
                         GameId = betDataSet.GameId,
-                        GameRoundId = betDataSet.GameRoundId.Split("_").Last(),
+                        GameRoundId = betDataSet.GameRoundId,
                         TransactionId = string.IsNullOrEmpty(betDataSet.TransactionId) ? "" : betDataSet.TransactionId,
                         Stake = 0m,
                         ActualStake = betDataSet.ActualStake,
