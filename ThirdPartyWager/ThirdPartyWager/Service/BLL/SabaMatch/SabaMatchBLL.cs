@@ -75,6 +75,6 @@ public class SabaMatchBLL
 
     private string CreateQuery()
     {
-        return $"isLive=false&Bettype=1&from={DateTime.Now.AddHours(-1):yyyy-MM-ddTHH:mm:ss}&to={DateTime.Now:yyyy-MM-ddTHH:mm:ss}&vendorId={_hotMatchConfigModel.VendorId}&vendorMemberId={_hotMatchConfigModel.VendorMemberId}";
+        return $"sportType=1&isLive=false&Bettype=1&from={DateTime.Now.AddHours(-1):yyyy-MM-ddTHH:mm:ss}&to={DateTime.Now:yyyy-MM-ddTHH:mm:ss}&vendorId={_hotMatchConfigModel.VendorId}&vendorMemberId={_hotMatchConfigModel.VendorMemberId}";
     }
 }
