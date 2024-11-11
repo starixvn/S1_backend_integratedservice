@@ -33,16 +33,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { "allbet", Tp.Allbet },
             {"pragmaticplay",Tp.PP },
             {"pragmaticplaycasino",Tp.PP },
-            {"fachai", Tp.FaChai },
             {"keno", Tp.SBPKeno },
             {"lottery", Tp.SBPLottery },
-            { "sexycasino", Tp.Sexy },
             { "pocketgames", Tp.PG },
-            { "pragmaticplay",Tp.PP },
-            { "pragmaticplaycasino",Tp.PP },
             { "fachai", Tp.FaChai },
-            { "keno", Tp.SBPKeno },
-            { "lottery", Tp.SBPLottery },
             { "sexycasino", Tp.Sexy },
             { "worldentertainment", Tp.EBet }
         };
