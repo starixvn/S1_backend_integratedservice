@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IEnumerable<TpCurrency> _tpCurrencyList;
         private readonly ILogger<NextspinFinancBLL> _logger;
         private readonly Dictionary<int, NextspinConfig> _siteConfigDic;
-        private readonly int _tpId = (int)Tp.Netent;
+        private readonly int _tpId = (int)Tp.Nextspin;
 
         public NextspinFinancBLL(IServiceProvider provider)
         {
