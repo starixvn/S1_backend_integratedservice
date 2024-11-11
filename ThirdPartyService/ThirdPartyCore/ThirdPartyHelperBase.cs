@@ -599,6 +599,16 @@ namespace ThirdPartyCore
 
             return md5;
         }
+
+        protected string ToMD5V2(string encodeStr)
+        {
+            using var cryptoMD5 = MD5.Create();
+            var bytes = Encoding.UTF8.GetBytes(encodeStr);
+            var hash = cryptoMD5.ComputeHash(bytes);
+
+            return Convert.ToBase64String(hash);
+        }
+
         protected string GetRandomString(int length)
         {
             var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ

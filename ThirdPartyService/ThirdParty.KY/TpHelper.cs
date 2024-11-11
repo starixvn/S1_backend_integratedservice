@@ -32,7 +32,7 @@ namespace ThirdParty.KY
             var timestamp = currentAt.ToUnixTimeMilliseconds().ToString();
             var timecnv = currentAt.ToString("yyyyMMddHHmmssfff");
 
-            string account = tpCustInfo.TpUserName;
+            string account = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(tpCustInfo.TpUserName));
             string orderId = $"{Agent}{timecnv}{account}";
             string ip = inputs.ContainsKey("ClientIP") && !string.IsNullOrEmpty(inputs["ClientIP"]) ? inputs["ClientIP"] : "";
             string lineCode = tpCustInfo.SiteId.ToString();
@@ -51,7 +51,7 @@ namespace ThirdParty.KY
 
             var sParams = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
             string eParams = AesEncrypt(sParams, DesKey);
-            string postParams = $"agent={Agent}&timestamp={timestamp}param={sParams}&key={ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()}";
+            string postParams = $"agent={Agent}&timestamp={timestamp}&param={eParams}&key={ToMD5V2($"{Agent}{timestamp}{Md5key}").ToLower()}";
 
             var result = HttpGet(ApiUrl, postParams);
 
