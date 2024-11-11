@@ -31,12 +31,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { "fastspin", Tp.FastSpin },
             { "jili", Tp.JILI },
             { "allbet", Tp.Allbet },
-            {"pragmaticplay",Tp.PP },
-            {"pragmaticplaycasino",Tp.PP },
-            {"fachai", Tp.FaChai },
-            {"keno", Tp.SBPKeno },
-            {"lottery", Tp.SBPLottery },
-            { "sexycasino", Tp.Sexy }
+            { "pragmaticplay",Tp.PP },
+            { "pragmaticplaycasino",Tp.PP },
+            { "fachai", Tp.FaChai },
+            { "keno", Tp.SBPKeno },
+            { "lottery", Tp.SBPLottery },
+            { "sexycasino", Tp.Sexy },
+            { "worldentertainment", Tp.EBet }
         };
 
         private readonly Dictionary<int, WalletKind> _gameOfWalletKind = new()
@@ -53,7 +54,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.FaChai_RNG, WalletKind.BonusWallet },
             { (int)GameType.SBP_Keno, WalletKind.BonusWallet },
             { (int)GameType.SBP_Lottery, WalletKind.BonusWallet },
-            { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet }
+            { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet },
+            { (int)GameType.EBet_LiveCasino, WalletKind.BonusWallet }
         };
 
         private readonly Dictionary<int, TpCategory> _gameOfTpCategory = new()
@@ -70,7 +72,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.FaChai_RNG, TpCategory.Slots },
             { (int)GameType.SBP_Keno, TpCategory.Lottery },
             { (int)GameType.SBP_Lottery, TpCategory.Lottery },
-            { (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino }
+            { (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino },
+            { (int)GameType.EBet_LiveCasino, TpCategory.LiveCasino }
         };
 
         public MaxGameBLL(IServiceProvider provider)
@@ -796,6 +799,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     GetTicketNoSpName = "Service_BettransLT_Lottery_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransLT_Lottery_Ins";
                     CancelBettransSpName = "Service_BettransLT_Lottery_CancelBet_Set";
+                    break;
+
+                case (int)GameType.EBet_LiveCasino:
+                    GetTicketNoSpName = "Service_BettransLC_WE_TicketNo_Get";
+                    InsertBettransSpName = "Service_BettransLC_WE_Ins";
+                    CancelBettransSpName = "Service_BettransLC_WE_CancelBet_Set";
                     break;
 
                 default:
