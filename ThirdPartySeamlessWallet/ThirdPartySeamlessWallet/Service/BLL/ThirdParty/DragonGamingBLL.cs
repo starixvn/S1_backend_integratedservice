@@ -36,7 +36,7 @@ public class DragonGamingBLL : IDragonGamingBLL
 
     #endregion
 
-    public async Task<SessionResponse_DragonGaming> GetSession(SessionRequest_DragonGaming request)
+    public async Task<CommonResponse_DragonGaming> GetSession(SessionRequest_DragonGaming request)
     {
         try
         {
@@ -44,50 +44,50 @@ public class DragonGamingBLL : IDragonGamingBLL
 
             if (!_authBll.Authenticate(token, out TpCustInfoAuth tpCustInfoAuth))
             {
-                return new SessionResponse_DragonGaming(ErrorCodeOfDragonGaming.PlayerInvalid, request.token);
+                return new CommonErrorResponse_DragonGaming(2012);
             }
 
             var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpCustInfoAuth.TpUserName);
             if (tpCheck == null || tpCheck.Locked)
             {
-                return new SessionResponse_DragonGaming(ErrorCodeOfDragonGaming.PlayerFrozen, request.token, tpCustInfoAuth.TpUserName);
+                return new CommonErrorResponse_DragonGaming(2024);
             }
 
             var gameType = _thirdPartyBll.GetGameType((int)_thisTp, tpGameType);
             var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
-            return new SessionResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfoAuth.TpUserName, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
+            return new SessionResponse_DragonGaming(request.token, tpCustInfoAuth.TpUserName, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming GetSession Exception:{ex.Message}");
-            return new SessionResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, request.token);
+            return new CommonErrorResponse_DragonGaming(2035);
         }
     }
 
-    public async Task<BalanceResponse_DragonGaming> GetBalance(BalanceRequest_DragonGaming request)
+    public async Task<CommonResponse_DragonGaming> GetBalance(BalanceRequest_DragonGaming request)
     {
         try
         {
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             if (tpCustInfo is null)
             {
-                return new BalanceResponse_DragonGaming(ErrorCodeOfDragonGaming.PlayerInvalid, request.token);
+                return new CommonErrorResponse_DragonGaming(2014);
             }
 
             var (token, tpUserName, tpGameType) = GetToken(request.token);
             var gameType = _thirdPartyBll.GetGameType((int)_thisTp, tpGameType);
             var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
 
-            return new BalanceResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, request.account_id, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
+            return new BalanceResponse_DragonGaming(request.account_id, request.token, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming GetBalance Exception:{ex.Message}");
-            return new BalanceResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, request.token);
+            return new CommonErrorResponse_DragonGaming(2035);
         }
     }
 
-    public async Task<DebitCreditRefundResponse_DragonGaming> Debit(DebitRequest_DragonGaming request)
+    public async Task<CommonResponse_DragonGaming> Debit(DebitRequest_DragonGaming request)
     {
         try
         {
@@ -95,16 +95,17 @@ public class DragonGamingBLL : IDragonGamingBLL
 
             if (tpCheck == null)
             {
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.PlayerInvalid, request.token);
+                return new CommonErrorResponse_DragonGaming(2014);
             }
             if (tpCheck.Locked)
             {
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.PlayerFrozen, request.token);
+                return new CommonErrorResponse_DragonGaming(2024);
             }
 
             var gameType = GetGameType(request.game_type);
             if (gameType is GameType.None)
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.GameTypeInvalid, request.token);
+                return new CommonErrorResponse_DragonGaming(2018);
+
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             int result = PlaceBet(request, tpCustInfo, gameType, out decimal tpAffterAmount);
             if (result > 0)
@@ -114,35 +115,36 @@ public class DragonGamingBLL : IDragonGamingBLL
                     var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
                     tpAffterAmount = tpCustBalance.Balance;
                 }
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+                return new DebitCreditRefundResponse_DragonGaming(request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DuplicateSuccess, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+                _logger.LogInformation($"DragonGaming-Debit Duplicate Request. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount}");
+                return new DebitCreditRefundResponse_DragonGaming(request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
             else if (tpAffterAmount < 0)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Insufficient, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+                return new CommonErrorResponse_DragonGaming(2028);
             }
-
-            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DebitInternalError, request.token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+            _logger.LogInformation($"DragonGaming-Debit Internal Error. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount}");
+            return new CommonErrorResponse_DragonGaming(2035);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming Debit Exception:{ex.Message}");
-            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, request.token);
+            return new CommonErrorResponse_DragonGaming(2035);
         }
     }
 
-    public async Task<DebitCreditRefundResponse_DragonGaming> Credit(CreditRequest_DragonGaming request)
+    public async Task<CommonResponse_DragonGaming> Credit(CreditRequest_DragonGaming request)
     {
         try
         {
             var gameType = GetGameType(request.game_type);
             if (gameType is GameType.None)
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.GameTypeInvalid, request.token);
+                return new CommonErrorResponse_DragonGaming(2018);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             int result = 0;
             decimal tpAffterAmount = 0m;
@@ -156,35 +158,37 @@ public class DragonGamingBLL : IDragonGamingBLL
                     var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
                     tpAffterAmount = tpCustBalance.Balance;
                 }
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+                return new DebitCreditRefundResponse_DragonGaming(request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DuplicateSuccess, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+                _logger.LogInformation($"DragonGaming-Credit Duplicate Request. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount}");
+                return new DebitCreditRefundResponse_DragonGaming(request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
             else if (result == -2)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.NoExistVaildBet, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+                _logger.LogInformation($"DragonGaming-not exist vaild bet. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount}");
+                return new CommonErrorResponse_DragonGaming(2035);
             }
-
-            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.CreditInternalError, request.token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+            _logger.LogInformation($"DragonGaming-Credit Internal Error. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount}");
+            return new CommonErrorResponse_DragonGaming(2035);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming Credit Exception:{ex.Message}");
-            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, request.token);
+            return new CommonErrorResponse_DragonGaming(2035);
         }
     }
 
-    public async Task<DebitCreditRefundResponse_DragonGaming> Refund(RefundRequest_DragonGaming request)
+    public async Task<CommonResponse_DragonGaming> Refund(RefundRequest_DragonGaming request)
     {
         try
         {
             var gameType = GetGameType(request.game_type);
             if (gameType is GameType.None)
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.GameTypeInvalid, request.token);
+                return new CommonErrorResponse_DragonGaming(2018);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
 
             int result = CancelBet(request, tpCustInfo, out decimal tpAffterAmount);
@@ -195,20 +199,21 @@ public class DragonGamingBLL : IDragonGamingBLL
                     var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
                     tpAffterAmount = tpCustBalance.Balance;
                 }
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+                return new DebitCreditRefundResponse_DragonGaming(request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DuplicateSuccess, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+                _logger.LogInformation($"DragonGaming-Refund Duplicate Request. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount},original_transaction_id={request.original_transaction_id}");
+                return new DebitCreditRefundResponse_DragonGaming(request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
-
-            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.RefundInternalError, request.token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
+            _logger.LogInformation($"DragonGaming-Refund Internal Error. player={tpCustInfo.TpUserName}, roundid={request.round_id}, gameid={request.game_id},amount={request.amount}");
+            return new CommonErrorResponse_DragonGaming(2035);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming Refund Exception:{ex.Message}");
-            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, request.token);
+            return new CommonErrorResponse_DragonGaming(2035);
         }
     }
 

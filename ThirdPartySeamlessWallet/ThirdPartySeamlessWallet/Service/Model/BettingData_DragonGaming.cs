@@ -1,6 +1,5 @@
 ﻿using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using static ThirdPartySeamlessWallet.Controllers.APController;
 
 namespace ThirdPartySeamlessWallet.Service.Model;
 
@@ -65,6 +64,11 @@ public class RefundRequest_DragonGaming : CommonDebitCreditRefundRequest_DragonG
 public class CommonResponse_DragonGaming
 {
     public int status { get; set; }
+
+}
+
+public class CommonSuccessResponse_DragonGaming : CommonResponse_DragonGaming
+{
     public string account_id { get; set; }
     public string country { get; set; }
     public string token { get; set; }
@@ -72,57 +76,63 @@ public class CommonResponse_DragonGaming
     public string currency { get; set; }
     public string message { get; set; }
 
-    public CommonResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token)
+    public CommonSuccessResponse_DragonGaming(string token)
     {
-        status = errorCode > 0 ? (int)ErrorCodeOfDragonGaming.Success : (int)errorCode;
+        status = (int)StatusOfDragonGaming.Success;
         this.token = token;
-        this.message = errorCode.GetEnumDescription();
+        this.message = StatusOfDragonGaming.Success.GetEnumDescription();
     }
 }
 
-public class SessionResponse_DragonGaming : CommonResponse_DragonGaming
+public class CommonErrorResponse_DragonGaming : CommonResponse_DragonGaming
+{
+    public int error_id { get; set; }
+    public string error_code { get; set; }
+    public string error_message { get; set; }
+
+    public CommonErrorResponse_DragonGaming(int errorId)
+    {
+        status = (int)StatusOfDragonGaming.Fail;
+        this.error_id = errorId;
+        this.error_code = errorId.GetErrorIdInfo().Code;
+        this.error_message = errorId.GetErrorIdInfo().Message;
+    }
+}
+
+public class SessionResponse_DragonGaming : CommonSuccessResponse_DragonGaming
 {
     public string username { get; set; }
 
-    public SessionResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token)
-        : base(errorCode, token)
-    {
-        account_id = "";
-        username = "";
-        balance = 0;
-        currency = "";
-    }
-
-    public SessionResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token, string tpUserName)
-        : base(errorCode, token)
+    /// <summary>
+    /// success session response
+    /// </summary>
+    /// <param name="token"></param>
+    /// <param name="tpUserName"></param>
+    /// <param name="balance"></param>
+    /// <param name="currency"></param>
+    public SessionResponse_DragonGaming(string token, string tpUserName, decimal balance, string currency)
+        : base(token)
     {
         account_id = tpUserName;
         username = tpUserName;
-        balance = 0;
-        currency = "";
-    }
-
-    public SessionResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token, string tpUserName, decimal balance, string currency)
-        : base(errorCode, token)
-    {
-        account_id = tpUserName;
-        username = tpUserName;
-        this.balance = (int)balance;
+        this.balance = (long)(balance * 100);
         this.currency = currency;
     }
 }
 
-public class BalanceResponse_DragonGaming : CommonResponse_DragonGaming
+public class BalanceResponse_DragonGaming : CommonSuccessResponse_DragonGaming
 {
     public int bonus_amount { get; set; }
 
-    public BalanceResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token) : base(errorCode, token)
-    {
-        bonus_amount = 0;
-    }
-
-    public BalanceResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token, string tpUserName, decimal balance, string currency)
-        : base(errorCode, token)
+    /// <summary>
+    /// success balance response
+    /// </summary>
+    /// <param name="token"></param>
+    /// <param name="tpUserName"></param>
+    /// <param name="balance"></param>
+    /// <param name="currency"></param>
+    public BalanceResponse_DragonGaming(string token, string tpUserName, decimal balance, string currency)
+        : base(token)
     {
         account_id = tpUserName;
         this.balance = (long)(balance * 100);
@@ -133,21 +143,16 @@ public class BalanceResponse_DragonGaming : CommonResponse_DragonGaming
 
 public class DebitCreditRefundResponse_DragonGaming : BalanceResponse_DragonGaming
 {
-
-    public DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token) : base(errorCode, token)
-    {
-    }
-
-    public DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token, string tpUserName, string currency, string transaction_id)
-        : base(errorCode, token)
-    {
-        account_id = tpUserName;
-        this.currency = currency;
-        this.transaction_id = transaction_id;
-    }
-
-    public DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token, string tpUserName, decimal balance, string currency, string transaction_id)
-        : base(errorCode, token, tpUserName, balance, currency)
+    /// <summary>
+    /// success debit/credit/refund response
+    /// </summary>
+    /// <param name="token"></param>
+    /// <param name="tpUserName"></param>
+    /// <param name="balance"></param>
+    /// <param name="currency"></param>
+    /// <param name="transaction_id"></param>
+    public DebitCreditRefundResponse_DragonGaming(string token, string tpUserName, decimal balance, string currency, string transaction_id)
+        : base(token, tpUserName, balance, currency)
     {
         this.transaction_id = transaction_id;
     }
