@@ -3,7 +3,6 @@
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-
 using Newtonsoft.Json;
 
 using static CommonService.Service.Model.SendGridResetPassword;

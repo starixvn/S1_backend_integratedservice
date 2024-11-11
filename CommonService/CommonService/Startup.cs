@@ -41,6 +41,7 @@ namespace CommonService
             services.AddSingleton<SendGridBLL>();
             services.AddSingleton<RestPasswordBLL>();
             services.AddSingleton<IovationBLL>();
+            services.AddSingleton<IBMMailBLL>();
 
             services.AddSingleton<SelLangBLL>();
             services.AddSingleton<FPSBLL>();

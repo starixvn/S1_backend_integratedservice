@@ -12,17 +12,18 @@ namespace CommonService.Controllers
     public class MailController : ControllerBase
     {
         private readonly CustInfoBLL _custInfoBll;
-        private readonly SendGridBLL _sendGridBll;
         private readonly RestPasswordBLL _restPasswordBll;
         private readonly OTPEmailBLL _otpEmailBll;
         private readonly Dictionary<int, int> _welComeMailConfig;
-        
+        private readonly IBMMailBLL _iBMMailBll;
+
         public MailController(IServiceProvider provider)
         {
             _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
             _sendGridBll = provider.GetRequiredService<SendGridBLL>();
             _restPasswordBll = provider.GetRequiredService<RestPasswordBLL>();
             _otpEmailBll = provider.GetRequiredService<OTPEmailBLL>();
+            _iBMMailBll = provider.GetRequiredService<IBMMailBLL>();
             _welComeMailConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<int>("WelComeMail");
         }
 
@@ -40,10 +41,8 @@ namespace CommonService.Controllers
             var config = _welComeMailConfig[custInfo.SiteId];
             if (config == 1)
             {
-                var resultResp = await _sendGridBll.SendMailAsync(custInfo, null, TemplateType.WelcomeMail);
-                apiResult.ErrorCode = resultResp.ErrorCode;
-                apiResult.Message = resultResp.Message;
-                apiResult.RawMessage = resultResp.RawMessage;
+                //return await _sendGridBll.SendMailAsync(custInfo, null, TemplateType.WelcomeMail);
+                return await _iBMMailBll.SendMailAsync(custInfo, null);
             }
             else
             {
@@ -67,10 +66,7 @@ namespace CommonService.Controllers
             var custInfo = _custInfoBll.GetCustInfoProfile(req2.custId);
             if (custInfo != null)
             {
-                var resultResp = await _restPasswordBll.SendMailAsync(custInfo, req2.resetPasswordUrl);
-                apiResult.ErrorCode = resultResp.ErrorCode;
-                apiResult.Message = resultResp.Message;
-                apiResult.RawMessage = resultResp.RawMessage;
+                return await _restPasswordBll.SendMailAsync(custInfo, req2.resetPasswordUrl);
             }
             return apiResult;
         }
@@ -78,8 +74,7 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult<SendOTPEmailResult>> OTPEmail(OTPEmailReq req)
         {
-            var apiResult = await _otpEmailBll.SendOtpEmailAsync(req.custId, req.OTPEmailUrl);
-            return apiResult;
+            return await _otpEmailBll.SendOtpEmailAsync(req.custId, req.OTPEmailUrl);
         }
 
         [HttpPost]
