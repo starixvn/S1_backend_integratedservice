@@ -80,7 +80,7 @@ public class TicketFaChaiBLL : ITpRefundBLL
                 {
                     task = true;
                     msg = $"{func} SEAMLESS_NULL (gameType={gameType}, type={type}, TicketNo={bettrans.TicketNo})";
-                    _logger.LogError($"{msg}");
+                    _logger.LogInformation($"{msg}");
                     return task;
                 }
 
