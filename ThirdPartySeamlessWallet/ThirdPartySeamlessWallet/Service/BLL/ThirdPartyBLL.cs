@@ -338,6 +338,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 case (int)Tp.Sexy:
                     gameType = GameType.Sexy_LiveCasino;
                     break;
+                case (int)Tp.PG:
+                    gameType = GameType.PG_RNG;
+                    break;
                 case (int)Tp.EBet:
                     gameType = GameType.EBet_LiveCasino;
                     break;

@@ -31,6 +31,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { "fastspin", Tp.FastSpin },
             { "jili", Tp.JILI },
             { "allbet", Tp.Allbet },
+            {"pragmaticplay",Tp.PP },
+            {"pragmaticplaycasino",Tp.PP },
+            {"fachai", Tp.FaChai },
+            {"keno", Tp.SBPKeno },
+            {"lottery", Tp.SBPLottery },
+            { "sexycasino", Tp.Sexy },
+            { "pocketgames", Tp.PG },
             { "pragmaticplay",Tp.PP },
             { "pragmaticplaycasino",Tp.PP },
             { "fachai", Tp.FaChai },
@@ -55,6 +62,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.SBP_Keno, WalletKind.BonusWallet },
             { (int)GameType.SBP_Lottery, WalletKind.BonusWallet },
             { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet },
+            { (int)GameType.PG_RNG, WalletKind.BonusWallet },
+            { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.EBet_LiveCasino, WalletKind.BonusWallet }
         };
 
@@ -72,6 +81,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.FaChai_RNG, TpCategory.Slots },
             { (int)GameType.SBP_Keno, TpCategory.Lottery },
             { (int)GameType.SBP_Lottery, TpCategory.Lottery },
+            { (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino },
+            { (int)GameType.PG_RNG, TpCategory.Slots },
             { (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.EBet_LiveCasino, TpCategory.LiveCasino }
         };
