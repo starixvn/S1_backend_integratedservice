@@ -7,7 +7,7 @@ using Serilog.Formatting.Json;
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseSentry();
 
-builder.Environment.EnvironmentName = builder.Configuration.GetSection("env").Get<string>();
+builder.Environment.EnvironmentName = builder.Configuration.GetValue<string>("env");
 
 var remoteUrls = GetRemoteUrls();
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
