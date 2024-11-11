@@ -152,6 +152,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.DragonGaming", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Eday", "ThirdParty.Eday\ThirdParty.Eday.csproj", "{5D10D76B-92E4-424E-AEB9-190FF23ABB9B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.KY", "ThirdParty.KY\ThirdParty.KY.csproj", "{38D98059-E0E7-4068-8199-E30D8D07597D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -442,6 +444,10 @@ Global
 		{5D10D76B-92E4-424E-AEB9-190FF23ABB9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D10D76B-92E4-424E-AEB9-190FF23ABB9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D10D76B-92E4-424E-AEB9-190FF23ABB9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38D98059-E0E7-4068-8199-E30D8D07597D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38D98059-E0E7-4068-8199-E30D8D07597D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38D98059-E0E7-4068-8199-E30D8D07597D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38D98059-E0E7-4068-8199-E30D8D07597D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -515,6 +521,7 @@ Global
 		{E877034A-BA89-4752-8AC3-38F425C599F9} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{ACC8CCAB-12D0-4400-A299-C86FA419923C} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{5D10D76B-92E4-424E-AEB9-190FF23ABB9B} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{38D98059-E0E7-4068-8199-E30D8D07597D} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
