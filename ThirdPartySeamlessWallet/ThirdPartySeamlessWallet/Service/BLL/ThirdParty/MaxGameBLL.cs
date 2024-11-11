@@ -551,6 +551,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
+        private static TpBetFailureRecord GetTpPlaceBetAndSettleFailureParam_MaxGame(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, PayoutData_MaxGame payoutData, TpCheckRecordCode Code, decimal AfterAmount, int tpId, int gameType)
+        {
+            // BLL會經過匯率換算 下列還原為原始資料
+            var InfoData = new
+            {
+                CurrentBalance = custBalance.Balance / tpCurrency.ExchangeRate,
+                BetAmount = payoutData.Payload.BetDataSet.Sum(i => i.ActualStake) / tpCurrency.ExchangeRate,
+                InsufficientBalance = AfterAmount,
+                ExchangeRate = tpCurrency.ExchangeRate,
+            };
+
+            return new TpBetFailureRecord
+            {
+                TransId = payoutData.Seq,
+                TpId = tpId,
+                TpGameType = gameType,
+                SiteId = tpCustInfo.SiteId,
+                CustId = tpCustInfo.CustId,
+                UserName = tpCustInfo.UserName,
+                Code = (int)Code,
+                TransTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Info = JsonConvert.SerializeObject(InfoData),
+            };
+        }
+
         private int PlaceBetPK_MaxGame(BettingData_MaxGame bettingData_MaxGame, int tpId, int gameType, out decimal afterAmount, out List<BetDataSetList_MaxGame> refData)
         {
             var walletKind = _gameOfWalletKind[gameType];
@@ -603,15 +628,36 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCategory = _gameOfTpCategory[gameType];
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, payoutData_MaxGame.Payload.OperatorCustId);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+            var custBalance = _tpCustInfoBLL.GetBalance(tpId, payoutData_MaxGame.Payload.OperatorCustId, gameType);
+            refData = new List<BetDataSetList_MaxGame>();
 
             if (tpCurrency.ExchangeRate != 0)
             {
+                custBalance.Balance *= tpCurrency.ExchangeRate;
                 foreach (var betDataSet in payoutData_MaxGame.Payload.BetDataSet)
                 {
-                    betDataSet.ActualStake *= tpCurrency.ExchangeRate;
-                    betDataSet.NetStake *= tpCurrency.ExchangeRate;
                     betDataSet.Payout *= tpCurrency.ExchangeRate;
+                    betDataSet.NetStake *= tpCurrency.ExchangeRate;
+                    betDataSet.ActualStake *= tpCurrency.ExchangeRate;
                 }
+            }
+            var totalActualStake = payoutData_MaxGame.Payload.BetDataSet.Sum(i => i.ActualStake);
+
+            if (custBalance.Balance < 0)
+            {
+                afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = GetTpPlaceBetAndSettleFailureParam_MaxGame(tpCustInfo, custBalance, tpCurrency, payoutData_MaxGame, TpCheckRecordCode.InsufficientBalance, afterAmount, tpId, gameType);
+                _thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                return 0;
+            }
+
+            var checkBalance = custBalance.Balance - Math.Abs(totalActualStake);
+            if (checkBalance < 0)
+            {
+                afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = GetTpPlaceBetAndSettleFailureParam_MaxGame(tpCustInfo, custBalance, tpCurrency, payoutData_MaxGame, TpCheckRecordCode.InsufficientBalance, afterAmount, tpId, gameType);
+                _thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                return 0;
             }
 
             var spName = GetSpNameList(gameType);

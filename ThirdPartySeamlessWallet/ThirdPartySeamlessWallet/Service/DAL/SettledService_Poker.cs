@@ -1456,93 +1456,39 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
                     result = _partitionService.Execute(partitionTime, spName.InsertBettrans, p, trans);
 
-                    // 檢查差額: 使用ActualStake當作該局的實際扣款金額，如果跟前面收到的PlaceBet下注金額加總後不符合，需要進行Refund
-                    var placeBetActualStake = bettrans.Where(i => i.TicketType == BettransType.Bet).Sum(i => i.ActualStake);
-                    var diffActualStake = placeBetActualStake - betDataSet.ActualStake;
-                    if (diffActualStake != 0)
+                    if (result > 0 && betDataSet.ActualStake != 0)
                     {
-                        // 差額:扣款
-                        if (diffActualStake < 0)
+                        if (walletKind == WalletKind.BonusWallet)
                         {
-                            if (walletKind == WalletKind.BonusWallet)
-                            {
-                                result = PayoutV2(
-                                    tpCustInfo,
-                                    Math.Abs(diffActualStake) * -1,
-                                    tpId,
-                                    betDataSet.TicketNo,
-                                    gameType,
-                                    tpCategory,
-                                    betDataSet.TicketNo,
-                                    TransType.Wagers,
-                                    null,
-                                    out afterAmount,
-                                    $"Stake",
-                                    out bonusId,
-                                    conn,
-                                    trans,
-                                    AllowNegative.Allow
-                                );
-                            }
-                            else
-                            {
-                                result = walletService.SetBalance(
-                                    tpCustInfo.CustId,
-                                    tpCustInfo.SiteId,
-                                    tpCustInfo.UserName,
-                                    Math.Abs(diffActualStake) * -1,
-                                    tpId,
-                                    TransType.Wagers,
-                                    $"Stake : {Math.Abs(diffActualStake):#,##0.##} {betDataSet.ActualStake}",
-                                    betDataSet.TicketNo,
-                                    out afterAmount,
-                                    conn,
-                                    trans,
-                                    AllowNegative.Allow
-                                );
-                            }
-
+                            result = _bettingService.PlaceBet(
+                                tpCustInfo,
+                                Math.Abs(betDataSet.ActualStake) * -1,
+                                tpId,
+                                betDataSet.TicketNo,
+                                gameType,
+                                betDataSet.TicketNo,
+                                out afterAmount,
+                                ref bonusId,
+                                out _,
+                                conn,
+                                trans
+                            );
                         }
-                        // 差額:退款
-                        if (diffActualStake > 0)
+                        else
                         {
-                            if (walletKind == WalletKind.BonusWallet)
-                            {
-                                result = PayoutV2(
-                                    tpCustInfo,
-                                    Math.Abs(diffActualStake),
-                                    tpId,
-                                    betDataSet.TicketNo,
-                                    gameType,
-                                    tpCategory,
-                                    betDataSet.TicketNo,
-                                    TransType.Refunds,
-                                    null,
-                                    out afterAmount,
-                                    $"Refund",
-                                    out bonusId,
-                                    conn,
-                                    trans,
-                                    AllowNegative.Allow
-                                );
-                            }
-                            else
-                            {
-                                result = walletService.SetBalance(
-                                    tpCustInfo.CustId,
-                                    tpCustInfo.SiteId,
-                                    tpCustInfo.UserName,
-                                    Math.Abs(diffActualStake),
-                                    tpId,
-                                    TransType.Refunds,
-                                    $"Refund: {Math.Abs(diffActualStake):#,##0.##}",
-                                    betDataSet.TicketNo,
-                                    out afterAmount,
-                                    conn,
-                                    trans,
-                                    AllowNegative.Allow
-                                );
-                            }
+                            result = walletService.SetBalance(
+                                tpCustInfo.CustId,
+                                tpCustInfo.SiteId,
+                                tpCustInfo.UserName,
+                                Math.Abs(betDataSet.ActualStake) * -1,
+                                tpId,
+                                TransType.Wagers,
+                                $"Stake: {betDataSet.ActualStake:#,##0.##}",
+                                betDataSet.TicketNo,
+                                out afterAmount,
+                                conn,
+                                trans
+                            );
                         }
                     }
 
