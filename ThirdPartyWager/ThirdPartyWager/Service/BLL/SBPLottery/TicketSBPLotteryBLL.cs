@@ -8,15 +8,15 @@ using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
-    public class TicketSBPLotteryBLL : ITpRefundBLL
+    public class TicketLotteryBLL : ITpRefundBLL
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiMaxGameBLL _apiMaxGameBLL;
-        private readonly WagerSBPLotteryService _wagerLotteryService;
-        private readonly ILogger<TicketSBPLotteryBLL> _logger;
+        private readonly WagerLotteryService _wagerLotteryService;
+        private readonly ILogger<TicketLotteryBLL> _logger;
         private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
-        private readonly int _tpId = (int)Tp.SBPLottery;
-        private readonly string _tpName = Tp.SBPLottery.ToString();
+        private readonly int _tpId = (int)Tp.Lottery;
+        private readonly string _tpName = Tp.Lottery.ToString();
         private readonly IEnumerable<ServerInfo> _serverList;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeRange = 10;
@@ -25,12 +25,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _delay = 3600;
         private readonly int _delayTimeRange = 60;
 
-        public TicketSBPLotteryBLL(IServiceProvider provider)
+        public TicketLotteryBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
-            _wagerLotteryService = provider.GetRequiredService<WagerSBPLotteryService>();
-            _logger = provider.GetRequiredService<ILogger<TicketSBPLotteryBLL>>();
+            _wagerLotteryService = provider.GetRequiredService<WagerLotteryService>();
+            _logger = provider.GetRequiredService<ILogger<TicketLotteryBLL>>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
             _serverList = provider.GetRequiredService<CommonBLL>().GetSiteList();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();

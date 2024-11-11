@@ -33,8 +33,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { "allbet", Tp.Allbet },
             {"pragmaticplay",Tp.PP },
             {"pragmaticplaycasino",Tp.PP },
-            {"keno", Tp.SBPKeno },
-            {"lottery", Tp.SBPLottery },
+            {"keno", Tp.RNGKeno },
+            {"lottery", Tp.Lottery },
             { "pocketgames", Tp.PG },
             { "fachai", Tp.FaChai },
             { "sexycasino", Tp.Sexy },
@@ -53,8 +53,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.PP_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PP_RNG, WalletKind.BonusWallet },
             { (int)GameType.FaChai_RNG, WalletKind.BonusWallet },
-            { (int)GameType.SBP_Keno, WalletKind.BonusWallet },
-            { (int)GameType.SBP_Lottery, WalletKind.BonusWallet },
+            { (int)GameType.RNG_Keno, WalletKind.BonusWallet },
+            { (int)GameType.Lottery, WalletKind.BonusWallet },
             { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PG_RNG, WalletKind.BonusWallet },
             { (int)GameType.EBet_LiveCasino, WalletKind.BonusWallet }
@@ -72,8 +72,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.PP_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.PP_RNG, TpCategory.Slots },
             { (int)GameType.FaChai_RNG, TpCategory.Slots },
-            { (int)GameType.SBP_Keno, TpCategory.Lottery },
-            { (int)GameType.SBP_Lottery, TpCategory.Lottery },
+            { (int)GameType.RNG_Keno, TpCategory.Lottery },
+            { (int)GameType.Lottery, TpCategory.Lottery },
             { (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.PG_RNG, TpCategory.Slots },
             { (int)GameType.EBet_LiveCasino, TpCategory.LiveCasino }
@@ -792,13 +792,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     CancelBettransSpName = "Service_BettransLC_Sexy_CancelBet_Set";
                     break;
 
-                case (int)GameType.SBP_Keno:
+                case (int)GameType.RNG_Keno:
                     GetTicketNoSpName = "Service_BettransRng_Keno_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransRng_Keno_Ins";
                     CancelBettransSpName = "Service_BettransRng_Keno_CancelBet_Set";
                     break;
 
-                case (int)GameType.SBP_Lottery:
+                case (int)GameType.Lottery:
                     GetTicketNoSpName = "Service_BettransLT_Lottery_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransLT_Lottery_Ins";
                     CancelBettransSpName = "Service_BettransLT_Lottery_CancelBet_Set";

@@ -7,34 +7,36 @@ using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
-    public class TicketKeno : BackgroundService
+    public class BetResultCheckLottery : BackgroundService
     {
-        private Timer _timer;
-        private readonly ILogger<TicketKeno> _logger;
-        private readonly TicketSBPKenoBLL _ticketKenoBLL;
+        private Timer timer;
+        private readonly ILogger<BetResultCheckLottery> _logger;
+        private readonly TicketLotteryBLL _ticketLotteryBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly int _tpId = (int)Tp.SBPKeno;
-        private readonly string _tpName = Tp.SBPKeno.ToString();
+        private readonly int _tpId = (int)Tp.Lottery;
+        private readonly string _tpName = Tp.Lottery.ToString();
         private readonly int _tpType = (int)WagerTimerType.UnSettle;
         private readonly int _lockPeriod = -30;// 近30分資料不處理
+        private readonly int _deductTime = -1;
 
-        public TicketKeno(IServiceProvider provider)
+        public BetResultCheckLottery(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<TicketKeno>>();
-            _ticketKenoBLL = provider.GetRequiredService<TicketSBPKenoBLL>();
+            _logger = provider.GetRequiredService<ILogger<BetResultCheckLottery>>();
+            _ticketLotteryBLL = provider.GetRequiredService<TicketLotteryBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoRefund, GameType.MaxGame_Poker, TimeSpan.Zero, TimeSpan.Zero);
+            timer = new Timer(BetResultCheck, GameType.Lottery, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
-        private async void DoRefund(object state)
+        private async void BetResultCheck(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+            var task = true;
             var gameType = (GameType)state;
 
             try
@@ -47,14 +49,14 @@ namespace ThirdPartyWager.Workers
                 {
                     TpId = _tpId,
                     Type = _tpType,
-                    StartTime = dataTpTimer?.StartTime ?? DateTime.Now.AddHours(-1),
+                    StartTime = (dataTpTimer == null) ? DateTime.Now.AddHours(-1) : dataTpTimer.StartTime,
                 };
 
-                // get time
-                var ticketTime = _ticketKenoBLL.GetTicketTime(execTime.StartTime, _lockPeriod, out bool exec);
+                // get time 
+                TimeCast ticketTime = _ticketLotteryBLL.GetTicketTime(execTime.StartTime, _lockPeriod, out bool exec);
                 if (exec)
                 {
-                    var res = await ExecRefundAsync(gameType, ticketTime);
+                    var res = await ExecBetResultCheckAsync(gameType, ticketTime);
                     // update timer
                     if (res)
                     {
@@ -68,48 +70,48 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(5);
-                _timer.Change(dueTimeSpan, TimeSpan.Zero);
+                var dueTimeSpan = (!task) ? TimeSpan.FromMinutes(3) : TimeSpan.FromMinutes(5);
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
-        private async Task<bool> ExecRefundAsync(GameType gameType, TimeCast ticketTime)
+        private async Task<bool> ExecBetResultCheckAsync(GameType gameType, TimeCast ticketTime)
         {
             var result = true;
             try
             {
-                _logger.LogInformation($"Refund Worker Execute Start {_tpId}, {JsonConvert.SerializeObject(ticketTime)}");
+                _logger.LogInformation($"Bet Result Check Worker Execute Start {_tpId}, {JsonConvert.SerializeObject(ticketTime)}");
 
                 // get list
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
 
                 // check tp status and only get first site to run
-                if (siteList.All(x => x.Status != 1))
+                if (!siteList.Any(x => x.Status == 1))
                 {
                     return true;
                 }
 
-                var pendingList = _ticketKenoBLL.GetPendingList((int)gameType, ticketTime);
+                var pendingList = _ticketLotteryBLL.GetPendingList((int)gameType, ticketTime);
                 if (pendingList == null)
                 {
-                    _logger.LogInformation($"Refund Worker Execute End {_tpId}, Count=0");
+                    _logger.LogInformation($"Bet Result Check Worker Execute End {_tpId}, Count=0");
                     return true;
                 }
 
                 // process
                 foreach (var pending in pendingList)
                 {
-                    var check = await _ticketKenoBLL.CheckTicketStatus(pending, (int)gameType);
+                    var check = await _ticketLotteryBLL.CheckTicketStatus(pending, (int)gameType);
                     if (!check)
                     {
                         result = false;
                     }
                 }
-                _logger.LogInformation($"Refund Worker Execute End {_tpId}, Count= {pendingList.Count()}");
+                _logger.LogInformation($"Bet Result Check Worker Execute End {_tpId}, Count= {pendingList.Count()}");
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Refund Worker Execute End {_tpId}");
+                _logger.LogInformation($"Bet Result Check Worker Execute End {_tpId}");
                 _logger.LogError(ex, ex.Message);
                 result = false;
             }
@@ -119,7 +121,7 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            _timer?.Change(Timeout.Infinite, 0);
+            timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

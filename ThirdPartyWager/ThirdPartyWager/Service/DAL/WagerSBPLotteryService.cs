@@ -4,11 +4,11 @@ using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
-    public class WagerSBPLotteryService
+    public class WagerLotteryService
     {
         private readonly MySqlClient _mainDbClient;
 
-        public WagerSBPLotteryService(IServiceProvider provider)
+        public WagerLotteryService(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }

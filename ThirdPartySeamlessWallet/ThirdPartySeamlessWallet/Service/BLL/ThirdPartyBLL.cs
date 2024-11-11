@@ -327,12 +327,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     gameType = GameType.Allbet_LiveCasino;
                     break;
 
-                case (int)Tp.SBPKeno:
-                    gameType = GameType.SBP_Keno;
+                case (int)Tp.RNGKeno:
+                    gameType = GameType.RNG_Keno;
                     break;
 
-                case (int)Tp.SBPLottery:
-                    gameType = GameType.SBP_Lottery;
+                case (int)Tp.Lottery:
+                    gameType = GameType.Lottery;
                     break;
 
                 case (int)Tp.Sexy:

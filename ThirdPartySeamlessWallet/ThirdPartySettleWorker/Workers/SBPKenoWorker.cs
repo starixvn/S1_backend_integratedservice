@@ -9,24 +9,24 @@ using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
 {
-    internal class SBPKenoWorker : BackgroundService, ISettleWorker
+    internal class RNGKenoWorker : BackgroundService, ISettleWorker
     {
-        public Tp Tp { get => Tp.SBPKeno; }
+        public Tp Tp { get => Tp.RNGKeno; }
 
         private Timer _timer;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly PartitionService _partitionService;
-        private readonly ILogger<SBPKenoWorker> _logger;
+        private readonly ILogger<RNGKenoWorker> _logger;
         private readonly string _tpName;
 
-        public SBPKenoWorker(IServiceProvider provider)
+        public RNGKenoWorker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            _logger = provider.GetRequiredService<ILogger<SBPKenoWorker>>();
+            _logger = provider.GetRequiredService<ILogger<RNGKenoWorker>>();
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
@@ -34,7 +34,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoSettle, GameType.SBP_Keno, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoSettle, GameType.RNG_Keno, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 

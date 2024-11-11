@@ -74,9 +74,9 @@
         Live22 = 68,
         FastSpin = 69,
         DragonGaming = 70,
-        SBPKeno = 71,
-        SBPLottery = 72,
-        SBPTableGame = 73
+        RNGKeno = 71,
+        Lottery = 72,
+        TableGame = 73
     }
 
     public enum TpGameType
@@ -179,8 +179,8 @@
         Live22_RNG = 121,
         FastSpin_RNG = 122,
         DragonGaming_RNG = 123,
-        SBP_Keno = 124,
-        SBP_Lottery = 125,
-        SBP_TableGame = 126
+        RNG_Keno = 124,
+        Lottery = 125,
+        TableGame = 126
     }
 }

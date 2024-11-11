@@ -9,24 +9,24 @@ using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
 {
-    public class SBPLotteryWorker : BackgroundService, ISettleWorker
+    public class LotteryWorker : BackgroundService, ISettleWorker
     {
-        public Tp Tp { get => Tp.SBPLottery; }
+        public Tp Tp { get => Tp.Lottery; }
 
         private Timer _timer;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly PartitionService _partitionService;
-        private readonly ILogger<SBPLotteryWorker> _logger;
+        private readonly ILogger<LotteryWorker> _logger;
         private readonly string _tpName;
 
-        public SBPLotteryWorker(IServiceProvider provider)
+        public LotteryWorker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            _logger = provider.GetRequiredService<ILogger<SBPLotteryWorker>>();
+            _logger = provider.GetRequiredService<ILogger<LotteryWorker>>();
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
@@ -34,7 +34,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoSettle, GameType.SBP_Lottery, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoSettle, GameType.Lottery, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 

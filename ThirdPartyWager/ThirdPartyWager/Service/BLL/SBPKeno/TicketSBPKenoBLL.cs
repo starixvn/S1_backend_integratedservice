@@ -8,15 +8,15 @@ using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
-    public class TicketSBPKenoBLL : ITpRefundBLL
+    public class TicketRNGKenoBLL : ITpRefundBLL
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiMaxGameBLL _apiMaxGameBLL;
-        private readonly WageSBPKenoService _wagerKenoService;
-        private readonly ILogger<TicketSBPKenoBLL> _logger;
+        private readonly WageRNGKenoService _wagerKenoService;
+        private readonly ILogger<TicketRNGKenoBLL> _logger;
         private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
-        private readonly int _tpId = (int)Tp.SBPKeno;
-        private readonly string _tpName = Tp.SBPKeno.ToString();
+        private readonly int _tpId = (int)Tp.RNGKeno;
+        private readonly string _tpName = Tp.RNGKeno.ToString();
         private readonly IEnumerable<ServerInfo> _serverList;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeRange = 10;
@@ -25,12 +25,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _delay = 3600;
         private readonly int _delayTimeRange = 60;
 
-        public TicketSBPKenoBLL(IServiceProvider provider)
+        public TicketRNGKenoBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
-            _wagerKenoService = provider.GetRequiredService<WageSBPKenoService>();
-            _logger = provider.GetRequiredService<ILogger<TicketSBPKenoBLL>>();
+            _wagerKenoService = provider.GetRequiredService<WageRNGKenoService>();
+            _logger = provider.GetRequiredService<ILogger<TicketRNGKenoBLL>>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
             _serverList = provider.GetRequiredService<CommonBLL>().GetSiteList();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();

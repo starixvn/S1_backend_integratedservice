@@ -108,8 +108,8 @@
         UuSlots_RNG = 120,
         Live22_RNG = 121,
         FastSpin_RNG = 122,
-        SBP_Keno = 124,
-        SBP_Lottery = 125,
-        SBP_TableGame = 126
+        RNG_Keno = 124,
+        Lottery = 125,
+        TableGame = 126
     }
 }

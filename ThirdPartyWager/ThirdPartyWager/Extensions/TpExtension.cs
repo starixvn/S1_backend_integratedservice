@@ -24,8 +24,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.FastSpin, AddFastSpin},
                 { Tp.Allbet, AddAllbet},
                 { Tp.FaChai, AddFaChai},
-                { Tp.SBPKeno, AddKeno},
-                { Tp.SBPLottery, AddSBPLottery},
+                { Tp.RNGKeno, AddKeno},
+                { Tp.Lottery, AddLottery},
                // {Tp.PP, AddPragmaticPlay },
                 //Loki comment:
                 //{ Tp.JILI, AddJILI},
@@ -709,9 +709,9 @@ namespace ThirdPartyWager.Extensions
 
         private IServiceCollection AddKeno(IServiceCollection services)
         {
-            services.AddSingleton<WageSBPKenoService>();
-            services.AddSingleton<TicketSBPKenoBLL>();
-            services.AddHostedService<TicketKeno>();
+            services.AddSingleton<WageRNGKenoService>();
+            services.AddSingleton<TicketRNGKenoBLL>();
+            services.AddHostedService<TicketRNGKeno>();
             return services;
         }
 
@@ -803,13 +803,13 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
-        private IServiceCollection AddSBPLottery(IServiceCollection services)
+        private IServiceCollection AddLottery(IServiceCollection services)
         {
-            services.AddSingleton<WagerSBPLotteryService>();
+            services.AddSingleton<WagerLotteryService>();
 
-            services.AddSingleton<TicketSBPLotteryBLL>();
+            services.AddSingleton<TicketLotteryBLL>();
 
-            services.AddHostedService<BetResultCheckSBPLottery>();
+            services.AddHostedService<BetResultCheckLottery>();
 
             return services;
         }

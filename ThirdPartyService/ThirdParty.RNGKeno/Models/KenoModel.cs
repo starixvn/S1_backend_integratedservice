@@ -1,4 +1,4 @@
-﻿namespace ThirdParty.SBPKeno.Models;
+﻿namespace ThirdParty.RNGKeno.Models;
 
 public class LoginResp
 {

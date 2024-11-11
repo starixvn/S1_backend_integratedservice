@@ -1,8 +1,8 @@
 ﻿using ThirdPartyCore.Model;
 
-namespace ThirdParty.SBPLottery
+namespace ThirdParty.Lottery
 {
-    internal class SBPLotteryConfig : TpSiteConfig
+    internal class LotteryConfig : TpSiteConfig
     {
         public string OperatorPwd { get; set; }
         public string OperatorKey { get; set; }

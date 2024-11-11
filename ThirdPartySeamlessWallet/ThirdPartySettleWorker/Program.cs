@@ -114,7 +114,7 @@ builder.Services
     .AddHostedService<AllbetWorker>()
     .AddHostedService<SexyWorker>()
     //.AddHostedService<SBOWorker>()
-    .AddHostedService<SBPKenoWorker>()
+    .AddHostedService<RNGKenoWorker>()
     .AddHostedService<JILIWorker>()
     .AddHostedService<FaChaiWorker>()
     .AddHostedService<SabaPlayWorker>()
@@ -123,7 +123,7 @@ builder.Services
     .AddHostedService<FastSpinWorker>()
     .AddHostedService<SBSWWorker>()
     .AddHostedService<MaxGameWorker>()
-    .AddHostedService<SBPLotteryWorker>();
+    .AddHostedService<LotteryWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

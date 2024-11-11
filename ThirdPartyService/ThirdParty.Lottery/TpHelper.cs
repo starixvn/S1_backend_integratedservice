@@ -7,19 +7,19 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
-namespace ThirdParty.SBPLottery
+namespace ThirdParty.Lottery
 {
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly TemporaryLogSentryService temporaryLogSentryService;
-        private readonly Dictionary<int, SBPLotteryConfig> _siteConfigDic;
+        private readonly Dictionary<int, LotteryConfig> _siteConfigDic;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SBPLotteryConfig>(TpEnum.SBPLottery.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<LotteryConfig>(TpEnum.Lottery.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
@@ -250,7 +250,7 @@ namespace ThirdParty.SBPLottery
             };
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(SBPLottery), ApiUrl, header, postdata, result);
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(Lottery), ApiUrl, header, postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 
@@ -284,7 +284,7 @@ namespace ThirdParty.SBPLottery
             throw new NotImplementedException();
         }
 
-        private string Encrypt(string req, SBPLotteryConfig config)
+        private string Encrypt(string req, LotteryConfig config)
         {
             var s = req + config.OperatorKey;
             var sign = ToMD5(s);

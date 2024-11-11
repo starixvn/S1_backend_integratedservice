@@ -146,9 +146,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Live22", "ThirdP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.FastSpin", "ThirdParty.FastSpin\ThirdParty.FastSpin.csproj", "{75DED446-2113-4EB3-804F-093B8C96E0B0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SBPLottery", "ThirdParty.SBPLottery\ThirdParty.SBPLottery.csproj", "{AD8E601E-8433-42A7-B8DF-21CAFDB47F62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Lottery", "ThirdParty.Lottery\ThirdParty.Lottery.csproj", "{AD8E601E-8433-42A7-B8DF-21CAFDB47F62}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SBPKeno", "ThirdParty.SBPRNGKeno\ThirdParty.SBPKeno.csproj", "{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.RNGKeno", "ThirdParty.RNGKeno\ThirdParty.RNGKeno.csproj", "{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

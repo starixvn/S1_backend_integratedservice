@@ -4,11 +4,11 @@ using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
-    public class WageSBPKenoService
+    public class WageRNGKenoService
     {
         private readonly MySqlClient _mainDbClient;
 
-        public WageSBPKenoService(IServiceProvider provider)
+        public WageRNGKenoService(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }

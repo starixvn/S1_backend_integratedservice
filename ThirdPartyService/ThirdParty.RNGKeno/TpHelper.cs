@@ -3,7 +3,7 @@ using System.Net;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using ThirdParty.SBPKeno.Models;
+using ThirdParty.RNGKeno.Models;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -11,7 +11,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
-namespace ThirdParty.SBPKeno
+namespace ThirdParty.RNGKeno
 {
     public class TpHelper : ThirdPartyHelperBase
     {
@@ -23,7 +23,7 @@ namespace ThirdParty.SBPKeno
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KenoConfig>(TpEnum.SBPKeno.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KenoConfig>(TpEnum.RNGKeno.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
@@ -252,7 +252,7 @@ namespace ThirdParty.SBPKeno
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(SBPKeno), ApiUrl, header, postdata, result);
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(RNGKeno), ApiUrl, header, postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 
