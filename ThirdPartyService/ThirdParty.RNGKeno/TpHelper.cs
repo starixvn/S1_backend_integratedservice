@@ -1,9 +1,5 @@
-﻿using System.ComponentModel;
-using System.Net;
-using System.Text;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using ThirdParty.RNGKeno.Models;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -299,5 +295,4 @@ namespace ThirdParty.RNGKeno
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
     }
-
 }

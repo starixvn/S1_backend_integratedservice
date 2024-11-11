@@ -150,6 +150,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Lottery", "Third
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.RNGKeno", "ThirdParty.RNGKeno\ThirdParty.RNGKeno.csproj", "{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.TableGame", "ThirdParty.TableGame\ThirdParty.TableGame.csproj", "{89352A0B-FF8B-4CA8-BF7E-87BFAE09B34C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -436,6 +438,10 @@ Global
 		{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89352A0B-FF8B-4CA8-BF7E-87BFAE09B34C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89352A0B-FF8B-4CA8-BF7E-87BFAE09B34C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89352A0B-FF8B-4CA8-BF7E-87BFAE09B34C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89352A0B-FF8B-4CA8-BF7E-87BFAE09B34C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -508,6 +514,7 @@ Global
 		{75DED446-2113-4EB3-804F-093B8C96E0B0} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{AD8E601E-8433-42A7-B8DF-21CAFDB47F62} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{14297B36-5CC0-4BC9-8E4F-B67BF9734B6F} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{89352A0B-FF8B-4CA8-BF7E-87BFAE09B34C} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
