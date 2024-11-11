@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
-using System.Net.Http;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -12,6 +10,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<SabaOddsBLL> _logger;
         private readonly SabaOddsService _sabaOddsService;
         private readonly HotEventOddsConfigModel _configModel;
+        private readonly HotMatchConfigModel _hotMatchConfigModel;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private const int SuccessErrorCode = 0;
@@ -21,6 +20,7 @@ namespace ThirdPartyWager.Service.BLL
             _sabaOddsService = provider.GetRequiredService<SabaOddsService>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _configModel = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HotEventOddsConfigModel>("HotEventOddsConfig");
+            _hotMatchConfigModel = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HotMatchConfigModel>("HotMatchConfig");
             _common = provider.GetRequiredService<Common>();
             _logger = provider.GetRequiredService<ILogger<SabaOddsBLL>>();
         }

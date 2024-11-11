@@ -1,9 +1,11 @@
 ﻿using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.BLL.SabaMatch;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.SabaMatch;
 
 namespace ThirdPartyWager.Extensions
 {
@@ -71,6 +73,14 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<SabaOddsService>();
             services.AddSingleton<SabaOddsBLL>();
             services.AddHostedService<SabaOdds>();
+            return services;
+        }
+
+        public static IServiceCollection AddSabaMatches(this IServiceCollection services)
+        {
+            services.AddSingleton<SabaMatchService>();
+            services.AddSingleton<SabaMatchBLL>();
+            services.AddHostedService<SabaMatches>();
             return services;
         }
 

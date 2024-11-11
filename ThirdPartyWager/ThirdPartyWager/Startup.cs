@@ -67,7 +67,7 @@ namespace ThirdPartyWager
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
 
-            // 先連線DB減少Worker連線錯誤
+            //// 先連線DB減少Worker連線錯誤
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
             services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
 
@@ -88,6 +88,7 @@ namespace ThirdPartyWager
             //services.AddLiveStreaming();
             //services.AddLatestHighlightVideo();
             //services.AddSabaOdds();
+            services.AddSabaMatches();
             //services.AddTpRefundWorker();
         }
 

@@ -18,6 +18,11 @@ namespace ThirdPartyWager.Service.DAL
             return await _mySqlClient.ExecuteAsync("Service_SabaOdds_Set_V3", sabaOdds);
         }
 
+        public async Task<int> InsertMatch(IEnumerable<HotEventInfo> hotEventInfos)
+        {
+            return await _mySqlClient.ExecuteAsync("Service_HotEventInfo_Insert_V3", hotEventInfos);
+        }
+
         public IEnumerable<HotEventInfo> GetSabaOddsMatchId()
         {
             return _mySqlClient.Query<HotEventInfo>("Service_SabaOddsMatchId_Get_V3");
