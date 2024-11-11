@@ -99,7 +99,7 @@ builder.Services
     //.AddHostedService<DGWorker>()
     //.AddHostedService<PegasusWorker>()
     //.AddHostedService<AGWorker>()
-    //.AddHostedService<EBetWorker>()
+    .AddHostedService<EBetWorker>()
     //.AddHostedService<WMWorker>()
     //.AddHostedService<EVOWorker>()
     //.AddHostedService<N2LiveWorker>()
