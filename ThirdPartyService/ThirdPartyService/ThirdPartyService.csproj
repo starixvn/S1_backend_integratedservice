@@ -71,6 +71,7 @@
     <ProjectReference Include="..\ThirdParty.SG\ThirdParty.SG.csproj" />
     <ProjectReference Include="..\ThirdParty.SimplePlay\ThirdParty.SimplePlay.csproj" />
     <ProjectReference Include="..\ThirdParty.SPRIBE\ThirdParty.SPRIBE.csproj" />
+    <ProjectReference Include="..\ThirdParty.TableGame\ThirdParty.TableGame.csproj" />
     <ProjectReference Include="..\ThirdParty.TCG\ThirdParty.TCG.csproj" />
     <ProjectReference Include="..\ThirdParty.TF\ThirdParty.TFG.csproj" />
     <ProjectReference Include="..\ThirdParty.UuSlots\ThirdParty.UuSlots.csproj" />
