@@ -99,6 +99,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public dynamic GetPlayerInfo(string request)
         {
+            SentrySdk.CaptureMessage($"[GetPlayerInfo]: {request}");
             var getReq = JsonConvert.DeserializeObject<GetPlayerInfoReq_MaxGame>(request);
 
             if (string.IsNullOrEmpty(getReq?.Payload?.WalletSideToken))
@@ -112,6 +113,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             var tpId = _gameOfTpId[getReq.Payload.GameType.ToLower()];
+
             var gameType = _thirdPartyBLL.GetGameType((int)tpId, getReq.Payload.GameType.ToLower());
             var operatorCustId = getReq?.Payload?.OperatorCustId ?? "";
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)tpId, operatorCustId);

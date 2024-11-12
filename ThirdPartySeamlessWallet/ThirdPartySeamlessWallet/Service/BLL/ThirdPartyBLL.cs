@@ -330,7 +330,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 case (int)Tp.RNGKeno:
                     gameType = GameType.RNG_Keno;
                     break;
-
+                case (int)Tp.TableGame:
+                    gameType = GameType.TableGame;
+                    break;
                 case (int)Tp.Lottery:
                     gameType = GameType.Lottery;
                     break;
