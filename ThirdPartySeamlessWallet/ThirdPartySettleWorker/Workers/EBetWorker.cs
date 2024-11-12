@@ -27,6 +27,7 @@ namespace ThirdPartySettleWorker.Workers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _logger = provider.GetRequiredService<ILogger<EBetWorker>>();
+            _partitionService = provider.GetRequiredService<PartitionService>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
         }
