@@ -26,8 +26,9 @@ namespace ThirdPartyWager.Extensions
                 { Tp.FaChai, AddFaChai},
                 { Tp.RNGKeno, AddKeno},
                 { Tp.Lottery, AddLottery},
-               // {Tp.PP, AddPragmaticPlay },
+                { Tp.PP, AddPragmaticPlay },
                 { Tp.JILI, AddJILI},
+                { Tp.Sexy, AddSexy},
                 //Loki comment:
                 //{ Tp.FaChai, AddFaChai},
                 //{ Tp.Pegasus, AddPegasus},
@@ -45,7 +46,6 @@ namespace ThirdPartyWager.Extensions
                 //{ Tp.YGG, AddYGG},
                 //{ Tp.KM, AddKM},
                 //{ Tp.OneGaming, AddOneGaming},
-                //{ Tp.Sexy, AddSexy},
                 //{ Tp.CQ9, AddCQ9},
                 //{ Tp.CF, AddCF},
                 //{ Tp.EBet, AddEBet},
@@ -222,10 +222,11 @@ namespace ThirdPartyWager.Extensions
 
         private IServiceCollection AddSexy(IServiceCollection services)
         {
-            services.AddSingleton<ApiSexyBLL>();
-            services.AddSingleton<FinanceSexyBLL>();
+            services.AddSingleton<WagerSexyService>();
 
-            services.AddHostedService<FinanceSexy>();
+            services.AddSingleton<TicketSexyBLL>();
+
+            services.AddHostedService<TicketSexy>();
 
             return services;
         }
@@ -390,10 +391,11 @@ namespace ThirdPartyWager.Extensions
 
         private IServiceCollection AddJILI(IServiceCollection services)
         {
-            services.AddSingleton<ApiJILIBLL>();
-            services.AddSingleton<FinanceJILIBLL>();
+            services.AddSingleton<WagerJiLiService>();
 
-            services.AddHostedService<FinanceJILI>();
+            services.AddSingleton<TicketJiLiBLL>();
+
+            services.AddHostedService<TicketJiLi>();
             return services;
         }
 
