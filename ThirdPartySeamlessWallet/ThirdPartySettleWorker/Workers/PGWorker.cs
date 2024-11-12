@@ -1,6 +1,8 @@
+using Newtonsoft.Json;
 using Serilog.Context;
 
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -17,8 +19,10 @@ namespace ThirdPartySettleWorker.Workers
 
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<PGWorker> _logger;
+        private readonly PartitionService _partitionService;
         private readonly string _tpName;
 
 
@@ -26,7 +30,9 @@ namespace ThirdPartySettleWorker.Workers
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _partitionService = provider.GetRequiredService<PartitionService>();
             _logger = provider.GetRequiredService<ILogger<PGWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
@@ -53,11 +59,10 @@ namespace ThirdPartySettleWorker.Workers
             var isError = false;
             var gametype = (GameType)state;
             var tpCategory = TpCategory.Slots;
+            var logName = $"Settle_PG_Rng";
+            var getSP = $"Service_BettransRng_PG_Settle_Get";
+            var setSP = $"Service_BettransRng_PG_Settle_Set";
 
-            var logName = $"SettlePG";
-            var getSP = $"Service_BettransRng_PG_Unsettle_Get_V2";
-            var getSP_Fix = $"Service_BettransRng_PG_Unsettle_Fix_Get";
-            var setSP = $"Service_BettransRng_PG_Settle_Set_V2";
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
@@ -67,39 +72,52 @@ namespace ThirdPartySettleWorker.Workers
                 }
 
                 forContinue = tpUnsettleList.Count() == 200;
-                foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
+                foreach (var unsettled in tpUnsettleList)
                 {
                     try
                     {
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Main).First();
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
-                        var fix = false;
-                        if ((settleData.TransTime >= 1712320200 && settleData.TransTime <= 1712348100) && (tpCustInfo.CurrencyId == 51 || tpCustInfo.CurrencyId == 15))
+                        var bettranList = _partitionService.GetUnsettleDataList<SettleData>(getSP, unsettled);
+                      
+                        if (!bettranList.Any())
                         {
-                            fix = true;
-                            settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP_Fix, new { TransId = transId }, DataBase.Main).First();
+                            LogContext.PushProperty("TP", _tpName);
+                            _logger.LogWarning($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
+                            continue;
                         }
+                        var bettran = bettranList.FirstOrDefault();
+                        var tpUserName = bettran?.Account;
+                        var stake = bettranList.Sum(x => x.Stake);
+                        var validBet = bettranList.Sum(x => x.ValidBet);
+                        var winLostAmount = bettranList.Sum(x => x.WinLostAmount);
+                        var gameId = bettran?.GameId;
+                        var settledTime = bettranList.Max(x => x.SettleTime);
+                        var transTime = bettranList.Min(x => x.TransTime);
+
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
 
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
-                            Stake = settleData.Stake,
-                            ValidBet = settleData.Stake,
-                            WinlostAmount = settleData.WinLostAmount,
-                            TransId = settleData.TransId,
+                            Stake = stake,
+                            ValidBet = validBet,
+                            WinlostAmount = winLostAmount,
+                            TransId = unsettled.TransId,
                             GameType = gametype,
-                            TpUserName = settleData.Account,
-                            SettledTime = settleData.SettleTime,
-                            TransTime = settleData.TransTime,
-                            SettlementType = SettlementType.SettledForValid,
-                            TicketStatus = settleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
-                            GameID = settleData.GameId,
+                            TpUserName = tpUserName,
+                            SettledTime = settledTime,
+                            TransTime = transTime,
+                            SettlementType = _settledBLL.GetSettlementType(gametype, gameId),
+                            TicketStatus = (TicketStatus)bettran?.TicketStatus,
+                            GameID = gameId
                         };
 
-                        // fix issue ticket to refund and not roll
-                        if (fix && settleData.TicketStatus > 0)
+                        if (betRecordInfo.WinlostAmount == 0)
                         {
-                            betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                            betRecordInfo.TicketStatus = TicketStatus.Draw;
+                        }
+                        // check refund
+                        if (bettran.TicketStatus > 0)
+                        {
                             betRecordInfo.TicketStatus = TicketStatus.Refund;
                         }
 
@@ -108,7 +126,8 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, transId);
+                                _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, betRecordInfo.TransId, true);
+                                _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(setSP, betRecordInfo);
                             });
                         }
                     }
@@ -116,10 +135,10 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, transId, false);
+                            _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, unsettled.TransId, true);
                         });
                         isError = true;
-                        _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {transId}");
+                        _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {unsettled.TransId}");
                     }
                 }
             }
@@ -144,7 +163,7 @@ namespace ThirdPartySettleWorker.Workers
                     dueTimeSpan = TimeSpan.FromSeconds(30);
                 }
 
-                timer?.Change(dueTimeSpan, TimeSpan.Zero);
+                _ = timer?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }

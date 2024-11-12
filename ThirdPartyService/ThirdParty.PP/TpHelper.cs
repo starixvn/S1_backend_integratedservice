@@ -17,7 +17,6 @@ namespace ThirdParty.PP
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-       private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, PPConfig> _siteConfigDic;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
@@ -30,7 +29,6 @@ namespace ThirdParty.PP
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PPConfig>(TpEnum.PP.ToString());
-            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
             _temporaryLogPayloadService = provider.GetRequiredService<IPayloadLogger>();
         }
 
