@@ -589,6 +589,42 @@ namespace ThirdPartyCore
             }
         }
 
+        protected string HttpGetWithProxy(string url, string parameters, WebProxy proxy = null, Dictionary<string, string> headers = null)
+        {
+            InsertLog?.Invoke(url, parameters, "1");
+
+            using var handler = new HttpClientHandler();
+            if (proxy is not null)
+            {
+                handler.UseProxy = true;
+                handler.Proxy = proxy;
+            }
+
+            using var client = new HttpClient(handler);
+            try
+            {
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        client.DefaultRequestHeaders.Add(item.Key, item.Value);
+                    }
+                }
+
+                var stream = client.GetStreamAsync($"{url}?{parameters}").Result;
+                using StreamReader myStreamReader = new StreamReader(stream, Encoding.GetEncoding("UTF-8"));
+                var response = myStreamReader.ReadToEnd();
+                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), response);
+                return response;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), e.Message);
+                return e.Message;
+            }
+        }
+
         protected string ToMD5(string encodeStr)
         {
             using var cryptoMD5 = MD5.Create();
@@ -598,15 +634,6 @@ namespace ThirdPartyCore
               .Replace("-", string.Empty);
 
             return md5;
-        }
-
-        protected string ToMD5V2(string encodeStr)
-        {
-            using var cryptoMD5 = MD5.Create();
-            var bytes = Encoding.UTF8.GetBytes(encodeStr);
-            var hash = cryptoMD5.ComputeHash(bytes);
-
-            return Convert.ToBase64String(hash);
         }
 
         protected string GetRandomString(int length)
