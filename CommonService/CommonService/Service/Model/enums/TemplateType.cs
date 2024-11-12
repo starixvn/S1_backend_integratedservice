@@ -1,10 +1,9 @@
 ﻿namespace CommonService.Service.Model.enums
 {
-    public enum TemplateType
+    public enum MailType
     {
-        ResetPassword,
-        VerificationMail,
-        WelcomeMail
+        SendGrid = 1,
+        IBM = 2,
     }
 
 }

@@ -41,7 +41,8 @@ namespace CommonService
             services.AddSingleton<SendGridBLL>();
             services.AddSingleton<RestPasswordBLL>();
             services.AddSingleton<IovationBLL>();
-            services.AddSingleton<IBMMailBLL>();
+            services.AddSingleton<IBMBLL>();
+            services.AddSingleton<WelcomeEmailBLL>();
 
             services.AddSingleton<SelLangBLL>();
             services.AddSingleton<FPSBLL>();
@@ -82,7 +83,7 @@ namespace CommonService
             {
                 app.UseDeveloperExceptionPage();
             }
-           
+
             app.UseRouting();
 
             app.UseAuthorization();

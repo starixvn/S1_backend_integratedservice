@@ -7,37 +7,34 @@ using System.Xml.Serialization;
 
 namespace CommonService.Service.BLL
 {
-    public class IBMMailBLL
+    public class IBMBLL
     {
         private readonly Dictionary<int, IBMMail> _iBMMailConfig;
         private readonly HttpHelper _httpHelper;
-        private readonly ILogger<IBMMailBLL> _logger;
+        private readonly ILogger<IBMBLL> _logger;
 
-        public IBMMailBLL(IServiceProvider provider)
+        public IBMBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _iBMMailConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<IBMMail>("IBM");
-            _logger = provider.GetRequiredService<ILogger<IBMMailBLL>>();
+            _logger = provider.GetRequiredService<ILogger<IBMBLL>>();
         }
 
-        public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, dynamic dynamicTemplateData)
+        public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, dynamic dynamicTemplateData, TemplateType type)
         {
             var apiResult = new ApiResult();
 
             if (!_iBMMailConfig.TryGetValue(custInfo.SiteId, out var config))
             {
                 apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.Message = "IBM config not found";
                 return apiResult;
             }
             if (config is null)
             {
                 apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.Message = "IBM config is null";
                 return apiResult;
-            }
-
-            if (!ParameterCheck(custInfo))
-            {
-                apiResult.Message = $"parameter check fail. parameter={JsonConvert.SerializeObject(custInfo)}";
             }
 
             //step 1 oauth : get access token
@@ -65,17 +62,6 @@ namespace CommonService.Service.BLL
         }
 
         #region Private Methods
-
-        private bool ParameterCheck(CustInfoProfile custInfo)
-        {
-            if (string.IsNullOrWhiteSpace(custInfo.UserName)
-                || string.IsNullOrWhiteSpace(custInfo.Email)
-                || string.IsNullOrWhiteSpace(custInfo.IsoCode)
-                || string.IsNullOrWhiteSpace(custInfo.CountryCode))
-                return false;
-
-            return true;
-        }
 
         private async Task<ApiResult<OauthResponse>> OauthAsync(string url, string clientId, string clientSecret, string refreshToken)
         {

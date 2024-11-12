@@ -19,53 +19,24 @@ namespace CommonService.Service.BLL
             _sendGridConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
         }
 
-        public class Result
-        {
-            public List<Error> errors { get; set; }
-        }
-
-        public class Error
-        {
-            public string message { get; set; }
-            public string field { get; set; }
-            public string help { get; set; }
-        }
-
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, dynamic dynamicTemplateData, TemplateType type)
         {
             var apiResult = new ApiResult();
 
             if (!_sendGridConfig.TryGetValue(custInfo.SiteId, out var config))
             {
-                return new ApiResult
-                {
-                    ErrorCode = ErrorCode.Fail
-                };
+                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.Message = "SendGrid config not found";
+                return apiResult;
+            }
+            if (config is null)
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.Message = "SendGrid config is null";
+                return apiResult;
             }
 
-            var headerParams = new Dictionary<string, string>
-            {
-                { "Authorization", $"Bearer {config.ApiKey}"}
-            };
-
-            var apiUrl = config.ApiUrl;
             var (verify, template) = CreateTemplate(type, config, GetUserLang(custInfo.UserLang));
-            var sendGridResetPasswordBody = new SendGridTemplateBody
-            {
-                from = new NameEmail { name = config.mailFrom.name, email = config.mailFrom.email },
-                personalizations = new List<TemplatePersonalization>
-                {
-                    new TemplatePersonalization
-                    {
-                        to = new List<NameEmail>
-                        {
-                            new NameEmail {name = custInfo.UserName, email = custInfo.Email}
-                        },
-                        dynamic_template_data = dynamicTemplateData
-                    }
-                },
-                template_id = template
-            };
 
             if (!verify)
             {
@@ -74,7 +45,38 @@ namespace CommonService.Service.BLL
                 return apiResult;
             }
 
-            using var result = await _httpHelper.HttpPost1Async(apiUrl, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
+            var sendGridResetPasswordBody = new SendGridTemplateBody
+            {
+                from = new NameEmail
+                {
+                    name = config.mailFrom.name,
+                    email = config.mailFrom.email
+                },
+                personalizations = new List<TemplatePersonalization>
+                {
+                    new TemplatePersonalization
+                    {
+                        to = new List<NameEmail>
+                        {
+                            new NameEmail
+                            {
+                                name = custInfo.UserName,
+                                email = custInfo.Email
+                            }
+                        },
+                        dynamic_template_data = dynamicTemplateData
+                    }
+                },
+                template_id = template
+            };
+
+            var headerParams = new Dictionary<string, string>
+            {
+                { "Authorization", $"Bearer {config.ApiKey}"}
+            };
+
+            using var result = await _httpHelper.HttpPost1Async(config.ApiUrl, headerParams, 
+                JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
             if (result.StatusCode == HttpStatusCode.Accepted)
             {
                 apiResult.ErrorCode = ErrorCode.Success;

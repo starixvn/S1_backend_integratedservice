@@ -16,18 +16,6 @@
         public string email { get; set; }
     }
 
-    public class Result
-    {
-        public List<Error> errors { get; set; }
-    }
-
-    public class Error
-    {
-        public string message { get; set; }
-        public string field { get; set; }
-        public string help { get; set; }
-    }
-
     public class SendMailBody
     {
         public NameEmail from { get; set; }
@@ -48,4 +36,17 @@
     {
         public dynamic dynamic_template_data { get; set; }
     }
+
+    public class Result
+    {
+        public List<Error> errors { get; set; }
+    }
+
+    public class Error
+    {
+        public string message { get; set; }
+        public string field { get; set; }
+        public string help { get; set; }
+    }
+
 }

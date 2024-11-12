@@ -1,88 +1,86 @@
-﻿using System.Net;
-
-using CommonService.Service.Library;
-using CommonService.Service.Model;
+﻿using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Newtonsoft.Json;
-
-using static CommonService.Service.Model.SendGridResetPassword;
 
 namespace CommonService.Service.BLL
 {
     public class RestPasswordBLL
     {
-        private readonly Dictionary<int, SendGridConfig> _sendGridConfig;
-        private readonly HttpHelper _httpHelper;
+        private readonly TemplateType template = TemplateType.ResetPassword;
         private readonly AuthBLL _authBLL;
+
+        private readonly Dictionary<int, MailStatusSetting> _mailSettingConfig;
+        private readonly CustInfoBLL _custInfoBll;
+
+        private readonly SendGridBLL _sendGridBll;
+        private readonly IBMBLL _iBMBll;
 
         public RestPasswordBLL(IServiceProvider provider)
         {
-            _httpHelper = provider.GetRequiredService<HttpHelper>();
             _authBLL = provider.GetRequiredService<AuthBLL>();
-            _sendGridConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
+            _mailSettingConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MailStatusSetting>("StatusSetting");
+            _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
+
+            _sendGridBll = provider.GetRequiredService<SendGridBLL>();
+            _iBMBll = provider.GetRequiredService<IBMBLL>();
         }
 
-        public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string resetPasswordUrl)
+        public async Task<ApiResult> SendMailAsync(int custId, string url)
         {
             var apiResult = new ApiResult();
 
-            if (!_sendGridConfig.TryGetValue(custInfo.SiteId, out var config))
+            var custInfo = _custInfoBll.GetCustInfoProfile(custId);
+
+            if (!_mailSettingConfig.TryGetValue(custInfo.SiteId, out var config))
             {
-                return new ApiResult
+                return new ApiResult<SendOTPEmailResult>
                 {
-                    ErrorCode = ErrorCode.Fail
+                    ErrorCode = ErrorCode.SettingNotFound,
+                    Message = "MailSettingConfig not found."
                 };
             }
 
-            var headerParams = new Dictionary<string, string>
+            if (!ParameterCheck(custInfo))
             {
-                { "Authorization", $"Bearer {config.ApiKey}"}
-            };
+                apiResult.ErrorCode = ErrorCode.UserNotExist;
+                return apiResult;
+            }
 
-            var url = config.ApiUrl;
-            var sendGridResetPasswordBody = new SendGridResetPasswordBody
-            {
-                from = new NameEmail
-                {
-                    name = config.mailFrom.name,
-                    email = config.mailFrom.email
-                },
-                personalizations = new List<ResetPasswordPersonalization>()
-            };
+            var resetPasswordUrl = GenResetPasswordUrl(custInfo, url, config);
 
-            var resetPasswordPersonalization = new ResetPasswordPersonalization();
-            sendGridResetPasswordBody.personalizations.Add(resetPasswordPersonalization);
+            return await SendMailAsync(config, custInfo, resetPasswordUrl);
+        }
 
-            resetPasswordPersonalization.to = new List<NameEmail>();
-            var to = new NameEmail
-            {
-                email = custInfo.Email,
-                name = custInfo.UserName
-            };
-            resetPasswordPersonalization.to.Add(to);
+        private bool ParameterCheck(CustInfoProfile custInfo)
+        {
+            if (string.IsNullOrWhiteSpace(custInfo?.UserName)
+                || string.IsNullOrWhiteSpace(custInfo?.Email))
+                return false;
+
+            return true;
+        }
+
+        private string GenResetPasswordUrl(CustInfoProfile custInfo, string url, MailStatusSetting config)
+        {
             var key = _authBLL.ApplyToken(custInfo);
-            var dynamicTemplateData = new DynamicTemplateData();
-            resetPasswordUrl ??= config.ResetPasswordUrl;
-            dynamicTemplateData.resetpwdurl = $"{resetPasswordUrl}?key={key}";
-            resetPasswordPersonalization.dynamic_template_data = dynamicTemplateData;
-            var lang = "en";
-            if (config.ResetPasswordTemplate.ContainsKey(custInfo.UserLang))
-                lang = custInfo.UserLang;
-            sendGridResetPasswordBody.template_id = config.ResetPasswordTemplate[lang];
+            url ??= config.ResetPasswordUrl;
+            return $"{url}?key={key}";
+        }
 
-            using var result = await _httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
-            if (result.StatusCode == HttpStatusCode.Accepted)
+        private async Task<ApiResult> SendMailAsync(MailStatusSetting config, CustInfoProfile custInfo, string resetPasswordUrl)
+        {
+            switch (config.Mode)
             {
-                apiResult.ErrorCode = 0;
+                case (int)MailType.SendGrid:
+                    return await _sendGridBll.SendMailAsync(custInfo, new { resetpwdurl = resetPasswordUrl }, template);
+                case (int)MailType.IBM:
+                    return await _iBMBll.SendMailAsync(custInfo, new { resetpwdurl = resetPasswordUrl }, template);
+                default:
+                    return new ApiResult
+                    {
+                        ErrorCode = ErrorCode.SettingNotFound,
+                        Message = "MailType not define."
+                    };
             }
-            else
-            {
-                var resultResp = JsonConvert.DeserializeObject<Result>(result.Content.ReadAsStringAsync().Result);
-                apiResult.ErrorCode = ErrorCode.Fail;
-                apiResult.Message = resultResp.errors[0].message;
-                apiResult.RawMessage = resultResp.errors[0].message;
-            }
-            return apiResult;
         }
     }
 }
