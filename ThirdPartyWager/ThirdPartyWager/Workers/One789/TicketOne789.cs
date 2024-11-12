@@ -53,7 +53,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get timer
-                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
+                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(_tpId, _tpType, (int)gameType);
 
                 // default time
                 var execTime = new ThirdPartyTimerModel()
@@ -71,7 +71,7 @@ namespace ThirdPartyWager.Workers
                     // update timer
                     if (res)
                     {
-                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, ticketTime.endUnix);
+                        _thirdPartyBLL.SetThirdPartyTimerByGameType(_tpId, _tpType, ticketTime.endUnix, (int)gameType);
                     }
                 }
             }
