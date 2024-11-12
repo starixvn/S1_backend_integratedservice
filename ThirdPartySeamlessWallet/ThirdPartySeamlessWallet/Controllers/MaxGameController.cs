@@ -1,7 +1,5 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Build.Framework;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
@@ -45,10 +43,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             string logName = $"{_thisTp}_GetPlayerInfo";
             string content = "";
-            var logMeta = new PayloadLogMeta() {
-               Action = nameof(GetPlayerInfo)   
+            var logMeta = new PayloadLogMeta()
+            {
+                Action = nameof(GetPlayerInfo)
             };
-            
+
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -74,7 +73,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 SentrySdk.CaptureException(ex);
             }
-            
+
             _payloadLogService.UpdateDetailedPayLoadWithResponse(content, new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError), logMeta);
             return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
@@ -86,8 +85,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{_thisTp}_GetBalance";
             string content = "";
             dynamic response;
-            var logMeta = new PayloadLogMeta() {
-                    Action = nameof(GetBalance),
+            var logMeta = new PayloadLogMeta()
+            {
+                Action = nameof(GetBalance),
             };
             try
             {
@@ -125,7 +125,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             string content = "";
             string logName = $"{_thisTp}_PlaceBet";
             dynamic response;
-            var logMeta = new PayloadLogMeta() {
+            var logMeta = new PayloadLogMeta()
+            {
                 Action = nameof(PlaceBet),
             };
             try
@@ -153,7 +154,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 SentrySdk.CaptureException(ex);
             }
             response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
-            
+
             _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
             return response;
         }
@@ -165,7 +166,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{_thisTp}_EndGame";
             string content = "";
             dynamic response;
-            var logMeta = new PayloadLogMeta {
+            var logMeta = new PayloadLogMeta
+            {
                 Action = nameof(EndGame)
             };
 
@@ -180,7 +182,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
-                    
+
                     _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
                     return response;
                 }
@@ -206,7 +208,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{_thisTp}_PlaceBetAndSettle";
             string content = "";
             dynamic response;
-            var logMeta = new PayloadLogMeta {
+            var logMeta = new PayloadLogMeta
+            {
                 Action = nameof(PlaceBetAndSettle)
             };
             try
@@ -220,7 +223,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
-                    
+
                     _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
                     return response;
                 }
@@ -247,7 +250,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{_thisTp}_VoidGame";
             string content = "";
             dynamic response;
-            var logMeta = new PayloadLogMeta {
+            var logMeta = new PayloadLogMeta
+            {
                 Action = nameof(VoidGame)
             };
             try
