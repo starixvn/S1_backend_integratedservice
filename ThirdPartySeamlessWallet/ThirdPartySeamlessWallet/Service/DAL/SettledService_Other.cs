@@ -2194,6 +2194,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
+                var settleBillId = $"{settleData_Eday.roundCode}_{settleData_Eday.player}";
                 var partitionTime = DateTime.Now;
                 var bettransLTEday = _partitionService.Query<BettransLTEdayDAL>(partitionTime, GetSpName, 
                     new { roundCode = settleData_Eday.roundCode , player = tpCustInfo.TpUserName });
@@ -2209,13 +2210,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return -3;
                 }
 
+                if (bettransLTEday.Any(i => i.billId == settleBillId))
+                {
+                    switch (settleData_Eday.eventId)
+                    {
+                        case 0:
+                            return -4;
+                        case > 0:
+                            settleBillId = $"{settleBillId}_{settleData_Eday.eventId}";
+                            break;
+                    }
+                }
+
                 var settleEdayData = new BettransLTEdayPayoutRequest
                 {
                     txId = settleData_Eday.txId,
                     //RoundUpdate沒有token拿第一筆的token當做Settle Token
                     token = bettransLTEday.FirstOrDefault().token,
                     //結算時沒有billId,目前想法是RoundCode + playerId 當作結算billId.
-                    billId = $"{settleData_Eday.roundCode}_{settleData_Eday.player}",
+                    billId = settleBillId,
                     player = settleData_Eday.player,
                     //amount 為 RoundUpdate 的 betTotal
                     amount = settleData_Eday.bet,
