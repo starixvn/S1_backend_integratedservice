@@ -105,6 +105,7 @@ public class DragonGamingBLL : IDragonGamingBLL
             var gameType = GetGameType(request.game_type);
             if (gameType is GameType.None)
                 return new CommonErrorResponse_DragonGaming(2018);
+
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             int result = PlaceBet(request, tpCustInfo, gameType, out decimal tpAffterAmount);
             if (result > 0)
