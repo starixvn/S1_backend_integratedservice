@@ -6,6 +6,7 @@
         public int SiteId { get; set; }
         public string UserName { get; set; }
         public int CurrencyId { get; set; }
+        public string IsoCode { get; set; }
         public int UserLevel { get; set; }
         public string Agent { get; set; }
         public string UserLang { get; set; }

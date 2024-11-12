@@ -1,7 +1,5 @@
 ﻿using CommonService.Service.BLL;
-using CommonService.Service.DAL;
 using CommonService.Service.Model;
-using CommonService.Service.Model.enums;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,77 +9,56 @@ namespace CommonService.Controllers
     [ApiController]
     public class MailController : ControllerBase
     {
-        private readonly CustInfoBLL _custInfoBll;
-        private readonly SendGridBLL _sendGridBll;
+        private readonly WelcomeEmailBLL _welcomeEmailBll;
         private readonly RestPasswordBLL _restPasswordBll;
         private readonly OTPEmailBLL _otpEmailBll;
-        private readonly Dictionary<int, int> _welComeMailConfig;
-        
+
         public MailController(IServiceProvider provider)
         {
-            _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
-            _sendGridBll = provider.GetRequiredService<SendGridBLL>();
+            _welcomeEmailBll = provider.GetRequiredService<WelcomeEmailBLL>();
             _restPasswordBll = provider.GetRequiredService<RestPasswordBLL>();
             _otpEmailBll = provider.GetRequiredService<OTPEmailBLL>();
-            _welComeMailConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<int>("WelComeMail");
         }
 
-        public class Req
+        public class SendWelcomeMailRequest
         {
             public int custId { get; set; }
         }
 
         [HttpPost]
-        public async Task<ApiResult> SendWelcomeMailAsync(Req req)
+        public async Task<ApiResult> SendWelcomeMailAsync(SendWelcomeMailRequest request)
         {
-            var apiResult = new ApiResult();
-            var custInfo = _custInfoBll.GetCustInfoProfile(req.custId);
-            
-            var config = _welComeMailConfig[custInfo.SiteId];
-            if (config == 1)
-            {
-                var resultResp = await _sendGridBll.SendMailAsync(custInfo, null, TemplateType.WelcomeMail);
-                apiResult.ErrorCode = resultResp.ErrorCode;
-                apiResult.Message = resultResp.Message;
-                apiResult.RawMessage = resultResp.RawMessage;
-            }
-            else
-            {
-                apiResult.ErrorCode = ErrorCode.Success;
-                return apiResult;
-            }
-            
-            return apiResult;
+            return await _welcomeEmailBll.SendMailAsync(request.custId);
         }
 
-        public class Req2
+        public class ResetPasseordRequest
         {
             public int custId { get; set; }
             public string resetPasswordUrl { get; set; }
         }
 
         [HttpPost]
-        public async Task<ApiResult> RestPasswordAsync(Req2 req2)
+        public async Task<ApiResult> RestPasswordAsync(ResetPasseordRequest request)
         {
-            var apiResult = new ApiResult();
-            var custInfo = _custInfoBll.GetCustInfoProfile(req2.custId);
-            if (custInfo != null)
-            {
-                var resultResp = await _restPasswordBll.SendMailAsync(custInfo, req2.resetPasswordUrl);
-                apiResult.ErrorCode = resultResp.ErrorCode;
-                apiResult.Message = resultResp.Message;
-                apiResult.RawMessage = resultResp.RawMessage;
-            }
-            return apiResult;
+            return await _restPasswordBll.SendMailAsync(request.custId, request.resetPasswordUrl);
         }
 
+        /// <summary>
+        /// 發送OTP To Mail
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<ApiResult<SendOTPEmailResult>> OTPEmail(OTPEmailReq req)
         {
-            var apiResult = await _otpEmailBll.SendOtpEmailAsync(req.custId, req.OTPEmailUrl);
-            return apiResult;
+            return await _otpEmailBll.SendOtpEmailAsync(req.custId, req.OTPEmailUrl);
         }
 
+        /// <summary>
+        /// Mail點擊btn驗證OTP
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
         [HttpPost]
         public ApiResult VerifyOTP(VerifyOTPEmailReq req)
         {
