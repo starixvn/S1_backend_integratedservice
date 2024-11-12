@@ -89,6 +89,7 @@
         Iconic_Fish = 40,
         AMB_Poker = 50,
         KM_Poker = 52,
+        JILI_RNG = 53,
         MP_Poker = 60,
         MP_Poker_None = 61, // without revenue games
         SG_RNG = 15,

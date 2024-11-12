@@ -27,9 +27,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.RNGKeno, AddKeno},
                 { Tp.Lottery, AddLottery},
                // {Tp.PP, AddPragmaticPlay },
-
+                { Tp.JILI, AddJILI},
                 //Loki comment:
-                //{ Tp.JILI, AddJILI},
                 //{ Tp.FaChai, AddFaChai},
                 //{ Tp.Pegasus, AddPegasus},
                 //{ Tp.Allbet, AddAllbet},
