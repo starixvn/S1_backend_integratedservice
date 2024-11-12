@@ -15,7 +15,7 @@ namespace ThirdPartyWager.Service.DAL
 
         public IEnumerable<BettransData_MaxGame> GetPendingList(TimeCast ticketTime)
         {
-            return _mainDbClient.Query<BettransData_MaxGame>("Service_BettransRng_Sexy_Bet_Pending_Get", parameters: new { _BeginTime = ticketTime.startUnix, _EndTime = ticketTime.endUnix });
+            return _mainDbClient.Query<BettransData_MaxGame>("Service_BettransLC_Sexy_Bet_Pending_Get", parameters: new { _BeginTime = ticketTime.startUnix, _EndTime = ticketTime.endUnix });
         }
     }
 }
