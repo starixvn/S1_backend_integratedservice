@@ -57,7 +57,7 @@ namespace ThirdPartyWager.Service.BLL
             if (ticketData.ErrorCode != null)
             {
                 msg = $"{func} THIRD_PARTY_ERROR";
-                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(ticketData)}");
+                _logger.LogError($"{msg} {(int)gameType}\r\n{JsonConvert.SerializeObject(ticketData)}");
                 return false;
             }
 
@@ -71,7 +71,7 @@ namespace ThirdPartyWager.Service.BLL
                     if (response == null)
                     {
                         msg = $"{func} SEAMLESS_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(pending)}\r\nresponse={JsonConvert.SerializeObject(response)}");
+                        _logger.LogError($"{msg} {(int)gameType}\r\n{JsonConvert.SerializeObject(pending)}\r\nresponse={JsonConvert.SerializeObject(response)}");
                         return false;
                     }
 
@@ -79,7 +79,7 @@ namespace ThirdPartyWager.Service.BLL
                     if (result == null || result.ErrorCode != null)
                     {
                         msg = $"{func} SEAMLESS_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(pending)}\r\nresult={JsonConvert.SerializeObject(result)}");
+                        _logger.LogError($"{msg} {(int)gameType}\r\n{JsonConvert.SerializeObject(pending)}\r\nresult={JsonConvert.SerializeObject(result)}");
                         return false;
                     }
                     else if (result.Tx == pending.Source)
@@ -89,7 +89,7 @@ namespace ThirdPartyWager.Service.BLL
                     else
                     {
                         msg = $"{func} UNKNOW_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(pending)}\r\nresult={JsonConvert.SerializeObject(result)}");
+                        _logger.LogError($"{msg} {(int)gameType}\r\n{JsonConvert.SerializeObject(pending)}\r\nresult={JsonConvert.SerializeObject(result)}");
                     }
                 }
                 catch (Exception ex)
