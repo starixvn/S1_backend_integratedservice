@@ -3,7 +3,14 @@ using ThirdPartyBetHistory.Extensions;
 using ThirdPartyBetHistory.Service.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseSentry();
+builder.WebHost.UseSentry(option =>
+{
+    option.SetBeforeSend(@event =>
+    {
+        @event.SetFingerprint(Guid.NewGuid().ToString());
+        return @event;
+    });
+});
 
 builder.Environment.EnvironmentName = builder.Configuration.GetSection("env").Get<string>();
 
@@ -29,6 +36,6 @@ var minWorkers = Environment.ProcessorCount * 4;
 var minIOCPs = Environment.ProcessorCount * 4;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 
-SentrySdk.CaptureMessage($"Started result common service at {DateTime.Now.ToString()}");
+SentrySdk.CaptureMessage($"Started {nameof(ThirdPartyBetHistory)} at {DateTime.Now}");
 
 app.Run();

@@ -12,10 +12,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="appsettings.Production.json" />
-  </ItemGroup>
-
-  <ItemGroup>
 	  <PackageReference Include="Sentry.AspNetCore" Version="4.12.1" />
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="MySql.Data" Version="8.0.27" />
