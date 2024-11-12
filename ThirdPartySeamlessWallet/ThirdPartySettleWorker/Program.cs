@@ -123,7 +123,8 @@ builder.Services
     .AddHostedService<FastSpinWorker>()
     .AddHostedService<SBSWWorker>()
     .AddHostedService<MaxGameWorker>()
-    .AddHostedService<LotteryWorker>();
+    .AddHostedService<LotteryWorker>()
+    .AddHostedService<TableGameWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
