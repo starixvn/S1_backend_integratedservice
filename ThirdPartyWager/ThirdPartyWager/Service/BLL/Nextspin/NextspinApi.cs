@@ -53,7 +53,7 @@ namespace ThirdPartyWager.Service.BLL
                 using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 client.DefaultRequestHeaders.Add("API", "getBetHistory");
                 client.DefaultRequestHeaders.Add("DataType", "JSON");
-                _log2File.InsertRequestLog(_tpName, apiUrl, $"{JsonConvert.SerializeObject(client.DefaultRequestHeaders)}", "1");
+                _log2File.InsertRequestLog(_tpName, apiUrl, $"Headers: {JsonConvert.SerializeObject(client.DefaultRequestHeaders)} Body:{json}", "1");
 
                 var httpResponseMessage = await client.PostAsync(apiUrl, stringContent);
 
