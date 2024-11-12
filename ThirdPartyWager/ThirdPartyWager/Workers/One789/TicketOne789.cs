@@ -109,7 +109,7 @@ namespace ThirdPartyWager.Workers
             var result = true;
             try
             {
-                _logger.LogInformation($"Refund Worker Execute Start {_tpId}, {JsonConvert.SerializeObject(ticketTime)}");
+                _logger.LogInformation($"Refund Worker Execute Start {_tpId} {(int)gameType}, {JsonConvert.SerializeObject(ticketTime)}");
 
                 // get list
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
@@ -123,7 +123,7 @@ namespace ThirdPartyWager.Workers
                 var pendingList = _ticketOne789BLL.GetPendingList((int)gameType, ticketTime);
                 if (pendingList == null)
                 {
-                    _logger.LogInformation($"Refund Worker Execute End {_tpId}, Count=0");
+                    _logger.LogInformation($"Refund Worker Execute End {_tpId} {(int)gameType}, Count=0");
                     return true;
                 }
 
@@ -136,11 +136,11 @@ namespace ThirdPartyWager.Workers
                         result = false;
                     }
                 }
-                _logger.LogInformation($"Refund Worker Execute End {_tpId}, Count={pendingList.Count()}");
+                _logger.LogInformation($"Refund Worker Execute End {_tpId} {(int)gameType}, Count={pendingList.Count()}");
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Refund Worker Execute End {_tpId}");
+                _logger.LogInformation($"Refund Worker Execute End {_tpId} {(int)gameType}");
                 _logger.LogError(ex, ex.Message);
                 result = false;
             }
