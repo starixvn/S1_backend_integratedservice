@@ -13,11 +13,11 @@ namespace ThirdParty.One789
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly One789Config _siteConfig;
+        private readonly Dictionary<int, One789Config> _siteConfigDic;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<One789Config>(TpEnum.One789.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<One789Config>(TpEnum.One789.ToString());
         }
 
         #region Response
@@ -58,7 +58,7 @@ namespace ThirdParty.One789
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
 
             string ApiUrl = config.ApiUrl;
             string ApiKey = config.ApiKey;

@@ -10,15 +10,17 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiOne789BLL _apiOne789BLL;
         private readonly WagerOne789Service _wagerOne789Service;
         private readonly ILogger<WagerOne789BLL> _logger;
-        private readonly One789Config _siteConfig;
+        private readonly Dictionary<int, One789Config> _siteConfigDic;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly int _tpId = (int)Tp.One789;
+
         public WagerOne789BLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiOne789BLL = provider.GetRequiredService<ApiOne789BLL>();
             _wagerOne789Service = provider.GetRequiredService<WagerOne789Service>();
             _logger = provider.GetRequiredService<ILogger<WagerOne789BLL>>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<One789Config>(Tp.One789.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<One789Config>(Tp.One789.ToString());
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         }
 
@@ -27,61 +29,71 @@ namespace ThirdPartyWager.Service.BLL
             string msg;
             try
             {
-                // get api info
-                var setting = _siteConfig;
-
-                var page = 1;
-                var totalPage = 1;
-                var perPage = 500;
-                while (page <= totalPage)
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var site in siteList)
                 {
-                    // get wager
-                    var dataWager = await _apiOne789BLL.GetBetListByTime(setting, startTime, endTime, page, perPage, gameType);
+                    // get api info
+                    var siteId = site.SiteId;
+                    var setting = _siteConfigDic[siteId];
 
-                    if (dataWager.Count > 0 && dataWager[0]["ErrorCode"] != null)
+                    if (site.TicketKey == 0)
                     {
-                        msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                        return false;
-                    }
-                    if (dataWager.Count == 0)
-                    {
-                        msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                        return true;
+                        continue;
                     }
 
-                    totalPage = (dataWager.Count == perPage) ? totalPage + 1 : totalPage;
-                    foreach (var bet in dataWager)
+                    var page = 1;
+                    var totalPage = 1;
+                    var perPage = 500;
+                    while (page <= totalPage)
                     {
-                        try
-                        {
-                            var record = JsonConvert.DeserializeObject<BetOne789>(JsonConvert.SerializeObject(bet));
-                            if (gameType == (int)GameType.One789_LiveCasino)
-                            {
-                                record.TransId = $"{record.AreaNumber}_{record.GameNumber}_{record.GameRound}_{record.Username}";
-                                record.GameResult = (record.Status == 0) ? -1 : record.GameResult;
-                            }
-                            else
-                            {
-                                record.Numbers = JsonConvert.SerializeObject(record.Numbers);
-                                record.TransId = $"{record.Term}_{record.GameType}_{record.Username}";
-                            }
-                            var result = _wagerOne789Service.InsertWagerOne789(record, gameType);
+                        // get wager
+                        var dataWager = await _apiOne789BLL.GetBetListByTime(setting, startTime, endTime, page, perPage, gameType);
 
-                            if (result)
-                            {
-                                _tpUnsettleService.InsertTpUnsettle(Tp.One789, (GameType)gameType, record.TransId);
-                            }
-                        }
-                        catch (Exception ex)
+                        if (dataWager.Count > 0 && dataWager[0]["ErrorCode"] != null)
                         {
-                            msg = $"INSERT_WAGER";
-                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                            msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{msg}\r\nsiteId={siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             return false;
                         }
+                        if (dataWager.Count == 0)
+                        {
+                            msg = "NO_DATA";
+                            _logger.LogInformation($"{msg}\r\nsiteId={siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            break;
+                        }
+
+                        totalPage = (dataWager.Count == perPage) ? totalPage + 1 : totalPage;
+                        foreach (var bet in dataWager)
+                        {
+                            try
+                            {
+                                var record = JsonConvert.DeserializeObject<BetOne789>(JsonConvert.SerializeObject(bet));
+                                if (gameType == (int)GameType.One789_LiveCasino)
+                                {
+                                    record.TransId = $"{record.AreaNumber}_{record.GameNumber}_{record.GameRound}_{record.Username}";
+                                    record.GameResult = (record.Status == 0) ? -1 : record.GameResult;
+                                }
+                                else
+                                {
+                                    record.Numbers = JsonConvert.SerializeObject(record.Numbers);
+                                    record.TransId = $"{record.Term}_{record.GameType}_{record.Username}";
+                                }
+                                var result = _wagerOne789Service.InsertWagerOne789(record, gameType);
+
+                                if (result)
+                                {
+                                    _tpUnsettleService.InsertTpUnsettle(Tp.One789, (GameType)gameType, record.TransId);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                msg = $"INSERT_WAGER";
+                                _logger.LogError(ex, $"{msg}\r\nsiteId={siteId}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                                return false;
+                            }
+                        }
+                        page++;
                     }
-                    page++;
                 }
 
                 msg = "FINISH";

@@ -89,12 +89,5 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<LatestHighlightVideo>();
             return services;
         }
-
-        public static IServiceCollection AddTpRefundWorker(this IServiceCollection services)
-        {
-            services.AddSingleton<TpRefundBLL>();
-            services.AddHostedService<TpRefundWorker>();
-            return services;
-        }
     }
 }
