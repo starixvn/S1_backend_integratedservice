@@ -13,7 +13,7 @@
         TokenFailure = 7,
         NonExistentRequest = 8,
         AccountNonExistence =11,
-        ChannelAuthenticaionError = 15,
+        ChannelAuthenticationError = 15,
         DataNonExistence = 16,
         AccountForbidden = 20,
         DESDecryptFailure = 22,

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using System.Net;
 using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
@@ -12,10 +13,17 @@ namespace ThirdParty.KY
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, KYConfig> _siteConfigDic;
+        private readonly WebProxy? _proxy;
 
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KYConfig>(TpEnum.KY.ToString());
+
+            var tokyoProxyConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
+            if (tokyoProxyConfig != null )
+            {
+                _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);
+            }
         }
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
@@ -32,7 +40,7 @@ namespace ThirdParty.KY
             var timestamp = currentAt.ToUnixTimeMilliseconds().ToString();
             var timecnv = currentAt.ToString("yyyyMMddHHmmssfff");
 
-            string account = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(tpCustInfo.TpUserName));
+            string account = tpCustInfo.TpUserName;
             string orderId = $"{Agent}{timecnv}{account}";
             string ip = inputs.ContainsKey("ClientIP") && !string.IsNullOrEmpty(inputs["ClientIP"]) ? inputs["ClientIP"] : "";
             string lineCode = tpCustInfo.SiteId.ToString();
@@ -51,9 +59,9 @@ namespace ThirdParty.KY
 
             var sParams = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
             string eParams = AesEncrypt(sParams, DesKey);
-            string postParams = $"agent={Agent}&timestamp={timestamp}&param={eParams}&key={ToMD5V2($"{Agent}{timestamp}{Md5key}").ToLower()}";
+            string postParams = $"agent={Agent}&timestamp={timestamp}&param={eParams}&key={ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()}";
 
-            var result = HttpGet(ApiUrl, postParams);
+            var result = HttpGetWithProxy(ApiUrl, postParams, _proxy);
 
             ApiResult oApiResult = new ApiResult();
             if (string.IsNullOrEmpty(result) || !IsJSON(result))
