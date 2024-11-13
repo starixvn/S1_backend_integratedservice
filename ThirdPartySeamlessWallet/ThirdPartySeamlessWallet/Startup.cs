@@ -68,6 +68,19 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<Log2File>();
 
+            services
+               .AddOpenTelemetry()
+               .ConfigureResource(_ => _.AddService(Configuration.GetValue<string>("Otel:ServiceName") ?? ""))
+               .WithTracing(traceProvider => traceProvider
+                   .AddAspNetCoreInstrumentation(options => options.Filter =
+                       httpContext => !httpContext.Request.Path.HasValue
+                           || !httpContext.Request.Path.StartsWithSegments("/swagger")
+                           && !httpContext.Request.Path.StartsWithSegments("/health")
+                           && !httpContext.Request.Path.StartsWithSegments("/healthcheck"))
+                   .AddHttpClientInstrumentation()
+                   .AddConnectorNet().ConfigureResource(_ => _.AddService(Configuration.GetValue<string>("Otel:ServiceName") ?? ""))
+                   .AddOtlpExporter(options => options.Endpoint = Configuration.GetValue<Uri>("Otel:Collector") ?? new Uri("")));
+
             /*DAL*/
             services.AddSingleton<ThirdPartyService>();
             services.AddSingleton<WalletService>();
@@ -134,21 +147,8 @@ namespace ThirdPartySeamlessWallet
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
             services.AddOptionListByDB<TpBetLimit>("Service_TpBetLimit_Get");
-            services
-                .AddOpenTelemetry()
-                .ConfigureResource(_ => _.AddService(Configuration.GetValue<string>("Otel:ServiceName") ?? ""))
-                .WithTracing(traceProvider => traceProvider
-                    .AddAspNetCoreInstrumentation(options => options.Filter =
-                        httpContext => !httpContext.Request.Path.HasValue
-                            || !httpContext.Request.Path.StartsWithSegments("/swagger")
-                            && !httpContext.Request.Path.StartsWithSegments("/health")
-                            && !httpContext.Request.Path.StartsWithSegments("/healthcheck"))
-                    .AddHttpClientInstrumentation()
-                    .AddConnectorNet().ConfigureResource(_ => _.AddService(Configuration.GetValue<string>("Otel:ServiceName") ?? ""))
-                    .AddOtlpExporter(options => options.Endpoint = Configuration.GetValue<Uri>("Otel:Collector") ?? new Uri("")));
 
             services.AddPayloadLog(Configuration);
-
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
