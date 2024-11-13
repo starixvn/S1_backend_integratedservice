@@ -110,6 +110,6 @@
         FastSpin_RNG = 122,
         RNG_Keno = 124,
         Lottery = 125,
-        TableGame = 126
+        TableGame_RNG = 126
     }
 }

@@ -73,7 +73,7 @@
         DragonGaming = 70,
         RNGKeno = 71,
         Lottery = 72,
-        TableGame = 73
+        RNGTableGame = 73
     }
 
 }

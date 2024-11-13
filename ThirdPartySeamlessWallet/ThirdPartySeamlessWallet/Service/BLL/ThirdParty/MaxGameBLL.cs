@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { "fachai", Tp.FaChai },
             { "sexycasino", Tp.Sexy },
             { "worldentertainment", Tp.EBet },
-            { "tablegame", Tp.TableGame }
+            { "tablegame", Tp.RNGTableGame }
         };
 
         private readonly Dictionary<int, WalletKind> _gameOfWalletKind = new()
@@ -59,7 +59,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PG_RNG, WalletKind.BonusWallet },
             { (int)GameType.EBet_LiveCasino, WalletKind.BonusWallet },
-            { (int)GameType.TableGame, WalletKind.BalanceWallet }
+            { (int)GameType.TableGame_RNG, WalletKind.BonusWallet }
         };
 
         private readonly Dictionary<int, TpCategory> _gameOfTpCategory = new()
@@ -79,7 +79,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.PG_RNG, TpCategory.Slots },
             { (int)GameType.EBet_LiveCasino, TpCategory.LiveCasino },
-            { (int)GameType.TableGame, TpCategory.Games }
+            { (int)GameType.TableGame_RNG, TpCategory.Lottery }
         };
 
         public MaxGameBLL(IServiceProvider provider)
@@ -853,10 +853,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     InsertBettransSpName = "Service_BettransLT_Lottery_Ins";
                     CancelBettransSpName = "Service_BettransLT_Lottery_CancelBet_Set";
                     break;
-                case (int)GameType.TableGame:
-                    GetTicketNoSpName = "Service_BettransPK_TableGame_TicketNo_Get";
-                    InsertBettransSpName = "Service_BettransPK_TableGame_Ins";
-                    CancelBettransSpName = "Service_BettransPK_TableGame_CancelBet_Set";
+                case (int)GameType.TableGame_RNG:
+                    GetTicketNoSpName = "Service_BettransRng_TableGame_TicketNo_Get";
+                    InsertBettransSpName = "Service_BettransRng_TableGame_Ins";
+                    CancelBettransSpName = "Service_BettransRng_TableGame_CancelBet_Set";
                     break;
 
                 case (int)GameType.EBet_LiveCasino:

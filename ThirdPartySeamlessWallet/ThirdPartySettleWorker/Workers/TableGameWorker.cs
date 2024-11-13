@@ -11,7 +11,7 @@ namespace ThirdPartySettleWorker.Workers
 {
     internal class TableGameWorker : BackgroundService, ISettleWorker
     {
-        public Tp Tp => Tp.TableGame;
+        public Tp Tp => Tp.RNGTableGame;
 
         private Timer _timer;
         private readonly SettledBLL _settledBLL;
@@ -34,7 +34,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoSettle, GameType.TableGame, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoSettle, GameType.TableGame_RNG, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -52,8 +52,8 @@ namespace ThirdPartySettleWorker.Workers
             var forContinue = false;
             var isError = false;
             var gametype = (GameType)state;
-            var bettransGet = "Service_BettransPK_TableGame_Settle_Get";
-            var bettransSet = "Service_BettransPK_TableGame_Settle_Set";
+            var bettransGet = "Service_BettransRng_TableGame_Settle_Get";
+            var bettransSet = "Service_BettransRng_TableGame_Settle_Set";
             string logName = $"Settle_TableGame";
 
             try
