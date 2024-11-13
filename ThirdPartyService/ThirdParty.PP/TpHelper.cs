@@ -208,8 +208,6 @@ namespace ThirdParty.PP
             var GameId = detailList.GetFirstStringValue("GameId");
             var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
             var IpAddress = detailList.GetFirstStringValue("IpAddress");
-            var details = JsonConvert.DeserializeObject<IList<BettransData_PP>>(JsonConvert.SerializeObject(detailList));
-            var resultId = details.Where(i => i.TicketType == 4).FirstOrDefault()?.ResultId;
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
@@ -217,7 +215,7 @@ namespace ThirdParty.PP
                 Game = GameId,
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
-                MatchID = resultId,
+                MatchID = string.Empty,
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,
