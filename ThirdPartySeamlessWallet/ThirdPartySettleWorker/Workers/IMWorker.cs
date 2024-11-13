@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -355,7 +355,7 @@ namespace ThirdPartySettleWorker.Workers
             var dDiffStake = Math.Abs(fWagerStake - betTrans.Stake);
             var dDiffAmount = (tpCurrency.ExchangeRate == 1000m) ? 1.1m : 0.1m;
 
-            var isSame = dDiffStake < dDiffAmount && Math.Abs(wagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(2);
+            var isSame = dDiffStake <= dDiffAmount && Math.Abs(wagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(2);
 
             if (!isSame)
             {
