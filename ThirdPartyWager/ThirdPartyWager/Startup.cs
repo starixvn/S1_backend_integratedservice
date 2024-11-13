@@ -50,7 +50,7 @@ namespace ThirdPartyWager
                      && !httpContext.Request.Path.StartsWithSegments("/health")
                      && !httpContext.Request.Path.StartsWithSegments("/healthcheck"))
                 .AddHttpClientInstrumentation()
-                .AddConnectorNet().ConfigureResource(_ => _.AddService(configuration.GetValue<string>("Otel:ServiceName") ?? ""))
+                .AddConnectorNet()
                 .AddOtlpExporter(options => options.Endpoint = configuration.GetValue<Uri>("Otel:Collector") ?? new Uri("")));
 
             /*Library*/
