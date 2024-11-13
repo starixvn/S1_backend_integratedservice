@@ -1,15 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -20,7 +17,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ILogger<EdayController> _logger;
         private static IEdayBLL _EdayBLL;
         private readonly Tp _thisTp;
-        private readonly Dictionary<int, EdayConfig> _siteConfigDic;
         private readonly EdayConfig _defaultConfig; // SiteConfig的SiteId=0
         private readonly Dictionary<string, EdayConfig> _siteNameConfigs;
 

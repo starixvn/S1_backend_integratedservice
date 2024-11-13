@@ -9,23 +9,23 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         [Description("Invalid OperatorId")] 
         InvalidOperatorId = 1000,
         [Description("Invalid Signature")] 
-        InvalidSignature = 1002,
+        InvalidSignature = 1001,
         [Description("Player Account Not Exist")] 
-        PlayerAccountNotExist = 1003,
+        PlayerAccountNotExist = 1002,
         [Description("Transaction Not Exist")] 
         TransactionNotExist = 1004,
         [Description("Invalid Status")] 
         InvalidStatus = 1005,
         [Description("Player Offline")] 
         PlayerOffline = 1006,
-        [Description("Prohibit Betting")] 
-        ProhibitBetting = 1007,
+        [Description("Player Frozen")] 
+        PlayerFrozen = 1007,
         [Description("Insufficient Balance")] 
         InsufficientBalance = 1008,
         [Description("System Under Maintenance")] 
         SystemUnderMaintenance = 1009,
-        [Description("Player Frozen")] 
-        PlayerFrozen = 1010,
+        [Description("Transaction failed")] 
+        TransactionFailed = 1010,
         [Description("Player Account Not Allowed To Login")] 
         PlayerAccountNotAllowedToLogin = 1011,
         [Description("Invalid Request Parameter")] 

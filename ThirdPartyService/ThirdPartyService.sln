@@ -146,7 +146,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Live22", "ThirdP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.FastSpin", "ThirdParty.FastSpin\ThirdParty.FastSpin.csproj", "{75DED446-2113-4EB3-804F-093B8C96E0B0}"
 EndProject
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.DragonGaming", "ThirdParty.DragonGaming\ThirdParty.DragonGaming.csproj", "{ACC8CCAB-12D0-4400-A299-C86FA419923C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Eday", "ThirdParty.Eday\ThirdParty.Eday.csproj", "{5D10D76B-92E4-424E-AEB9-190FF23ABB9B}"
