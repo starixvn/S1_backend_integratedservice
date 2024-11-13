@@ -29,10 +29,10 @@ namespace ThirdPartyWager.Extensions
                 { Tp.PP, AddPragmaticPlay },
                 { Tp.JILI, AddJILI},
                 { Tp.Sexy, AddSexy},
+                { Tp.EBet, AddEBet},
+
                 //Loki comment:
-                //{ Tp.FaChai, AddFaChai},
                 //{ Tp.Pegasus, AddPegasus},
-                //{ Tp.Allbet, AddAllbet},
 
                 //{ Tp.SA, AddSA},
                 //{ Tp.SG, AddSG},
@@ -48,7 +48,6 @@ namespace ThirdPartyWager.Extensions
                 //{ Tp.OneGaming, AddOneGaming},
                 //{ Tp.CQ9, AddCQ9},
                 //{ Tp.CF, AddCF},
-                //{ Tp.EBet, AddEBet},
                 //{ Tp.WM, AddWM},
                 //{ Tp.Kiss918, AddKiss918},
                 //{ Tp.Mega, AddMega},
@@ -254,11 +253,9 @@ namespace ThirdPartyWager.Extensions
 
         private IServiceCollection AddEBet(IServiceCollection services)
         {
-            services.AddSingleton<ApiEbetBLL>();
-            services.AddSingleton<FinanceEbetBLL>();
-
-            services.AddHostedService<FinanceEbet>();
-
+            services.AddSingleton<WagerEBetService>();
+            services.AddSingleton<TicketEBetBLL>();
+            services.AddHostedService<BetResultCheckEBet>();
             return services;
         }
 

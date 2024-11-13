@@ -78,30 +78,33 @@
     public enum GameType
     {
         Allbet_LiveCasino = 6,
+        PP_RNG = 7,
         AG_LiveCasino = 8,
         SA_LiveCasino = 9,
         GPI_RNG = 11,
+        YGG_RNG = 14,
+        SG_RNG = 15,
+        PP_LiveCasino = 16,
         Sexy_LiveCasino = 18,
+        EBet_LiveCasino = 28, // WorldEntertainment
+        SG_Fish = 31,
         WM_LiveCasino = 32,
         One789_Lottery = 35,
         One789_Lottery_789 = 36,
         One789_LiveCasino = 37,
         Iconic_RNG = 39,
         Iconic_Fish = 40,
+        V8_Poker = 42,
+        PT_RNG = 46,
+        V8_Poker_None = 47, // without revenue games
+        PT_LiveCasino = 48,
         AMB_Poker = 50,
         KM_Poker = 52,
         JILI_RNG = 53,
         MP_Poker = 60,
         MP_Poker_None = 61, // without revenue games
-        SG_RNG = 15,
-        SG_Fish = 31,
         SBO_Sports = 77,
         SBO_VirtualSports = 81,
-        YGG_RNG = 14,
-        V8_Poker = 42,
-        PT_RNG = 46,
-        V8_Poker_None = 47, // without revenue games
-        PT_LiveCasino = 48,
         AMB_RNG = 76,
         Skywind_RNG = 82,
         Skywind_LiveCasino = 84,
@@ -130,8 +133,6 @@
         Live22_RNG = 121,
         FastSpin_RNG = 122,
         RNG_Keno = 124,
-        PP_RNG = 7,
-        PP_LiveCasino = 16,
         Lottery = 125,
         TableGame = 126
     }
