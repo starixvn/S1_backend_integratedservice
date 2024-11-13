@@ -41,27 +41,18 @@ namespace CommonService.Service.BLL
                 };
             }
 
-            if (config.WelComeMailEnable == 1)
+            switch (config.Mode)
             {
-                switch (config.Mode)
-                {
-                    case (int)MailType.SendGrid:
-                        return await _sendGridBll.SendMailAsync(custInfo, null, template);
-                    case (int)MailType.IBM:
-                        return await _iBMBll.SendMailAsync(custInfo, null, template);
-                    default:
-                        return new ApiResult
-                        {
-                            ErrorCode = ErrorCode.SettingNotFound,
-                            Message = "MailType not define."
-                        };
-                }
-            }
-            else
-            {
-                apiResult.ErrorCode = ErrorCode.Success;
-                apiResult.Message = "Welcome Email don't have to send.";
-                return apiResult;
+                case (int)MailType.SendGrid:
+                    return await _sendGridBll.SendMailAsync(custInfo, null, template);
+                case (int)MailType.IBM:
+                    return await _iBMBll.SendMailAsync(custInfo, null, template);
+                default:
+                    return new ApiResult
+                    {
+                        ErrorCode = ErrorCode.SettingNotFound,
+                        Message = "MailType not define."
+                    };
             }
         }
 
