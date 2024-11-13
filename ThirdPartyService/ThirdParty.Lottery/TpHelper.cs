@@ -127,21 +127,25 @@ namespace ThirdParty.Lottery
             };
 
             var convert = new DateTimeOffset(getBetDetail.SettledTime);
-            var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyy/MM/dd HH:mm:ss");
+            var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyyMMdd");
             var input = new
             {
                 Timestamp = GetCurrentTimeFormat(),
                 Seq = Guid.NewGuid().ToString(),
                 Payload = new
                 {
-                    GameType = config.GameType,
+                    config.GameType,
                     OperatorCustId = tpCustInfo.TpUserName,
                     TicketNo = getBetDetail.TransId,
-                    SettleDate = time,
                     Language = "en-US",
                     AgentInfo = new
                     {
                         AgentKey = tpCustInfo.TpCurrencyId
+                    },
+                    OtherBetInfo = new
+                    {
+                        Platform = "D",
+                        EventDate = time
                     }
                 }
             };
