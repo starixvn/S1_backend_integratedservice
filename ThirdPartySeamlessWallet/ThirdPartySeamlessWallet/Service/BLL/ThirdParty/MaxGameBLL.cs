@@ -99,7 +99,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public dynamic GetPlayerInfo(string request)
         {
-            SentrySdk.CaptureMessage($"[GetPlayerInfo]: {request}");
             var getReq = JsonConvert.DeserializeObject<GetPlayerInfoReq_MaxGame>(request);
 
             if (string.IsNullOrEmpty(getReq?.Payload?.WalletSideToken))
