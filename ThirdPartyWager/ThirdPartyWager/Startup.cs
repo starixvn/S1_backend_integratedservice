@@ -1,5 +1,6 @@
 ﻿using System.Net;
-
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
@@ -39,6 +40,19 @@ namespace ThirdPartyWager
                 services.AddHttpClient();
             }
 
+            services
+                .AddOpenTelemetry()
+                .ConfigureResource(_ => _.AddService(configuration.GetValue<string>("Otel:ServiceName") ?? ""))
+                .WithTracing(traceProvider => traceProvider
+                .AddAspNetCoreInstrumentation(options => options.Filter =
+                     httpContext => !httpContext.Request.Path.HasValue
+                     || !httpContext.Request.Path.StartsWithSegments("/swagger")
+                     && !httpContext.Request.Path.StartsWithSegments("/health")
+                     && !httpContext.Request.Path.StartsWithSegments("/healthcheck"))
+                .AddHttpClientInstrumentation()
+                .AddConnectorNet().ConfigureResource(_ => _.AddService(configuration.GetValue<string>("Otel:ServiceName") ?? ""))
+                .AddOtlpExporter(options => options.Endpoint = configuration.GetValue<Uri>("Otel:Collector") ?? new Uri("")));
+
             /*Library*/
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<Common>();
@@ -73,8 +87,6 @@ namespace ThirdPartyWager
 
             //services.AddLiveStreaming();
             //services.AddLatestHighlightVideo();
-
-            //Loki comment:
             //services.AddSabaOdds();
             //services.AddTpRefundWorker();
         }
