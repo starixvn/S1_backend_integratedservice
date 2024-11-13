@@ -161,12 +161,14 @@ namespace ThirdParty.PG
                     TicketNo = getBetDetail.TransId,
                     SettleDate = time,
                     Language = "en-US",
-
                 }
             };
 
             var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/GetBetHistory";
             var postdata = JsonConvert.SerializeObject(input, Formatting.None);
+            _temporaryLogPayloadService.LogDetailedPayload(postdata, new PayloadLogMeta() {
+                GameType = config.GameType
+            });
             var header = new Dictionary<string, string>()
             {
                 { "operator-pwd", config.OperatorPwd},
@@ -174,6 +176,8 @@ namespace ThirdParty.PG
             };
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
+            _temporaryLogPayloadService.UpdateDetailedPayLoadWithResponse(postdata, result);
+
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<GetBetHistoryResp>(result);
@@ -213,16 +217,13 @@ namespace ThirdParty.PG
             var GameId = detailList.GetFirstStringValue("GameId");
             var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
             var IpAddress = detailList.GetFirstStringValue("IpAddress");
-            var details = JsonConvert.DeserializeObject<IList<BettransData_PG>>(JsonConvert.SerializeObject(detailList));
-            var resultId = details.Where(i => i.TicketType == 4).FirstOrDefault()?.ResultId;
-
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = GameId,
                 Game = GameId,
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
-                MatchID = resultId,
+                MatchID = string.Empty,
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,
