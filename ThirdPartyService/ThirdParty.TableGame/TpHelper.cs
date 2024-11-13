@@ -134,11 +134,19 @@ namespace ThirdParty.TableGame
                 Seq = Guid.NewGuid().ToString(),
                 Payload = new
                 {
-                    GameType = config.GameType,
+                    config.GameType,
                     OperatorCustId = tpCustInfo.TpUserName,
                     TicketNo = getBetDetail.TransId,
-                    SettleDate = time,
-                    Language = "en-US"
+                    Language = "en-US",
+                    AgentInfo = new
+                    {
+                        AgentKey = tpCustInfo.TpCurrencyId
+                    },
+                    OtherBetInfo = new
+                    {
+                        Platform = "D",
+                        EventDate = time
+                    }
                 }
             };
 

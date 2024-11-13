@@ -133,7 +133,66 @@ namespace ThirdParty.FaChai
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+
+            var convert = new DateTimeOffset(getBetDetail.SettledTime);
+            var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyyMMdd");
+            var input = new
+            {
+                Timestamp = GetCurrentTimeFormat(),
+                Seq = Guid.NewGuid().ToString(),
+                Payload = new
+                {
+                    config.GameType,
+                    OperatorCustId = tpCustInfo.TpUserName,
+                    TicketNo = getBetDetail.TransId,
+                    Language = "en-US",
+                    AgentInfo = new
+                    {
+                        AgentKey = tpCustInfo.TpCurrencyId
+                    },
+                    OtherBetInfo = new
+                    {
+                        Platform = "D",
+                        EventDate = time
+                    }
+                }
+            };
+
+            var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/GetBetHistory";
+            var postdata = JsonConvert.SerializeObject(input, Formatting.None);
+            var header = new Dictionary<string, string>()
+            {
+                { "operator-pwd", config.OperatorPwd},
+                { "operator-sign", Encrypt(postdata, config)},
+            };
+
+            var result = HttpPost(ApiUrl, postdata, "application/json", header);
+            if (IsJSON(result))
+            {
+                var json = JsonConvert.DeserializeObject<GetBetHistoryResp>(result);
+                if (json.ErrorCode == 0)
+                {
+                    return new BaseDetail(getBetDetail.TpGameTypeOption)
+                    {
+                        TransId = getBetDetail.TransId,
+                        DetailUrl = json.Payload.ReturnUrl,
+                        TpCurrency = tpCurrency,
+                    };
+                }
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                TpCurrency = tpCurrency,
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
