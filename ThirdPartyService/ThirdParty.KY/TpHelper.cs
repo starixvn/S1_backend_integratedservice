@@ -20,9 +20,23 @@ namespace ThirdParty.KY
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KYConfig>(TpEnum.KY.ToString());
 
             var tokyoProxyConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
-            if (tokyoProxyConfig != null )
+
+            if (tokyoProxyConfig != null
+                && !string.IsNullOrEmpty(tokyoProxyConfig.ProxyHost)
+                && tokyoProxyConfig.ProxyPort > 0)
             {
-                _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);
+                try
+                {
+                    _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);
+                }
+                catch (UriFormatException ex)
+                {
+                    _proxy = null;
+                }
+            }
+            else
+            {
+                _proxy = null;
             }
         }
 
