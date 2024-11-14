@@ -253,7 +253,7 @@ namespace ThirdParty.PG
                     ProductInfo = new
                     {
                         GameType = gameType,
-                        GameId = "6001",
+                        GameId = gameId,
                         AppType = (appType == AppType.Desktop) ? "D" : "M",
                     },
                     CustInfo = new
