@@ -371,6 +371,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideTransactionFailed));
             }
+            else if (tpAffterAmount < 0)
+            {
+                PlaceBetResp response = new(ErrorCodeOfMaxGame.OpSidePlayerHasInsufficientFunds, getReq.Seq)
+                {
+                    Payload = new Payload_PlaceBetResp()
+                    {
+                        OperatorCustId = getReq.Payload.OperatorCustId,
+                        Balance = _tools.Floor(tpAffterAmount, 2),
+                        //BetDataSet
+                    },
+                };
+                return _tools.ToJson(response);
+            }
+
 
             _log2File.Error($"result={result}", logName);
             return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError));

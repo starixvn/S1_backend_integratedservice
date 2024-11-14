@@ -225,7 +225,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return response;
                 }
 
-                response = response = _maxGameBLL.PlaceBetAndSettle(content);
+                response = _maxGameBLL.PlaceBetAndSettle(content);
                 _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
 
                 return response;
