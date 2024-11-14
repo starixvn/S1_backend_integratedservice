@@ -1,6 +1,7 @@
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
+using Serilog.Sinks.Network;
 using ThirdPartyWager;
 using ThirdPartyWager.Extensions;
 
@@ -24,7 +25,7 @@ builder.Host.UseSerilog((context, Configuration) =>
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails()
         .Enrich.WithProperty("ApplicationName", "ThirdPartyWager")
-        .WriteTo.LogstashHttp("http://10.18.200.193:32012/")
+        .WriteTo.TCPSink("tcp://10.18.200.193", 31853, new Serilog.Formatting.Json.JsonFormatter())
         .WriteTo.Sentry(o =>
         {
             // Debug and higher are stored as breadcrumbs (default is Information)
