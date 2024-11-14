@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System.Dynamic;
 using System.Text;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -41,11 +43,15 @@ namespace ThirdPartyWager.Service.BLL
                 Payload = new
                 {
                     GameType = setting.GameType,
-                    OperatorCustId = parameters.OperatorCustId,
-                    TicketNo = parameters.TicketNo,
+                    parameters.OperatorCustId,
+                    parameters.TicketNo,
+                    parameters.TransDate,
                     AgentInfo = new
                     {
-                        AgentKey = parameters.AgentKey
+                        parameters.AgentId,
+                        parameters.AgentKey,
+                        parameters.AgentCode,
+                        parameters.ExtraInfo
                     }
                 }
             };

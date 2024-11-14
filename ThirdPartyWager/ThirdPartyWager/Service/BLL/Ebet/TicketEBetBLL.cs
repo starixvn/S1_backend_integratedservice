@@ -50,12 +50,14 @@ namespace ThirdPartyWager.Service.BLL
             TpCustInfo tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache(_tpId, bettrans.OperatorCustId);
             var config = _siteConfigDic[tpCustInfo.SiteId];
             var siteName = _serverList.FirstOrDefault(i => i.SiteId == tpCustInfo.SiteId).SiteName;
-
+            string createTime = bettrans.CreateTime;
+            var TransDate = DateTime.Parse(createTime).AddHours(-4).ToString("yyyy-MM-dd hh:mm:ss");
             var param = new CheckTicketStatusPayloadMaxGame
             {
                 OperatorCustId = bettrans.OperatorCustId,
                 TicketNo = bettrans.TicketNo,
                 AgentKey = tpCustInfo.TpCurrencyId,
+                TransDate = TransDate
             };
 
             TicketDataMaxGame data = await _apiMaxGameBLL.CheckTicketStatus(config, _tpName, param);

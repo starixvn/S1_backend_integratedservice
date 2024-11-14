@@ -13,9 +13,14 @@
 
     public class CheckTicketStatusPayloadMaxGame
     {
+        public string GameType { get; set; }
         public string OperatorCustId { get; set; }
         public string TicketNo { get; set; }
+        public string TransDate { get; set; }
+        public string AgentId { get; set; }
         public string AgentKey { get; set; }
+        public string AgentCode { get; set; }
+        public string ExtraInfo { get; set; }
     }
 
     public class TicketDataMaxGame
