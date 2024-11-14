@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
-using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using StackExchange.Redis;
@@ -78,7 +77,7 @@ namespace ThirdPartySeamlessWallet
                            && !httpContext.Request.Path.StartsWithSegments("/health")
                            && !httpContext.Request.Path.StartsWithSegments("/healthcheck"))
                    .AddHttpClientInstrumentation()
-                   .AddConnectorNet().ConfigureResource(_ => _.AddService(Configuration.GetValue<string>("Otel:ServiceName") ?? ""))
+                   .AddConnectorNet()
                    .AddOtlpExporter(options => options.Endpoint = Configuration.GetValue<Uri>("Otel:Collector") ?? new Uri("")));
 
             /*DAL*/
