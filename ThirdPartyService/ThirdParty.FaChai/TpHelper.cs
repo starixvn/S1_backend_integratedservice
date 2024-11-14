@@ -203,15 +203,17 @@ namespace ThirdParty.FaChai
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
             }
+            var GameId = detail.GetStringValue("GameId");
+            var GameRoundId = detail.GetStringValue("GameRoundId");
 
             // No need MatchId
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
-                GameID = detail.GetStringValue("gameID"),
-                Game = GetGameName(detail.GetStringValue("gameID")),
-                RefNo = string.Empty,
+                GameID = GameId,
+                Game = GetGameName(GameId),
+                RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
-                BetType = detail.GetStringValue("gametype"),
+                BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,
                 DeviceType = DeviceType.None,
@@ -419,10 +421,10 @@ namespace ThirdParty.FaChai
         {
             if (!_gameNameList.TryGetValue(gameCode, out var name))
             {
-                return string.Empty;
+                return gameCode;
             }
             var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : string.Empty : string.Empty;
+            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : gameCode : gameCode;
         }
 
         private string Encrypt(string req, FaChaiConfig config)

@@ -13,6 +13,7 @@ namespace ThirdParty.Live22
     {
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, Live22Config> _siteConfigDic;
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -21,6 +22,7 @@ namespace ThirdParty.Live22
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Live22Config>(TpEnum.Live22.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Live22).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         #region Request
@@ -206,14 +208,15 @@ namespace ThirdParty.Live22
             var GameId = detailList.GetFirstStringValue("GameId");
             var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
             var IpAddress = detailList.GetFirstStringValue("IpAddress");
+            var ResultId = detailList.GetFirstStringValue("ResultId");
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = GameId,
-                Game = GameId,
+                Game = GetGameName(GameId),
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
-                MatchID = string.Empty,
+                MatchID = ResultId,
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,
@@ -315,6 +318,16 @@ namespace ThirdParty.Live22
         {
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+        }
+
+        private string GetGameName(string gameId)
+        {
+            if (!_gameNameList.TryGetValue(gameId, out var name))
+            {
+                return gameId;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : gameId;
         }
     }
 }

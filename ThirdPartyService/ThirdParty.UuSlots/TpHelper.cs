@@ -13,6 +13,7 @@ namespace ThirdParty.UuSlots
     {
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, UuSlotsConfig> _siteConfigDic;
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -21,6 +22,7 @@ namespace ThirdParty.UuSlots
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<UuSlotsConfig>(TpEnum.UuSlots.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.UuSlots).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         #region Request
@@ -220,7 +222,7 @@ namespace ThirdParty.UuSlots
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = GameId,
-                Game = GameId,
+                Game = GetGameName(GameId),
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
                 MatchID = resultId,
@@ -319,6 +321,16 @@ namespace ThirdParty.UuSlots
         {
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+        }
+
+        private string GetGameName(string gameId)
+        {
+            if (!_gameNameList.TryGetValue(gameId, out var name))
+            {
+                return gameId;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : gameId;
         }
     }
 }

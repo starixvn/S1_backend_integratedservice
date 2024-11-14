@@ -193,6 +193,7 @@ namespace ThirdParty.SabaPlay
             var GameId = detailList.GetFirstStringValue("GameId");
             var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
             var IpAddress = detailList.GetFirstStringValue("IpAddress");
+            var BetChoice = detailList.GetFirstStringValue("BetChoice");
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
@@ -202,7 +203,7 @@ namespace ThirdParty.SabaPlay
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
                 BetType = string.Empty,
-                BetChoice = string.Empty,
+                BetChoice = BetChoice,
                 Result = string.Empty,
                 DeviceType = DeviceType.None,
                 IP = IpAddress,

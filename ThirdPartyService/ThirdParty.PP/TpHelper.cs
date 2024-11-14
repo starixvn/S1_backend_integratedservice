@@ -18,6 +18,7 @@ namespace ThirdParty.PP
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, PPConfig> _siteConfigDic;
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -28,6 +29,7 @@ namespace ThirdParty.PP
 
         public TpHelper(IServiceProvider provider)
         {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.PP).ToDictionary(d => d.AppId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PPConfig>(TpEnum.PP.ToString());
             _temporaryLogPayloadService = provider.GetRequiredService<IPayloadLogger>();
         }
@@ -205,14 +207,13 @@ namespace ThirdParty.PP
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
             }
 
-            var GameId = detailList.GetFirstStringValue("GameId");
-            var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
-            var IpAddress = detailList.GetFirstStringValue("IpAddress");
+            var GameId = detailList.GetFirstStringValue("gameId");
+            var GameRoundId = detailList.GetFirstStringValue("roundId");
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = GameId,
-                Game = GameId,
+                Game = GetGameName(GameId, betRecordInfo.GameType),
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
@@ -220,7 +221,7 @@ namespace ThirdParty.PP
                 BetChoice = string.Empty,
                 Result = string.Empty,
                 DeviceType = DeviceType.None,
-                IP = IpAddress,
+                IP = string.Empty,
             };
         }
 
@@ -345,6 +346,21 @@ namespace ThirdParty.PP
             }
 
             return "Service_BettransRng_PP_TicketNo_Get";
+        }
+
+        private string GetGameName(string gameId, int gameType)
+        {
+            if (gameType.ToString() == PPLiveCasinoGameTypeId)
+            {
+                return gameId;
+            }
+
+            if (!_gameNameList.TryGetValue(gameId, out var name))
+            {
+                return gameId;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : gameId;
         }
     }
 }

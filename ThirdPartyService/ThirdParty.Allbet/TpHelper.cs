@@ -150,6 +150,8 @@ namespace ThirdParty.Allbet
             var GameId = detailList.GetFirstStringValue("GameId");
             var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
             var IpAddress = detailList.GetFirstStringValue("IpAddress");
+            var BetChoice = detailList.GetFirstStringValue("BetChoice");
+            var Result = detailList.GetFirstStringValue("GameResult");
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
@@ -159,8 +161,8 @@ namespace ThirdParty.Allbet
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
                 BetType = string.Empty,
-                BetChoice = string.Empty,
-                Result = string.Empty,
+                BetChoice = BetChoice,
+                Result = Result,
                 DeviceType = DeviceType.None,
                 IP = IpAddress,
             };

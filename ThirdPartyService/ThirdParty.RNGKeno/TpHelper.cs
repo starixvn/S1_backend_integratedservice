@@ -198,6 +198,7 @@ namespace ThirdParty.RNGKeno
             var gameId = detail.GetFirstStringValue("GameId");
             var gameRoundId = detail.GetFirstStringValue("GameRoundId");
             var ipAddress = detail.GetFirstStringValue("IpAddress");
+            var BetChoice = detail.GetFirstStringValue("BetChoice");
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
@@ -207,7 +208,7 @@ namespace ThirdParty.RNGKeno
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
                 BetType = string.Empty,
-                BetChoice = string.Empty,
+                BetChoice = BetChoice,
                 Result = string.Empty,
                 DeviceType = DeviceType.None,
                 IP = ipAddress,

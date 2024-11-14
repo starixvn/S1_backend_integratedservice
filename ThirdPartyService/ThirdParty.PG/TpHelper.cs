@@ -25,6 +25,7 @@ namespace ThirdParty.PG
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, PGConfig> _siteConfigDic;
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -35,6 +36,7 @@ namespace ThirdParty.PG
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PGConfig>(TpEnum.PG.ToString());
             _temporaryLogPayloadService = provider.GetRequiredService<IPayloadLogger>();
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.PG).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         #region Request
@@ -220,7 +222,7 @@ namespace ThirdParty.PG
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = GameId,
-                Game = GameId,
+                Game = GetGameName(GameId),
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
@@ -329,6 +331,16 @@ namespace ThirdParty.PG
         private static string GetSPNameBasedOnTpGameType()
         {
             return "Service_BettransRng_PG_TicketNo_Get";
+        }
+
+        private string GetGameName(string gameId)
+        {
+            if (!_gameNameList.TryGetValue(gameId, out var name))
+            {
+                return gameId;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : gameId;
         }
     }
 }
