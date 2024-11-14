@@ -25,7 +25,7 @@ builder.Host.UseSerilog((context, Configuration) =>
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails()
         .Enrich.WithProperty("ApplicationName", "ThirdPartyWager")
-        .WriteTo.TCPSink("tcp://10.18.200.193", 31853, new Serilog.Formatting.Json.JsonFormatter())
+        .WriteTo.UDPSink("10.18.200.193", 31853, new Serilog.Formatting.Json.JsonFormatter())
         .WriteTo.Sentry(o =>
         {
             // Debug and higher are stored as breadcrumbs (default is Information)
