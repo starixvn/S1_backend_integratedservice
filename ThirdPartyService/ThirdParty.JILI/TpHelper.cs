@@ -171,7 +171,11 @@ namespace ThirdParty.JILI
                     OperatorCustId = tpCustInfo.TpUserName,
                     TicketNo = getBetDetail.TransId,
                     SettleDate = time,
-                    Language = "en-US"
+                    Language = "en-US",
+                    AgentInfo = new
+                    {
+                        AgentKey = tpCustInfo.TpCurrencyId
+                    }
                 }
             };
 
