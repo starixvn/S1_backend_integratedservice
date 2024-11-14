@@ -25,11 +25,10 @@ public class ApiPG2BLL
         _wagerPG2Service = provider.GetRequiredService<WagerPG2Service>();
     }
 
-    public async Task<CurrencyStats_PG2> GetBetSummaryByDate(dynamic setting, string currency, int gameType, string reportTimeStartTime,
+    public async Task<CurrencyStats_PG2> GetBetSummaryByDate(dynamic setting, string apiKey, string currency, int gameType, string reportTimeStartTime,
         string reportTimeEndTime, int perPage, int page)
     {
         var apiUrl = setting.ApiUrl;
-        var key = setting.CurrencyData[currency].ApiKey;
         var agent = setting.CurrencyData[currency].Agent;
 
         var url = $"{apiUrl}/seamless/report/date";
@@ -48,7 +47,7 @@ public class ApiPG2BLL
         var sParam = JsonConvert.SerializeObject(param);
 
         // request
-        var r = await DoHttpClientAsync(url, sParam, key, "x-amb-signature", HttpMethod.Post);
+        var r = await DoHttpClientAsync(url, sParam, apiKey, "x-amb-signature", HttpMethod.Post);
         var result = JsonConvert.DeserializeObject<CurrencyStats_PG2>(r);
         return result;
     }

@@ -101,7 +101,7 @@ public class FinancePG2BLL : ITpReportBLL
                 var perPage = 500;
                 while (page <= totalPage)
                 {
-                    CurrencyStats_PG2 getWagerSummary = await _apiPG2BLL.GetBetSummaryByDate(setting, currency, _gameType, reportTime.startTime, reportTime.endTime, perPage, page);
+                    CurrencyStats_PG2 getWagerSummary = await _apiPG2BLL.GetBetSummaryByDate(setting, apiKey, currency, _gameType, reportTime.startTime, reportTime.endTime, perPage, page);
                     if (getWagerSummary.status.code != 0)
                     {
                         var msg = "THIRD_PARTY_ERROR";
