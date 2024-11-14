@@ -23,7 +23,8 @@ builder.Host.UseSerilog((context, Configuration) =>
                 excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails()
-        .WriteTo.MySQL(builder.Configuration.GetValue<string>("connectionStrings:worker_LogDB"), "LogInfo")
+        .Enrich.WithProperty("ApplicationName", "ThirdPartyWager")
+        .WriteTo.LogstashHttp("http://10.18.200.193:32012/")
         .WriteTo.Sentry(o =>
         {
             // Debug and higher are stored as breadcrumbs (default is Information)
