@@ -154,7 +154,7 @@ namespace CommonService.Service.BLL
                 }
                 _logger.LogInformation("addcontact:finish check fault");
                 _logger.LogInformation($"jsonResult={JsonConvert.SerializeObject(jsonResult)}");
-                if (jsonResult is null || jsonResult?.Body?.Result?.Success?.ToUpper() == "FALSE")
+                if (jsonResult is null || jsonResult.Body.Result.Success.ToUpper() == "FALSE")
                 {
                     result.Message = $"response don't have access token:{JsonConvert.SerializeObject(jsonResult)}";
                     return result;
