@@ -46,12 +46,7 @@
         public DateTime? SettleDate { get; set; } = new DateTime(1970, 1, 1);
         public string GameResult { get; set; }
         public decimal Odds { get; set; }
-        public OtherBetInfoMaxGame OtherBetInfo { get; set; } = null;
-    }
-
-    public class OtherBetInfoMaxGame
-    {
-        public string ResultId { get; set; } = "";
+        public Dictionary<string,string> OtherBetInfo { get; set; } = null;
     }
 
     public class BettransData_MaxGame
@@ -64,7 +59,7 @@
         public string TicketNo { get; set; }
         public string GameId { get; set; }
         public string GameRoundId { get; set; }
-        public string TransactionId { get; set; }
+        public string TransactionId { get; set; } = "";
         public decimal Stake { get; set; }
         public decimal ActualStake { get; set; }
         public decimal NetStake { get; set; }
@@ -122,6 +117,7 @@
         public string GameResult { get; set; }
         public DateTime SettleDate { get; set; }
         public string ResultId { get; set; }
+        public Dictionary<string,string> OtherBetInfo { get; set; }
     }
 
     public class SeamlessMaxGameResponse

@@ -82,7 +82,7 @@ namespace ThirdPartyWager.Service.BLL
                     var resultId = "";
                     if (ticketDataMaxGame.Payload.OtherBetInfo != null)
                     {
-                        resultId = ticketDataMaxGame.Payload.OtherBetInfo.ResultId;
+                        resultId = ticketDataMaxGame.Payload.OtherBetInfo.GetValueOrDefault("ResultId");
                     }
 
                     var endGameData = new
@@ -100,14 +100,15 @@ namespace ThirdPartyWager.Service.BLL
                                     TicketNo = bettransDataMaxGame.TicketNo,
                                     GameId = bettransDataMaxGame.GameId,
                                     GameRoundId = bettransDataMaxGame.GameRoundId,
-                                    TransactionId = "",
+                                    TransactionId = bettransDataMaxGame.TransactionId,
                                     ActualStake = ticketDataMaxGame.Payload.ActualStake,
                                     NetStake = ticketDataMaxGame.Payload.NetStake,
                                     Payout =  ticketDataMaxGame.Payload.Payout,
                                     Odds = ticketDataMaxGame.Payload.Odds,
                                     GameResult = ticketDataMaxGame.Payload.GameResult,
                                     SettleDate =  (DateTime)ticketDataMaxGame.Payload.SettleDate,
-                                    ResultId = resultId
+                                    ResultId = resultId,
+                                    OtherBetInfo = ticketDataMaxGame.Payload.OtherBetInfo
                                 }
                             }
                         }
@@ -132,7 +133,7 @@ namespace ThirdPartyWager.Service.BLL
                                     TicketNo = bettransDataMaxGame.TicketNo,
                                     GameId = bettransDataMaxGame.GameId,
                                     GameRoundId = bettransDataMaxGame.GameRoundId,
-                                    TransactionId = "",
+                                    TransactionId = bettransDataMaxGame.TransactionId,
                                     Status = (int)TypeOfMaxGame.Reject,
                                 }
                             }
