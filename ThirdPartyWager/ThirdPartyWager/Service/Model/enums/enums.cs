@@ -85,6 +85,7 @@
         YGG_RNG = 14,
         SG_RNG = 15,
         PP_LiveCasino = 16,
+        PG_RNG = 17,
         Sexy_LiveCasino = 18,
         EBet_LiveCasino = 28, // WorldEntertainment
         SG_Fish = 31,

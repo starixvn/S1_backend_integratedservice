@@ -1,11 +1,13 @@
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.FaChai;
+using ThirdPartyWager.Service.BLL.PG;
 using ThirdPartyWager.Service.BLL.PP;
 using ThirdPartyWager.Service.BLL.TableGame;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
 using ThirdPartyWager.Workers.FaChai;
+using ThirdPartyWager.Workers.PG;
 using ThirdPartyWager.Workers.PP;
 
 namespace ThirdPartyWager.Extensions
@@ -31,7 +33,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.JILI, AddJILI},
                 { Tp.Sexy, AddSexy},
                 { Tp.EBet, AddEBet},
-                { Tp.TableGame, AddTableGame}
+                { Tp.TableGame, AddTableGame},
+                { Tp.PG, AddPG}
 
                 //Loki comment:
                 //{ Tp.Pegasus, AddPegasus},
@@ -820,6 +823,13 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<BetResultCheckLottery>();
 
+            return services;
+        }
+        
+        private IServiceCollection AddPG(IServiceCollection services) {
+            services.AddSingleton<WagerPGService>();
+            services.AddSingleton<TicketPGBLL>();
+            services.AddHostedService<TicketPG>();
             return services;
         }
     }
