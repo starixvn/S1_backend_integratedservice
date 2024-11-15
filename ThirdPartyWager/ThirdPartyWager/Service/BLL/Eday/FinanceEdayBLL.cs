@@ -7,23 +7,20 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class FinanceEdayBLL :ITpReportBLL
     {
-        private readonly ILogger<FinanceNTConnectBLL> _logger;
+        private readonly ILogger<FinanceEdayBLL> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
-        private readonly ApiNTConnectBLL _apiNTConnectBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly string _tpName = Tp.Eday.ToString();
-        private readonly NTConnectConfig _siteNTConnectConfig;
+
         private readonly int _timeZone = 0;
 
         public FinanceEdayBLL(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<FinanceNTConnectBLL>>();
+            _logger = provider.GetRequiredService<ILogger<FinanceEdayBLL>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _apiNTConnectBLL = provider.GetRequiredService<ApiNTConnectBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _siteNTConnectConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NTConnectConfig>(_tpName);
         }
 
         public TimeCast GetReportTime(DateTime startTime, int day)

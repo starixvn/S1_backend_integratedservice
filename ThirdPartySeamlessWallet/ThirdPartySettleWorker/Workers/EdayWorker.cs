@@ -73,11 +73,10 @@ namespace ThirdPartySettleWorker.Workers
 
                 foreach (var wager in tpUnsettleList)
                 {
-                    
-                    var getUnsettledList = _partitionService.GetUnsettleDataList<SettleDataEday>(getSP, wager);
+
+                    var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleDataEday>(getSP, wager, DataBase.Wager);
                     var wagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleDataEday>(getWager,
                         new { TransId = wager.TransId }, DataBase.Wager).FirstOrDefault();
-                    
                    
                     if(getUnsettledList == null || !getUnsettledList.Any())
                     {
@@ -99,14 +98,18 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
                         }
 
-                        var transType = wagerData.BillStatus switch
+                        //若拉單都還沒拉回來，先給預設UnSettled
+                        var transType = SettlementType.UnSettled;
+                        if (wagerData != null)
                         {
-                            100 => SettlementType.SettledForInvalid,
-                            10 => SettlementType.UnSettled,
-                            200 => SettlementType.SettledForValid,
-                            _ => SettlementType.SettledForInvalid
-                        };
-                        
+                            transType = wagerData.BillStatus switch
+                            {
+                                100 => SettlementType.SettledForInvalid,
+                                10 => SettlementType.UnSettled,
+                                200 => SettlementType.SettledForValid,
+                                _ => SettlementType.SettledForInvalid
+                            };
+                        }
                         
                         if (transType != SettlementType.UnSettled)
                         {

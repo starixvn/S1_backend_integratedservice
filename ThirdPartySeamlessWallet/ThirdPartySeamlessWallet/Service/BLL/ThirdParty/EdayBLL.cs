@@ -132,6 +132,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         }
                     };
                 }
+                
+                if (result == -2)
+                {
+                    return new EdayResponse<EdayBetRequestResponse>()
+                    { 
+                        resultCode = (int)EdayResultCode.InsufficientBalance,
+                        message = EdayResultCode.InsufficientBalance.GetEnumDescription(),
+                    };
+                }
             }
             catch (Exception ex)
             {
@@ -206,7 +215,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (result == -3)
                 {
                     //已經取消不給動 若真的有送 直接詢問Eday
-                    _log2File.Info($"Eday BetRequestCancel : {request.billId} , Already CancelBet , Please check with Eday", logName);
+                    _log2File.Error($"Eday BetRequestCancel : {request.billId} , Already CancelBet , Please check with Eday", logName);
                     return new EdayResponse<EdayBetRequestResponse>()
                     { 
                         resultCode = (int)EdayResultCode.InvalidStatus,
@@ -307,7 +316,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (result == -3)
                 {
                     //已經取消不給動 若真的有送 直接詢問Eday
-                    _log2File.Info($"Eday BetRequestCancel : {request.roundCode} , Already CancelBet , Please check with Eday", logName);
+                    _log2File.Error($"Eday BetRequestCancel : {request.roundCode} , Already CancelBet , Please check with Eday", logName);
                     return new EdayResponse<EdayRoundUpdateResponse>()
                     { 
                         resultCode = (int)EdayResultCode.InvalidStatus,
@@ -356,14 +365,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (custBalance.Balance < 0)
             {
                 afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
-                return 0;
+                return -2;
             }
 
             var checkBalance = custBalance.Balance - Math.Abs(bettingDataLT_Eday.amount);
             if (checkBalance < 0)
             {
                 afterAmount = checkBalance / tpCurrency.ExchangeRate;
-                return 0;
+                return -2;
             }
             
             var result = _bettingService.BetRequest_Eday(tpCustInfo, bettingDataLT_Eday, out afterAmount);
@@ -378,6 +387,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, cancelDataLT_Eday.player);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
+            
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                cancelDataLT_Eday.amount *= tpCurrency.ExchangeRate;
+            }
             
             var result = _settledService.BetRequestCancel_Eday(tpCustInfo, cancelDataLT_Eday, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
