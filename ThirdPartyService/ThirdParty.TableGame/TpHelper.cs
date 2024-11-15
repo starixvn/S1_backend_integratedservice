@@ -138,6 +138,7 @@ namespace ThirdParty.TableGame
                     OperatorCustId = tpCustInfo.TpUserName,
                     TicketNo = getBetDetail.TransId,
                     Language = "en-US",
+                    SettleDate = time,
                     AgentInfo = new
                     {
                         AgentKey = tpCustInfo.TpCurrencyId

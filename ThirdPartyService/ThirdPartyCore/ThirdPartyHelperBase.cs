@@ -139,6 +139,7 @@ namespace ThirdPartyCore
             }
             catch (Exception e)
             {
+                SentrySdk.CaptureMessage(e.Message, SentryLevel.Error);
                 logger.LogError(e, e.Message);
                 return e.Message;
             }
