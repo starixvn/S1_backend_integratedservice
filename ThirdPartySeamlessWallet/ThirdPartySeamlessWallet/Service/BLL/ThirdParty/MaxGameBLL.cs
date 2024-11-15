@@ -229,7 +229,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
-                PlaceBetResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
+                PlaceBetResp response = new(ErrorCodeOfMaxGame.OpSideRequestWasDone, getReq.Seq)
                 {
                     Payload = new Payload_PlaceBetResp()
                     {
@@ -304,7 +304,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else if (result == -2)
             {
-                return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideTransactionFailed));
+                return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideRequestWasDone));
             }
 
             _log2File.Error($"result={result}", logName);

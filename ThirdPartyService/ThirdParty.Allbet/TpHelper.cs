@@ -174,7 +174,7 @@ namespace ThirdParty.Allbet
             var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "0";
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
-            string betLimit = inputs.ContainsKey("betLimitGroup") && !string.IsNullOrEmpty(inputs["betLimitGroup"]) ? inputs["betLimitGroup"] : "20_10K";
+            string betLimit = inputs.ContainsKey("betLimitGroup") && !string.IsNullOrEmpty(inputs["betLimitGroup"]) ? inputs["betLimitGroup"] : "1_10K";
 
             var key = ApplyToken(tpCustInfo);
 

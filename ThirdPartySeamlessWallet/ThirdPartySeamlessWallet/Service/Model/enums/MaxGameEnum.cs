@@ -26,6 +26,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         OpSideParameterIncorrect = 1007,
         [Description("Duplicate request")]
         OpSideDuplicateRequest = 1009,
+        [Description("Request was done")]
+        OpSideRequestWasDone = 1010,
         [Description("The previous operation has not been completed")]
         OpSidePreviousTransactionNotCompleted = 1015,
         [Description("Login validation failed. Login name or password is incorrect")]
