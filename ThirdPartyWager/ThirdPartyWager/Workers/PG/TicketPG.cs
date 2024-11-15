@@ -29,7 +29,8 @@ public class TicketPG : BackgroundService
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        throw new NotImplementedException();
+        timer = new Timer(DoRefund, GameType.PG_RNG, TimeSpan.Zero, TimeSpan.Zero);
+        return Task.CompletedTask;
     }
 
     private async void DoRefund(object state)
