@@ -45,10 +45,9 @@ namespace ThirdParty.KY
             var config = _siteConfigDic[tpCustInfo.SiteId];
 
             string ApiUrl = config.ApiUrl;
-            string Agent = config.Agent;
-            string OperateSubtype = config.OperateSubtype;
-            string Md5key = config.Md5Key;
-            string DesKey = config.DesKey;
+            string Agent = config.CurrencyData[tpCustInfo.TpCurrencyId].Agent;
+            string Md5key = config.CurrencyData[tpCustInfo.TpCurrencyId].Md5Key;
+            string DesKey = config.CurrencyData[tpCustInfo.TpCurrencyId].DesKey;
 
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = currentAt.ToUnixTimeMilliseconds().ToString();
@@ -62,7 +61,7 @@ namespace ThirdParty.KY
 
             var parameters = new Dictionary<string, string>()
             {
-                { "s", OperateSubtype },
+                { "s", "0" },
                 { "account", account },
                 { "money", "0" },
                 { "orderid", orderId },

@@ -664,7 +664,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
                         Math.Abs(bettingDataPK_KY.money) * -1,
-                        (int)Tp.V8,
+                        (int)Tp.KY,
                         TransType.Wagers,
                         $"Stake: {bettingDataPK_KY.money:#,##0.##} {bettingDataPK_KY.orderId}",
                         bettingDataPK_KY.gameNo,

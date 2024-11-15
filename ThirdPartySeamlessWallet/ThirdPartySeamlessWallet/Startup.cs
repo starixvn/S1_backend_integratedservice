@@ -105,6 +105,7 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IBGBLL, BGBLL>();
             services.AddTransient<ITFGBLL, TFGBLL>();
             services.AddTransient<V8BLL>();
+            services.AddTransient<KYBLL>();
             services.AddTransient<AmigoBLL>();
             services.AddTransient<IPNGBLL, PNGBLL>();
             services.AddTransient<IFaChaiBLL, FaChaiBLL>();
