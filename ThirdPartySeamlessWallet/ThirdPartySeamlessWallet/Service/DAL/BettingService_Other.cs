@@ -1052,8 +1052,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 // 檢查是否重複
-                var bettrans = _partitionService.Query<BettransLTEdayDAL>(bettingDataLT_Eday.UTCBetTime, CheckSpName,
-                    new { billId = bettingDataLT_Eday.billId, player = tpCustInfo.TpUserName });
+                var bettrans = _mainDbClient.Query<BettransLTEdayDAL>(CheckSpName,
+                    commandType: CommandType.StoredProcedure,new { billId = bettingDataLT_Eday.billId, player = tpCustInfo.TpUserName });
                 if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.billId == bettingDataLT_Eday.billId))
                 {
                     return -1;
@@ -1068,16 +1068,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("winTotal", 0.00m);
                 p.Add("UTCSettleTime", bettingDataLT_Eday.UTCBetTime);
                 p.Add("SettleFlag", (int)SettleFlag.Running);
-                result = _partitionService.Execute(bettingDataLT_Eday.UTCBetTime, InsSpName, p, trans);
+                result = _mainDbClient.Execute(InsSpName , p , conn , trans);
                 if (result > 0 && bettingDataLT_Eday.amount != 0)
                 {
                     result = PlaceBet(
                         tpCustInfo,
                         bettingDataLT_Eday.amount,
                         (int)tpId,
-                        bettingDataLT_Eday.billId.ToString(),
+                        bettingDataLT_Eday.billId,
                         (int)tpGameType,
-                        bettingDataLT_Eday.billId.ToString(),
+                        bettingDataLT_Eday.billId,
                         out afterAmount,
                         ref bonusId,
                         out _,

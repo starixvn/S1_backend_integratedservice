@@ -2109,8 +2109,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 // 檢查是否有注單
-                var bettrans = _partitionService.Query<BettransLTEdayDAL>(cancelData_Eday.UTCBetTime, GetSpName,
-                    new { billId = cancelData_Eday.billId, player = tpCustInfo.TpUserName });
+                var bettrans = _mainDbClient.Query<BettransLTEdayDAL>(GetSpName,
+                    commandType: CommandType.StoredProcedure,new { billId = cancelData_Eday.billId, player = tpCustInfo.TpUserName });
                 
                 if (!bettrans.Any(i => i.billId == cancelData_Eday.billId))
                 {
@@ -2132,7 +2132,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 };
                 
                 var p = new DynamicParameters(cancelData);
-                result = _partitionService.Execute(cancelData_Eday.UTCBetTime,CancelSpName, p, trans);
+                result = _mainDbClient.Execute(CancelSpName, p, conn ,trans);
 
                 if (result > 0)
                 {
@@ -2195,9 +2195,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var settleBillId = $"{settleData_Eday.roundCode}_{settleData_Eday.player}";
-                var partitionTime = DateTime.Now;
-                var bettransLTEday = _partitionService.Query<BettransLTEdayDAL>(partitionTime, GetSpName, 
-                    new { roundCode = settleData_Eday.roundCode , player = tpCustInfo.TpUserName });
+                var bettransLTEday = _mainDbClient.Query<BettransLTEdayDAL>(GetSpName, 
+                    commandType: CommandType.StoredProcedure,new { roundCode = settleData_Eday.roundCode , player = tpCustInfo.TpUserName });
 
                 if (!bettransLTEday.Any())
                 {
@@ -2250,7 +2249,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 };
                 
                 var p = new DynamicParameters(settleEdayData);
-                result = _partitionService.Execute(partitionTime,InsSpName, p, trans);
+                result = _mainDbClient.Execute(InsSpName, p, conn,trans);
 
                 if (result > 0)
                 {
@@ -2265,10 +2264,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         payoutAmount,
                         (int)tpId,
-                        settleData_Eday.roundCode,
+                        settleBillId,
                         (int)tpGameType,
                         category,
-                        settleData_Eday.roundCode,
+                        settleBillId,
                         TransType.Payout,
                         null,
                         out afterAmount,
@@ -2325,11 +2324,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 //針對派彩單
-                var settledRoundId = $"{voidRoundData_Eday.roundCode}_{voidRoundData_Eday.player}";
+                var voidRoundId = $"{voidRoundData_Eday.roundCode}_{voidRoundData_Eday.player}";
                 
                 // 檢查是否有注單
-                var bettrans = _partitionService.Query<BettransLTEdayDAL>(voidRoundData_Eday.UTCSettleBetTime, 
-                    CancelSpName, new { billId = settledRoundId, player = tpCustInfo.TpUserName });
+                var bettrans = _mainDbClient.Query<BettransLTEdayDAL>( 
+                    CancelSpName, commandType: CommandType.StoredProcedure,new { billId = voidRoundId, player = tpCustInfo.TpUserName });
                 
                 //沒注單無法取消
                 if (!bettrans.Any())
@@ -2353,7 +2352,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 };
                 
                 var p = new DynamicParameters(cancelData);
-                result = _partitionService.Execute(voidRoundData_Eday.UTCSettleBetTime,CancelSpName, p, trans);
+                result = _mainDbClient.Execute(CancelSpName, p, conn,trans);
                 
                 if (result > 0)
                 {
@@ -2362,10 +2361,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         //此function為把payout金額收回
                         voidRoundData_Eday.win * -1,
                         (int)tpId,
-                        voidRoundData_Eday.roundCode,
+                        voidRoundId,
                         (int)tpGameType,
                         tpCategory,
-                        voidRoundData_Eday.roundCode,
+                        voidRoundId,
                         TransType.Refunds,
                         null,
                         out afterAmount,
@@ -2418,9 +2417,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             
             try
             {
+                // transId
+                var voidDrawRoundId = $"{voidDrawData_Eday.roundCode}_{voidDrawData_Eday.player}";
+                
                 // 檢查是否有注單
-                var bettrans = _partitionService.Query<BettransLTEdayDAL>(voidDrawData_Eday.UTCSettleBetTime, 
-                    GetRoundSpName, new { roundCode = voidDrawData_Eday.roundCode, player = tpCustInfo.TpUserName });
+                var bettrans = _mainDbClient.Query<BettransLTEdayDAL>(
+                    GetRoundSpName, commandType: CommandType.StoredProcedure, new { roundCode = voidDrawData_Eday.roundCode, player = tpCustInfo.TpUserName });
                 
                 //沒注單無法取消
                 if (!bettrans.Any())
@@ -2450,7 +2452,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 };
                 
                 var p = new DynamicParameters(cancelData);
-                result = _partitionService.Execute(voidDrawData_Eday.UTCSettleBetTime,CancelRoundSpName, p, trans);
+                result = _mainDbClient.Execute(CancelRoundSpName, p, conn, trans);
                 
                 if (result > 0)
                 {
@@ -2458,10 +2460,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         voidDrawData_Eday.bet,
                         (int)tpId,
-                        voidDrawData_Eday.roundCode,
+                        voidDrawRoundId,
                         (int)tpGameType,
                         tpCategory,
-                        voidDrawData_Eday.roundCode,
+                        voidDrawRoundId,
                         TransType.Refunds,
                         null,
                         out afterAmount,

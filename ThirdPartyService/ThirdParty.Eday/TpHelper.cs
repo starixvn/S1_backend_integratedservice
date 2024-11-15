@@ -152,7 +152,6 @@ namespace ThirdParty.Eday
             //拿Bettrans，Eday無注單明細API，注單明細為Json不是Url，若需要再改
             var spName = "Service_BettransLT_Eday_Detail_Get";
             var db = DataBase.Main;
-            var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
 
             TpCurrency tpCurrency = new()
             {
@@ -160,7 +159,7 @@ namespace ThirdParty.Eday
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             
-            var wagerDetail = TpBetRecordProvider.DbQueryFirst(spName, new { YYYYMM, getBetDetail.TransId }, db);
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst(spName, new { getBetDetail.TransId }, db);
             var detail = ToJson(wagerDetail);
             
             return new LotteryDetail(getBetDetail.TpGameTypeOption)
