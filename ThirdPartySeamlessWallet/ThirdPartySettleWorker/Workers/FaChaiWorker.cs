@@ -100,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             TpId = (int)Tp,
                             Stake = betData.Sum(x => x.Bet),
-                            ValidBet = betData.Sum(x => x.ValidBet),
+                            ValidBet = betData.FirstOrDefault()?.ValidBet,
                             WinlostAmount = winlostAmount,
                             TransId = tpUnsettle.TransId,
                             GameType = GameType.FaChai_RNG,
