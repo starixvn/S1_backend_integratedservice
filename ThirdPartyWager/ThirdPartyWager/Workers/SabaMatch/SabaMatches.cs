@@ -20,14 +20,14 @@ public class SabaMatches : BackgroundService
     }
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _timerSabaOdds = new Timer(DoSabaOddsAsync, null, TimeSpan.Zero, TimeSpan.Zero);
+        _timerSabaOdds = new Timer(DoSabaMatchAsync, null, TimeSpan.Zero, TimeSpan.Zero);
         return Task.CompletedTask;
     }
-    private async void DoSabaOddsAsync(object state)
+    private async void DoSabaMatchAsync(object state)
     {
         LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
         LogContext.PushProperty("Tp", _tpName);
-        LogContext.PushProperty("JobName", nameof(DoSabaOddsAsync));
+        LogContext.PushProperty("JobName", nameof(DoSabaMatchAsync));
 
         var isError = false;
         try
