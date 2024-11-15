@@ -27,7 +27,7 @@ namespace ThirdPartyWager.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoRefund, GameType.MaxGame_Poker, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoRefund, GameType.RNG_Keno, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
