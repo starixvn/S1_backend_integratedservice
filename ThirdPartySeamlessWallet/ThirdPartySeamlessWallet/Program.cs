@@ -32,6 +32,7 @@ builder.Host.UseSerilog((context, Configuration) =>
                 || c.MessageTemplate.ToString().Equals(excludesResponseEmptyMessage))))
         .Enrich.WithExceptionDetails()
         .Enrich.WithProperty("ApplicationName", "ThirdPartySeamlessWallet")
+        //.WriteTo.Console()
         .WriteTo.Sentry(o =>
         {
             // Debug and higher are stored as breadcrumbs (default is Information)
