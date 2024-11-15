@@ -127,7 +127,7 @@ namespace ThirdParty.TableGame
             };
 
             var convert = new DateTimeOffset(getBetDetail.SettledTime);
-            var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyy/MM/dd HH:mm:ss");
+            var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyyMMdd");
             var input = new
             {
                 Timestamp = GetCurrentTimeFormat(),
