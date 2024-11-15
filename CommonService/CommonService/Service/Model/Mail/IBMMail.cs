@@ -21,6 +21,12 @@ public class CurrencySetting
     public int MailingId { get; set; }
 }
 
+public class IBMCommon
+{
+    public int ListId { get; set; }
+    public int CreateFrom { get; set; }
+    public string DefaultOddsType { get; set; }
+}
 #endregion
 
 #region Oauth Model

@@ -60,8 +60,7 @@ namespace CommonService.Service.BLL
         {
             if (string.IsNullOrWhiteSpace(custInfo?.UserName)
                 || string.IsNullOrWhiteSpace(custInfo?.Email)
-                || string.IsNullOrWhiteSpace(custInfo?.IsoCode)
-                || string.IsNullOrWhiteSpace(custInfo?.CountryCode))
+                || string.IsNullOrWhiteSpace(custInfo?.IsoCode))
                 return false;
 
             return true;

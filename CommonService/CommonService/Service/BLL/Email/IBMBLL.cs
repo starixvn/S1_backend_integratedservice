@@ -10,13 +10,16 @@ namespace CommonService.Service.BLL
     public class IBMBLL
     {
         private readonly Dictionary<int, IBMMail> _iBMMailConfig;
+        private readonly Dictionary<int, IBMCommon> _iBMCommonConfig;
         private readonly HttpHelper _httpHelper;
         private readonly ILogger<IBMBLL> _logger;
 
         public IBMBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            _iBMMailConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<IBMMail>("IBM");
+            var configBll = provider.GetRequiredService<ConfigBLL>();
+            _iBMMailConfig = configBll.GetConfigValuesBySiteId<IBMMail>("IBM");
+            _iBMCommonConfig = configBll.GetConfigValuesBySiteId<IBMCommon>("IBMCommon");
             _logger = provider.GetRequiredService<ILogger<IBMBLL>>();
         }
 
@@ -36,7 +39,18 @@ namespace CommonService.Service.BLL
                 apiResult.Message = "IBM config is null";
                 return apiResult;
             }
-
+            if (!_iBMCommonConfig.TryGetValue(custInfo.SiteId, out var commonConfig))
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.Message = "IBMCommon config not found";
+                return apiResult;
+            }
+            if (commonConfig is null)
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.Message = "IBMCommon config is null";
+                return apiResult;
+            }
             //step 1 oauth : get access token
             var oauthResult = await OauthAsync($"{config.BaseUrl}{config.OathPath}", config.ClientId, config.ClientSecret, config.RefreshToken);
 
@@ -44,7 +58,7 @@ namespace CommonService.Service.BLL
                 return new ApiResult(oauthResult.ErrorCode, oauthResult.Message);
 
             //step 2 add contact : add member email to contact
-            var addContactResult = await AddContactAsync($"{config.BaseUrl}{config.AddContactPath}", oauthResult.Data.token_type, oauthResult.Data.access_token, custInfo);
+            var addContactResult = await AddContactAsync($"{config.BaseUrl}{config.AddContactPath}", oauthResult.Data.token_type, oauthResult.Data.access_token, commonConfig, custInfo);
 
             if (addContactResult.ErrorCode != ErrorCode.Success)
                 return new ApiResult(addContactResult.ErrorCode, addContactResult.Message);
@@ -111,7 +125,7 @@ namespace CommonService.Service.BLL
             }
         }
 
-        private async Task<ApiResult<AddContactAndSendResponse>> AddContactAsync(string url, string tokenType, string accessToken, CustInfoProfile custInfo)
+        private async Task<ApiResult<AddContactAndSendResponse>> AddContactAsync(string url, string tokenType, string accessToken, IBMCommon commonConfig, CustInfoProfile custInfo)
         {
             var result = new ApiResult<AddContactAndSendResponse>();
             try
@@ -120,7 +134,7 @@ namespace CommonService.Service.BLL
                 {
                     { "Authorization", $"{tokenType} {accessToken}" }
                 };
-                var request = new AddContactRequest(5730358, 3, custInfo.UserName, custInfo.Email, custInfo.IsoCode, custInfo.CountryCode);
+                var request = new AddContactRequest(commonConfig.ListId, commonConfig.CreateFrom, custInfo.UserName, custInfo.Email, custInfo.IsoCode, commonConfig.DefaultOddsType);
 
                 string xmlContent = SerializeToXml(request);
                 var apiResult = await _httpHelper.HttpPostAsync(url, xmlContent, "text/xml", header);
