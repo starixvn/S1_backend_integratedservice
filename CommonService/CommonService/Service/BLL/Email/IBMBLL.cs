@@ -138,28 +138,26 @@ namespace CommonService.Service.BLL
 
                 string xmlContent = SerializeToXml(request);
                 var apiResult = await _httpHelper.HttpPostAsync(url, xmlContent, "text/xml", header);
-                _logger.LogInformation("addcontact:finish api");
+
                 if (!IsXML(apiResult))
                 {
                     result.Message = "No Result, response is not xml.";
                     return result;
                 }
-                _logger.LogInformation("addcontact:finish xml check");
+
                 var jsonResult = XMLDeserialize<AddContactAndSendResponse>(apiResult);
-                _logger.LogInformation("addcontact:finish convert to model");
+                _logger.LogInformation($"add contact jsonResult={JsonConvert.SerializeObject(jsonResult)}");
+
                 if (jsonResult?.Body.Fault is not null)
                 {
                     result.Message = $"response error:{JsonConvert.SerializeObject(jsonResult)}";
                     return result;
                 }
-                _logger.LogInformation("addcontact:finish check fault");
-                _logger.LogInformation($"jsonResult={JsonConvert.SerializeObject(jsonResult)}");
                 if (jsonResult is null || jsonResult.Body.Result.Success.ToUpper() == "FALSE")
                 {
                     result.Message = $"response don't have access token:{JsonConvert.SerializeObject(jsonResult)}";
                     return result;
                 }
-                _logger.LogInformation("addcontact:finish check sucess");
                 result.ErrorCode = ErrorCode.Success;
                 return result;
             }
@@ -184,27 +182,26 @@ namespace CommonService.Service.BLL
 
                 string xmlContent = SerializeToXml(request);
                 var apiResult = await _httpHelper.HttpPostAsync(url, xmlContent, "text/xml", header);
-                _logger.LogInformation("send:finish api");
+
                 if (!IsXML(apiResult))
                 {
                     result.Message = "send:No Result, response is not xml.";
                     return result;
                 }
-                _logger.LogInformation("send:finish xml check");
+
                 var jsonResult = XMLDeserialize<AddContactAndSendResponse>(apiResult);
-                _logger.LogInformation("send:finish convert to model");
+                _logger.LogInformation($"send jsonResult={JsonConvert.SerializeObject(jsonResult)}");
+
                 if (jsonResult?.Body.Fault is not null)
                 {
                     result.Message = $"response error:{JsonConvert.SerializeObject(jsonResult)}";
                     return result;
                 }
-                _logger.LogInformation("send:finish check fault");
                 if (jsonResult is null || jsonResult.Body.Result.Success.ToUpper() == "FALSE")
                 {
                     result.Message = $"response don't have access token:{JsonConvert.SerializeObject(jsonResult)}";
                     return result;
                 }
-                _logger.LogInformation("send:finish check sucess");
                 result.ErrorCode = ErrorCode.Success;
                 return result;
             }
