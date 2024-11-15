@@ -222,6 +222,7 @@ namespace ThirdParty.EBet
             var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "0";
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
+            string betLimit = inputs.ContainsKey("betLimitGroup") && !string.IsNullOrEmpty(inputs["betLimitGroup"]) ? inputs["betLimitGroup"] : "A1";
 
             var key = ApplyToken(tpCustInfo);
 
@@ -248,6 +249,10 @@ namespace ThirdParty.EBet
                         WalletSideToken = key
                     },
                     HomeUrl = homeUrl,
+                    Additional = new
+                    {
+                        BetLimit = betLimit
+                    }
                 }
             };
             var postdata = JsonConvert.SerializeObject(input, Formatting.None);
