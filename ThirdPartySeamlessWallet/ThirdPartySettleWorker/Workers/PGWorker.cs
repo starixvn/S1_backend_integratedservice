@@ -60,13 +60,13 @@ namespace ThirdPartySettleWorker.Workers
             var setSP = $"Service_BettransRng_PG_Settle_Set_V2";
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 2000);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
                 }
 
-                forContinue = tpUnsettleList.Count() == 200;
+                forContinue = tpUnsettleList.Count() >= 200;
                 foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
                 {
                     try
