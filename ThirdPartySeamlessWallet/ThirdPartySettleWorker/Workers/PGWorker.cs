@@ -134,10 +134,10 @@ namespace ThirdPartySettleWorker.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
+                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(10);
                 if (forContinue)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                    dueTimeSpan = TimeSpan.FromSeconds(2);
                 }
                 else if (isError)
                 {
