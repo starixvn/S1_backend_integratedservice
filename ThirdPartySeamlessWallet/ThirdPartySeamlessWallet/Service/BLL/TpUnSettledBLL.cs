@@ -22,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         /// <summary>
         /// 從TpUnsettle取出第三方待結算資料
         /// </summary>
-        public IEnumerable<TpUnsettle> GetTpUnsettleList(Tp tp, GameType gameType, int LimitCount = 200)
+        public IEnumerable<TpUnsettle> GetTpUnsettleList(Tp tp, GameType gameType, int LimitCount = 1000)
         {
             return _tpUnsettleService.GetTpUnsettleList(tp, gameType, LimitCount);
         }
