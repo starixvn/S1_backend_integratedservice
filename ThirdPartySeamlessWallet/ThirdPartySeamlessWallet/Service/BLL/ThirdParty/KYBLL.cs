@@ -83,6 +83,56 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         #region Api Verify & Process
 
+        public dynamic GetBalance(string reqParam)
+        {
+            string logName = $"{_thisTp}_getBalance";
+            var subType = SubTypeOfKY.GetBalance;
+            GetApiResp getApiResponse = new GetApiResp
+            {
+                s = (int)subType,
+                m = "/channelHandle",
+                d = new info
+                {
+                    code = 999
+                }
+            };
+
+            var req = JsonConvert.DeserializeObject<GetBalanceP>(reqParam);
+
+            if (req.s != (int)subType)
+            {
+                getApiResponse.d.code = (int)ErrorCodeOfKY.Subtype;
+                _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+            if (req.account == null)
+            {
+                getApiResponse.d.code = (int)ErrorCodeOfKY.Account;
+                _log2File.Error($"Account Empty {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, req.account);
+            if (tpCustBalance != null)
+            {
+                GetBalanceRespOfSeamless getBalanceResponse = new()
+                {
+                    s = (int)subType,
+                    m = "/channelHandle",
+                    d = new GetBalanceD
+                    {
+                        code = (int)ErrorCodeOfKY.Success,
+                        account = req.account,
+                        money = tpCustBalance.Balance
+                    }
+                };
+                return getBalanceResponse;
+            }
+
+            _log2File.Error($"Unknow Error {JsonConvert.SerializeObject(req)} {JsonConvert.SerializeObject(getApiResponse)}", logName);
+            return getApiResponse;
+        }
+
         public dynamic PlaceBet(ApiReq getReq, string reqParam)
         {
             var result = 0;

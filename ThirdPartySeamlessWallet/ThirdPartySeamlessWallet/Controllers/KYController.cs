@@ -112,6 +112,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 switch (req.s)
                 {
+                    case (int)SubTypeOfKY.GetBalance:
+                        return _kyBLL.GetBalance(json);
                     case (int)SubTypeOfKY.RequestBet:
                         return _kyBLL.PlaceBet(getReq, json);
                     case (int)SubTypeOfKY.ReturnBalance:

@@ -43,6 +43,11 @@ namespace ThirdPartySeamlessWallet.Service.Model.KY
         public int s { get; set; }
     }
 
+    public class  GetBalanceP : CommonP
+    {
+        public string account { get; set; }
+    }
+
     public class KYConfig
     {
         public Dictionary<string, CurrencyData> CurrencyData { get; set; }
