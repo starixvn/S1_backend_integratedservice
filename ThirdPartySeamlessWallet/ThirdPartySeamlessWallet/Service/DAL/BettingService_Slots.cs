@@ -2271,15 +2271,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region PG2
 
-        public IEnumerable<BettingDataRNG_PG2> IsExist_PG2(bool checkEndRound, DateTime partitionTime, BettingDataRNG_PG2 data)
+        public IEnumerable<BettingDataRNG_PG2> IsExist_PG2(bool checkEndRound, BettingDataRNG_PG2 data)
         {
             var query = new { CheckEndRound = checkEndRound, refId = data.refId, roundId = data.roundId, FromAPIType = data.FromAPIType };
-            return _partitionService.Query<BettingDataRNG_PG2>(partitionTime, "Service_BettransRng_PG2_Check", query);
+            return _mainDbClient.Query<BettingDataRNG_PG2>("Service_BettransRng_PG2_Check", parameters:query);
         }
 
-        public bool InsertBettransRng_PG2(DateTime partitionTime, BettingDataRNG_PG2 data, MySqlTransaction trans)
+        public bool InsertBettransRng_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
         {
-            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PG2_Ins", data, trans);
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_Ins", trans, data);
 
             if (result == 0)
             {
