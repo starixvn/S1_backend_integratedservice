@@ -33,7 +33,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.JILI, AddJILI},
                 { Tp.Sexy, AddSexy},
                 { Tp.EBet, AddEBet},
-                //{ Tp.TableGame, AddTableGame},
+                { Tp.TableGame, AddTableGame},
                 { Tp.PG, AddPG}
 
                 //Loki comment:
