@@ -510,6 +510,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         return -1;
                     }
+                    // reject bet after payout
+                    if (bettrans.Any(i => i.TicketType == BettransType.Payout))
+                    {
+                        return -2;
+                    }
 
                     var otherBetInfo = betDataSet.OtherBetInfo == null ? "{}" : JsonConvert.SerializeObject(betDataSet.OtherBetInfo);
                     var p = new DynamicParameters(new

@@ -1208,7 +1208,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusName = "",
                         PrizeName = "",
                         ResultId = roundId,
-                        OtherBetInfo = "{}",
+                        OtherBetInfo = betDataSet.OtherBetInfo == null ? "{}" : JsonConvert.SerializeObject(betDataSet.OtherBetInfo),
                         FreeBet = false,
                         FreeSpin = false,
                         ContributionAmount = 0,

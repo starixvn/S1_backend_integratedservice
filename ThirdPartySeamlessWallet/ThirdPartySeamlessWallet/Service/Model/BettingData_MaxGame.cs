@@ -97,6 +97,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
                 return new DateTimeOffset(SettleDate, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds();
             }
         }
+        public Dictionary<string, string>? OtherBetInfo { get; set; }
     }
 
     public class CancelBetData_MaxGame

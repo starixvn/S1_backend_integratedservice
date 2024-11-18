@@ -207,6 +207,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             int result = PlaceBetPK_MaxGame(getReq, (int)tpId, (int)gameType, out decimal tpAffterAmount, out List<BetDataSetList_MaxGame> refData);
+            if (result == -1 || result == -2)
+            {
+                var errorCode = result == -1 ? ErrorCodeOfMaxGame.OpSideRequestWasDone : ErrorCodeOfMaxGame.OpSideTransactionOpSideTicketHasBeenSettledFailed;
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
+                PlaceBetResp response = new(errorCode, getReq.Seq)
+                {
+                    Payload = new Payload_PlaceBetResp()
+                    {
+                        OperatorCustId = getReq.Payload.OperatorCustId,
+                        Balance = _tools.Floor(tpCustBalance.Balance, 2),
+                        //BetDataSet
+                    },
+                };
+                return _tools.ToJson(response);
+            }
             if (result > 0)
             {
                 if (tpAffterAmount == 0)
@@ -224,20 +239,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
                 response.Payload.BetDataSet = refData;
 
-                return _tools.ToJson(response);
-            }
-            else if (result == -1)
-            {
-                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
-                PlaceBetResp response = new(ErrorCodeOfMaxGame.OpSideRequestWasDone, getReq.Seq)
-                {
-                    Payload = new Payload_PlaceBetResp()
-                    {
-                        OperatorCustId = getReq.Payload.OperatorCustId,
-                        Balance = _tools.Floor(tpCustBalance.Balance, 2),
-                        //BetDataSet
-                    },
-                };
                 return _tools.ToJson(response);
             }
             else if (tpAffterAmount < 0)
