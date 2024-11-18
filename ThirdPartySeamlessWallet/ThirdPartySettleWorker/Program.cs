@@ -54,7 +54,7 @@ startup.ConfigureServices(builder.Services);
 
 builder.Services
     .AddHostedService<TpReRequestWorker>()
-    .AddHostedService<TpRewardWorker>();
+    .AddHostedService<TpRewardWorker>()
 //.AddHostedService<JokerWorker>()
 //.AddHostedService<MGWorker>()
 //.AddHostedService<APWorker>()
@@ -104,23 +104,23 @@ builder.Services
 //.AddHostedService<GAWorker>()
 //.AddHostedService<WonCasinoWorker>()
 //.AddHostedService<SGWorker>()
-
-//.AddHostedService<EBetWorker>()
-//.AddHostedService<PPWorker>()
-//.AddHostedService<AllbetWorker>()
-//.AddHostedService<SexyWorker>()
 //.AddHostedService<SBOWorker>()
-//.AddHostedService<RNGKenoWorker>()
-//.AddHostedService<JILIWorker>()
-//.AddHostedService<FaChaiWorker>()
-//.AddHostedService<SabaPlayWorker>()
-//.AddHostedService<UuSlotsWorker>()
-//.AddHostedService<Live22Worker>()
-//.AddHostedService<FastSpinWorker>()
-//.AddHostedService<SBSWWorker>()
-//.AddHostedService<MaxGameWorker>()
-//.AddHostedService<LotteryWorker>()
-//.AddHostedService<TableGameWorker>();
+
+.AddHostedService<EBetWorker>()
+.AddHostedService<PPWorker>()
+.AddHostedService<AllbetWorker>()
+.AddHostedService<SexyWorker>()
+.AddHostedService<RNGKenoWorker>()
+.AddHostedService<JILIWorker>()
+.AddHostedService<FaChaiWorker>()
+.AddHostedService<SabaPlayWorker>()
+.AddHostedService<UuSlotsWorker>()
+.AddHostedService<Live22Worker>()
+.AddHostedService<FastSpinWorker>()
+.AddHostedService<SBSWWorker>()
+.AddHostedService<MaxGameWorker>()
+.AddHostedService<LotteryWorker>()
+.AddHostedService<TableGameWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
