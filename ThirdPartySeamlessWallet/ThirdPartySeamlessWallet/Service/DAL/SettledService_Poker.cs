@@ -1997,6 +1997,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _mainDbClient.RollbackAndDisposeConnection(conn, trans);
             return result;
         }
+        
+        public IEnumerable<BettransDataPK_KY> GetRecordPK_KY(OrderDataPK_KY orderDataPK_KY)
+        {
+            var p = new DynamicParameters(orderDataPK_KY);
+            var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(orderDataPK_KY.timestamp).DateTime;
+            return _partitionService.Query<BettransDataPK_KY>(partitionTime, "Service_BettransPK_KY_orderId_Get", p);
+        }
+
         #endregion
     }
 }

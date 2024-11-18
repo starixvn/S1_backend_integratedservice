@@ -118,6 +118,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return _kyBLL.PlaceBet(getReq, json);
                     case (int)SubTypeOfKY.ReturnBalance:
                         return _kyBLL.Payout(getReq, json);
+                    case (int)SubTypeOfKY.GetOrderStatus:
+                        return _kyBLL.GetOrderStatus(getReq, json);
                     case (int)SubTypeOfKY.CancelBet:
                         return _kyBLL.CancelBet(getReq, json);
                     default:

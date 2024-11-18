@@ -347,6 +347,60 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return getApiResponse;
         }
 
+        public dynamic GetOrderStatus(ApiReq getReq, string reqParam)
+        {
+            string logName = $"{_thisTp}_GetOrderStatus";
+            var subType = SubTypeOfKY.GetOrderStatus;
+            GetOrderStatusResp getApiResponse = new GetOrderStatusResp()
+            {
+                s = (int)subType,
+                m = "/channelHandle",
+                d = new GetOrderStatusD
+                {
+                    code = 999,
+                    status = (int)StatusTypeOfKY.OtherError,
+                }
+            };
+
+            try
+            {
+                var req = JsonConvert.DeserializeObject<OrderDataPK_KY>(reqParam);
+                _log2File.Info($"{JsonConvert.SerializeObject(req)}", logName);
+
+                req.timestamp = getReq.timestamp;
+
+                if (req.s != (int)subType)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Subtype;
+                    _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                var bettrans = GetRecordPK_KY(req);
+                if (!bettrans.Any() || bettrans == null)
+                {
+                    // 4:查无订单
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Success;
+                    getApiResponse.d.status = (int)StatusTypeOfKY.NoResult;
+                    return getApiResponse;
+                }
+                else if (bettrans.Any())
+                {
+                    // 1:成功
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Success;
+                    getApiResponse.d.status = (int)StatusTypeOfKY.Success;
+                    return getApiResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            _log2File.Error($"Unknow Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+            return getApiResponse;
+        }
+
         #endregion
 
         #region ExchangeRate & Service
@@ -403,6 +457,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 afterAmount /= tpCurrency.ExchangeRate;
             }
             return result;
+        }
+
+        private IEnumerable<BettransDataPK_KY> GetRecordPK_KY(OrderDataPK_KY orderDataPK_KY)
+        {
+            return _settledService.GetRecordPK_KY(orderDataPK_KY);
         }
 
         #endregion
