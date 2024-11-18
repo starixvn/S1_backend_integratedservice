@@ -255,13 +255,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return getApiResponse;
                 }
 
-                result = PayoutPK_KY(req, out decimal tpAffterAmount);
+                result = PayoutPK_KY(req, out decimal tpAfterAmount);
                 if (result > 0 || result == -1)
                 {
-                    if (tpAffterAmount == 0 || result == -1)
+                    if (tpAfterAmount == 0 || result == -1)
                     {
                         var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, req.account, _gameType);
-                        tpAffterAmount = tpCustBalance.Balance;
+                        tpAfterAmount = tpCustBalance.Balance;
                     }
                     PayoutResp getPayoutResponse = new()
                     {
@@ -271,7 +271,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         {
                             code = (int)ErrorCodeOfKY.Success,
                             account = req.account,
-                            money = tpAffterAmount
+                            money = tpAfterAmount
                         }
                     };
                     return getPayoutResponse;
