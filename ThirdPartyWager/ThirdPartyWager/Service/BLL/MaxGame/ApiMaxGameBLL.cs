@@ -60,11 +60,11 @@ namespace ThirdPartyWager.Service.BLL
             var r = await DoHttpClientAsync(setting, tpName, url, postdata);
             var result = JsonConvert.DeserializeObject<TicketDataMaxGame>(r);
             var additionalLogInfo = new Dictionary<string, object>() {
-                {"Request", param},
-                {"Response",result }
+                {"Request", JsonConvert.SerializeObject(param, Formatting.Indented) },
+                {"Response",JsonConvert.SerializeObject(result, Formatting.Indented) }
             };
             using (_logger.BeginScope(additionalLogInfo)) {
-                _logger.LogInformation($"SABA PLUS API CALL, uri: {uri}, request: {postdata}, response {r}");
+                _logger.LogInformation($"SABA PLUS API CALL, uri: {uri}");
 
             }
             return result;
