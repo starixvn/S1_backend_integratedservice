@@ -7,4 +7,6 @@ public class HotMatchConfigModel
     public string VendorId { get; set; }
 
     public string VendorMemberId { get; set; }
+
+    public string MajorLeague { get; set; }
 }

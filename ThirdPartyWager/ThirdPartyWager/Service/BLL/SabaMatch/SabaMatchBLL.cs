@@ -13,7 +13,7 @@ public class SabaMatchBLL
     private readonly HotMatchConfigModel _hotMatchConfigModel;
     private readonly HttpHelper _httpHelper;
     private readonly Common _common;
-    private const int SuccessErrorCode = 0;
+    private const int EnableStatus = 1;
 
     public SabaMatchBLL(IServiceProvider provider)
     {
@@ -52,13 +52,13 @@ public class SabaMatchBLL
                     HomeOdds = r.Markets.First().Selections.First(x => x.Key == "h").OddsPrice.DecimalPrice,
                     AwayOdds = r.Markets.First().Selections.First(x => x.Key == "a").OddsPrice.DecimalPrice,
                     Handicap = r.Markets.First().Selections.First(x => x.Key == "h").Point,
-                    CreateTime = DateTime.Now
+                    CreateTime = DateTime.Now,
+                    Status = EnableStatus
                 }).ToList();
 
-            var matchesJson = JsonConvert.SerializeObject(matchList);
-
-            if (!string.IsNullOrEmpty(matchesJson))
+            if (matchList.Count > 0)
             {
+                var matchesJson = JsonConvert.SerializeObject(matchList);
                 await _sabaMatchService.InsertMatch(new HotMatchRequest { Matches = matchesJson });
                 _logger.LogInformation("UpdateHotMatch run successfully");
             }
@@ -76,6 +76,6 @@ public class SabaMatchBLL
 
     private string CreateQuery()
     {
-        return $"sportType=1&isLive=false&Bettype=1&from={DateTime.Now:yyyy-MM-ddTHH:mm:ss}&to={DateTime.Now.AddHours(12):yyyy-MM-ddTHH:mm:ss}&vendorId={_hotMatchConfigModel.VendorId}&vendorMemberId={_hotMatchConfigModel.VendorMemberId}";
+        return $"sportType=1&leagueIds={_hotMatchConfigModel.MajorLeague}&isLive=false&Bettype=1&from={DateTime.Now:yyyy-MM-ddTHH:mm:ss}&to={DateTime.Now.AddDays(3):yyyy-MM-ddTHH:mm:ss}&vendorId={_hotMatchConfigModel.VendorId}&vendorMemberId={_hotMatchConfigModel.VendorMemberId}";
     }
 }
