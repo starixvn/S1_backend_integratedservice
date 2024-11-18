@@ -1866,21 +1866,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var bettrans = _partitionService.Query<BettransData_KY>(partitionTime, "Service_BettransPK_KY_gameNo_Get", new { gameNo = bettingDataPK_KY.gameNo });
 
-                // 檢查是否有下注該round
-                if (!bettrans.Any(i => i.TicketType == BettransType.Bet))
-                {
-                    // TODO: 我方游戏目前只有财神到有免费游戏机制，进行免费游戏是无需进行下注的，此部分再劳烦贵司进行调整哦
-                    if (bettingDataPK_KY.kindId != "8910")
-                    {
-                        return -2;
-                    }
-                }
-                if (bettrans.Any(i => i.TicketType == BettransType.Payout))
-                {
-                    // TODO: 一局游戏结算后是返回一笔S1003的哦
-                    return -3;
-                }
-
                 result = _partitionService.Execute(partitionTime, "Service_BettransPK_KY_Ins", p, trans);
 
                 if (result > 0 && bettingDataPK_KY.money != 0)
@@ -1997,6 +1982,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _mainDbClient.RollbackAndDisposeConnection(conn, trans);
             return result;
         }
+        
+        public IEnumerable<BettransDataPK_KY> GetRecordPK_KY(OrderDataPK_KY orderDataPK_KY)
+        {
+            var p = new DynamicParameters(orderDataPK_KY);
+            var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(orderDataPK_KY.timestamp).DateTime;
+            return _partitionService.Query<BettransDataPK_KY>(partitionTime, "Service_BettransPK_KY_orderId_Get", p);
+        }
+
         #endregion
     }
 }

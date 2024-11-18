@@ -5,8 +5,12 @@ namespace ThirdParty.KY
 {
     public class KYConfig : TpSiteConfig
     {
-        public string Agent {  get; set; }
-        public string OperateSubtype { get; set; }
+        public Dictionary<string, CurrencyData> CurrencyData { get; set; }
+    }
+
+    public class CurrencyData
+    {
+        public string Agent { get; set; }
         public string Md5Key { get; set; }
         public string DesKey { get; set; }
     }

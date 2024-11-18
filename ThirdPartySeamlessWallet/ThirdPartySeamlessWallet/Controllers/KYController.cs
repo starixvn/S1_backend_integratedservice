@@ -32,25 +32,21 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly Tools _tools;
         private readonly Tp _thisTp;
-        private readonly Dictionary<string, string> _defaultConfig;
-        private readonly Dictionary<string, Dictionary<string, string>> _siteNameConfigs;
+        private readonly Dictionary<string, KYConfig> _siteConfig;
 
         public KYController(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<KYController>>();
             _log2File = provider.GetRequiredService<Log2File>();
+            _kyBLL = provider.GetRequiredService<KYBLL>();
             _tools = provider.GetRequiredService<Tools>();
             _thisTp = Tp.KY;
-
-            // defaultConfig給原本NOVA、GOAL、BWING的商號使用
-            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_thisTp.ToString());
-            // 新增商號使用指定siteName
-            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<Dictionary<string, string>>(_thisTp.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<KYConfig>((Tp.KY).ToString());
         }
         
         [HttpGet]
-        [Route("[controller]/{sitename}/seamlesswallet")]
-        public dynamic SeamlessWalletAsync([FromQuery] ApiReq getReq, string sitename = "")
+        [Route("[controller]/seamlesswallet")]
+        public dynamic SeamlessWalletAsync([FromQuery] ApiReq getReq)
         {
             string logName = $"{_thisTp}";
             GetApiResp getApiResponse = new GetApiResp
@@ -79,7 +75,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                var param = DecryptParam(getReq.param, getReq.agent, sitename);
+                var param = DecryptParam(getReq.param, getReq.agent);
 
                 if (string.IsNullOrEmpty(param))
                 {
@@ -105,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var verifyKey = false;
                 if (!string.IsNullOrEmpty(getReq.key))
                 {
-                    verifyKey = CheckKey(getReq.key, getReq.timestamp, getReq.agent, sitename);
+                    verifyKey = CheckKey(getReq.key, getReq.timestamp, getReq.agent);
                 }
                 if (!verifyKey)
                 {
@@ -116,10 +112,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 switch (req.s)
                 {
+                    case (int)SubTypeOfKY.GetBalance:
+                        return _kyBLL.GetBalance(json);
                     case (int)SubTypeOfKY.RequestBet:
                         return _kyBLL.PlaceBet(getReq, json);
                     case (int)SubTypeOfKY.ReturnBalance:
                         return _kyBLL.Payout(getReq, json);
+                    case (int)SubTypeOfKY.GetOrderStatus:
+                        return _kyBLL.GetOrderStatus(getReq, json);
                     case (int)SubTypeOfKY.CancelBet:
                         return _kyBLL.CancelBet(getReq, json);
                     default:
@@ -135,14 +135,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getApiResponse;
         }
 
-        private string DecryptParam(string getReq, string agent, string sitename)
+        private string DecryptParam(string getReq, string agent)
         {
             var param = getReq;
 
             try
             {
-                var config = GetSiteConfig(sitename);
-                var deskey = config["Deskey"];
+                var deskey = _siteConfig
+                    .Select(x => x.Value)
+                    .Where(y => y.CurrencyData != null)
+                    .SelectMany(y => y.CurrencyData.Values)
+                    .FirstOrDefault(x => x.Agent == agent)?.Deskey;
+
+                if (deskey == null)
+                {
+                    throw new Exception("Deskey not found for the specified agent.");
+                }
+
                 param = _tools.AesDecrypt(HttpUtility.UrlEncode(getReq), deskey);
 
                 _logger.LogInformation(param);
@@ -155,11 +164,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             return param;
         }
 
-        private bool CheckKey(string key, long timestamp, string agent, string sitename)
+        private bool CheckKey(string key, long timestamp, string agent)
         {
-            var config = GetSiteConfig(sitename);
-            var md5key = config["Md5key"];
-            
+            var md5key = _siteConfig
+                .Select(x => x.Value)
+                .Where(y => y.CurrencyData != null)
+                .SelectMany(y => y.CurrencyData.Values)
+                .FirstOrDefault(x => x.Agent == agent)?.Md5key;
+
+            if (md5key == null)
+            {
+                throw new Exception("MD5key not found for the specified agent.");
+            }
+
             var encryptKey = _tools.ToMD5($"{agent}{timestamp}{md5key}").ToLower();
             if (key.ToLower() == encryptKey)
             {
@@ -168,16 +185,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             _logger.LogError($"ChecKey Error\r\nkey{key}\r\nencryptKey={encryptKey}");
             return false;
-        }
-
-        private Dictionary<string, string> GetSiteConfig(string siteName)
-        {
-            if (siteName == "")
-            {
-                return _defaultConfig;
-            }
-
-            return _siteNameConfigs.TryGetValue(siteName, out var result) ? result : _defaultConfig;
         }
     }
 }

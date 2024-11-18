@@ -83,6 +83,56 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         #region Api Verify & Process
 
+        public dynamic GetBalance(string reqParam)
+        {
+            string logName = $"{_thisTp}_getBalance";
+            var subType = SubTypeOfKY.GetBalance;
+            GetApiResp getApiResponse = new GetApiResp
+            {
+                s = (int)subType,
+                m = "/channelHandle",
+                d = new info
+                {
+                    code = 999
+                }
+            };
+
+            var req = JsonConvert.DeserializeObject<GetBalanceP>(reqParam);
+
+            if (req.s != (int)subType)
+            {
+                getApiResponse.d.code = (int)ErrorCodeOfKY.Subtype;
+                _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+            if (req.account == null)
+            {
+                getApiResponse.d.code = (int)ErrorCodeOfKY.Account;
+                _log2File.Error($"Account Empty {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, req.account);
+            if (tpCustBalance != null)
+            {
+                GetBalanceRespOfSeamless getBalanceResponse = new()
+                {
+                    s = (int)subType,
+                    m = "/channelHandle",
+                    d = new GetBalanceD
+                    {
+                        code = (int)ErrorCodeOfKY.Success,
+                        account = req.account,
+                        money = tpCustBalance.Balance
+                    }
+                };
+                return getBalanceResponse;
+            }
+
+            _log2File.Error($"Unknow Error {JsonConvert.SerializeObject(req)} {JsonConvert.SerializeObject(getApiResponse)}", logName);
+            return getApiResponse;
+        }
+
         public dynamic PlaceBet(ApiReq getReq, string reqParam)
         {
             var result = 0;
@@ -205,13 +255,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return getApiResponse;
                 }
 
-                result = PayoutPK_KY(req, out decimal tpAffterAmount);
+                result = PayoutPK_KY(req, out decimal tpAfterAmount);
                 if (result > 0 || result == -1)
                 {
-                    if (tpAffterAmount == 0 || result == -1)
+                    if (tpAfterAmount == 0 || result == -1)
                     {
                         var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, req.account, _gameType);
-                        tpAffterAmount = tpCustBalance.Balance;
+                        tpAfterAmount = tpCustBalance.Balance;
                     }
                     PayoutResp getPayoutResponse = new()
                     {
@@ -221,7 +271,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         {
                             code = (int)ErrorCodeOfKY.Success,
                             account = req.account,
-                            money = tpAffterAmount
+                            money = tpAfterAmount
                         }
                     };
                     return getPayoutResponse;
@@ -297,6 +347,60 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return getApiResponse;
         }
 
+        public dynamic GetOrderStatus(ApiReq getReq, string reqParam)
+        {
+            string logName = $"{_thisTp}_GetOrderStatus";
+            var subType = SubTypeOfKY.GetOrderStatus;
+            GetOrderStatusResp getApiResponse = new GetOrderStatusResp()
+            {
+                s = (int)subType,
+                m = "/channelHandle",
+                d = new GetOrderStatusD
+                {
+                    code = 999,
+                    status = (int)StatusTypeOfKY.OtherError,
+                }
+            };
+
+            try
+            {
+                var req = JsonConvert.DeserializeObject<OrderDataPK_KY>(reqParam);
+                _log2File.Info($"{JsonConvert.SerializeObject(req)}", logName);
+
+                req.timestamp = getReq.timestamp;
+
+                if (req.s != (int)subType)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Subtype;
+                    _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                var bettrans = GetRecordPK_KY(req);
+                if (!bettrans.Any() || bettrans == null)
+                {
+                    // 4:查无订单
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Success;
+                    getApiResponse.d.status = (int)StatusTypeOfKY.NoResult;
+                    return getApiResponse;
+                }
+                else if (bettrans.Any())
+                {
+                    // 1:成功
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Success;
+                    getApiResponse.d.status = (int)StatusTypeOfKY.Success;
+                    return getApiResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            _log2File.Error($"Unknow Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+            return getApiResponse;
+        }
+
         #endregion
 
         #region ExchangeRate & Service
@@ -353,6 +457,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 afterAmount /= tpCurrency.ExchangeRate;
             }
             return result;
+        }
+
+        private IEnumerable<BettransDataPK_KY> GetRecordPK_KY(OrderDataPK_KY orderDataPK_KY)
+        {
+            return _settledService.GetRecordPK_KY(orderDataPK_KY);
         }
 
         #endregion

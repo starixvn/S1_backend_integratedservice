@@ -15,6 +15,20 @@ namespace ThirdPartySeamlessWallet.Service.Model.KY
         public long timestamp { get; set; }
     }
 
+    public class OrderDataPK_KY
+    {
+        public int s { get; set; }
+        public string orderId {  set; get; }
+        public long timestamp {  set; get; }
+    }
+
+    public class BettransDataPK_KY : BettingDataPK_KY
+    {
+        public BettransType TicketType { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+        public SettleFlag SettleFlag { get; set; }
+    }
+
 
     public class BettransData_KY : BettingDataPK_KY
     {
@@ -41,6 +55,11 @@ namespace ThirdPartySeamlessWallet.Service.Model.KY
     public class CommonP
     {
         public int s { get; set; }
+    }
+
+    public class  GetBalanceP : CommonP
+    {
+        public string account { get; set; }
     }
 
     public class KYConfig
