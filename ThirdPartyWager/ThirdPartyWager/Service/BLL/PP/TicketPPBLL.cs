@@ -14,7 +14,7 @@ namespace ThirdPartyWager.Service.BLL.PP
         private readonly ApiMaxGameBLL _apiMaxGameBLL;
         private readonly WagerPPService _wagerPPService;
         private readonly ILogger<TicketPPBLL> _logger;
-        private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
+        private readonly Dictionary<int, PPConfig> _siteConfigDic;
         private readonly int _tpId = (int)Tp.PP;
         private readonly string _tpName = Tp.PP.ToString();
         private readonly IEnumerable<ServerInfo> _serverList;
@@ -31,7 +31,8 @@ namespace ThirdPartyWager.Service.BLL.PP
             _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
             _wagerPPService = provider.GetRequiredService<WagerPPService>();
             _logger = provider.GetRequiredService<ILogger<TicketPPBLL>>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>()
+                .GetConfigValuesBySiteId<PPConfig>(_tpName);
             _serverList = provider.GetRequiredService<CommonBLL>().GetSiteList();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
@@ -49,7 +50,7 @@ namespace ThirdPartyWager.Service.BLL.PP
 
             // use TpUserName get TpCurrency and SiteId
             TpCustInfo tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache(_tpId, bettrans.OperatorCustId);
-            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var config = GetCorrectConfigByGameType(tpCustInfo.SiteId, gameType);
             var siteName = _serverList.FirstOrDefault(i => i.SiteId == tpCustInfo.SiteId)?.SiteName;
 
             var param = new CheckTicketStatusPayloadMaxGame
@@ -130,6 +131,25 @@ namespace ThirdPartyWager.Service.BLL.PP
                 }
             }
             return ticketTime;
+        }
+
+        private MaxGameConfig GetCorrectConfigByGameType (int siteId,int gameType)
+        {
+            var ppConfig = _siteConfigDic[siteId];
+            if (gameType == (int)GameType.PP_LiveCasino)
+            {
+                ppConfig.GameType = ppConfig.LiveCasinoGameType;
+                ppConfig.GameUrl = ppConfig.LiveCasinoApiUrl;
+             }
+            return new MaxGameConfig
+            {
+               ApiUrl = ppConfig.ApiUrl,
+               OperatorKey = ppConfig.OperatorKey,
+               GameType = ppConfig.GameType,
+               GameUrl = ppConfig.GameUrl,
+               OperatorPwd = ppConfig.OperatorPwd,
+               WagerUrl = ppConfig.WagerUrl
+            };
         }
     }
 }

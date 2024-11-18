@@ -29,7 +29,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.FaChai, AddFaChai},
                 { Tp.RNGKeno, AddKeno},
                 { Tp.Lottery, AddLottery},
-                //{ Tp.PP, AddPragmaticPlay },
+                { Tp.PP, AddPragmaticPlay },
                 { Tp.JILI, AddJILI},
                 { Tp.Sexy, AddSexy},
                 { Tp.EBet, AddEBet},

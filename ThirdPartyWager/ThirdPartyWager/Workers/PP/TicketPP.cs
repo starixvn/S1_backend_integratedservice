@@ -31,7 +31,7 @@ namespace ThirdPartyWager.Workers.PP
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timerRNG = new Timer(DoRefund, GameType.PP_RNG, TimeSpan.Zero, TimeSpan.Zero);
-            timerLC = new Timer(DoRefund, GameType.PP_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            //timerLC = new Timer(DoRefund, GameType.PP_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
