@@ -139,7 +139,7 @@ namespace ThirdPartyWager.Service.BLL.PP
             if (gameType == (int)GameType.PP_LiveCasino)
             {
                 ppConfig.GameType = ppConfig.LiveCasinoGameType;
-                ppConfig.GameUrl = ppConfig.LiveCasinoApiUrl;
+                ppConfig.ApiUrl = ppConfig.LiveCasinoApiUrl;
              }
             return new MaxGameConfig
             {
