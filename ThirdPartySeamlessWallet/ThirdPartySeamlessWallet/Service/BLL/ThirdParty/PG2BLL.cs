@@ -137,7 +137,7 @@ public class PG2BLL : IPG2BLL
         await conn.OpenAsync();
         await using var trans = await conn.BeginTransactionAsync();
 
-        if (!InsertBettrans(BettransType.Bet, partitionTime, data, out message, trans))
+        if (!InsertBettrans(BettransType.Bet, data, out message, trans))
         {
             await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
             return new BetResponse_PG2()
@@ -233,7 +233,7 @@ public class PG2BLL : IPG2BLL
         await conn.OpenAsync();
         await using var trans = await conn.BeginTransactionAsync();
 
-        if (!InsertBettrans(BettransType.Payout, partitionTime, data, out message, trans))
+        if (!InsertBettrans(BettransType.Payout, data, out message, trans))
         {
             await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
             return new PayoutResponse_PG2()
@@ -352,7 +352,7 @@ public class PG2BLL : IPG2BLL
             TicketStatus = TicketStatus.UnSettled
         };
 
-        var slotDatas = _bettingService.IsExist_PG2(false, partitionTime, data);
+        var slotDatas = _bettingService.IsExist_PG2(false, data);
         if (slotDatas.Any())
         {
             return new SettleResponse_PG2()
@@ -369,7 +369,7 @@ public class PG2BLL : IPG2BLL
         await conn.OpenAsync();
         await using var trans = await conn.BeginTransactionAsync();
 
-        var result = _settledService.InsertBettrans_BetAndPayout_PG2(partitionTime, data, trans);
+        var result = _settledService.InsertBettrans_BetAndPayout_PG2(data, trans);
         if (!result)
         {
             await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
@@ -571,7 +571,7 @@ public class PG2BLL : IPG2BLL
         message = string.Empty;
         try
         {
-            var slotDatas = _bettingService.IsExist_PG2(false, partitionTime, data);
+            var slotDatas = _bettingService.IsExist_PG2(false, data);
 
             if (slotDatas.Any())
             {
@@ -628,7 +628,7 @@ public class PG2BLL : IPG2BLL
         message = string.Empty;
         try
         {
-            var slotDatas = _bettingService.IsExist_PG2(false, partitionTime, data);
+            var slotDatas = _bettingService.IsExist_PG2(false, data);
 
             if (slotDatas.Any())
             {
@@ -686,7 +686,7 @@ public class PG2BLL : IPG2BLL
         sq = 0;
         try
         {
-            var slotDatas = _bettingService.IsExist_PG2(false, partitionTime, data);
+            var slotDatas = _bettingService.IsExist_PG2(false, data);
 
             if (!slotDatas.Any())
             {
@@ -704,7 +704,7 @@ public class PG2BLL : IPG2BLL
                 return false;
             }
 
-            var endRoundDatas = _bettingService.IsExist_PG2(true, partitionTime, data);
+            var endRoundDatas = _bettingService.IsExist_PG2(true, data);
 
             if (endRoundDatas.Any())
             {
@@ -850,7 +850,7 @@ public class PG2BLL : IPG2BLL
         return true;
     }
 
-    private bool InsertBettrans(BettransType bettransType, DateTime partitionTime, BettingDataRNG_PG2 data, out string message, MySqlTransaction trans)
+    private bool InsertBettrans(BettransType bettransType, BettingDataRNG_PG2 data, out string message, MySqlTransaction trans)
     {
         message = string.Empty;
         var result = false;
@@ -859,11 +859,11 @@ public class PG2BLL : IPG2BLL
         {
             if (bettransType == BettransType.Bet)
             {
-                result = _bettingService.InsertBettransRng_PG2(partitionTime, data, trans);
+                result = _bettingService.InsertBettransRng_PG2(data, trans);
             }
             else if (bettransType == BettransType.Payout)
             {
-                result = _settledService.InsertBettrans_PG2(partitionTime, data, trans);
+                result = _settledService.InsertBettrans_PG2(data, trans);
             }
 
             if (!result)
@@ -887,7 +887,7 @@ public class PG2BLL : IPG2BLL
         message = string.Empty;
         try
         {
-            var result = _settledService.CancelBettrans_PG2(partitionTime, sq, trans);
+            var result = _settledService.CancelBettrans_PG2(sq, trans);
 
             if (!result)
             {

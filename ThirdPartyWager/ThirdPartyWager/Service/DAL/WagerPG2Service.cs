@@ -15,7 +15,6 @@ public class WagerPG2Service
 
     public IEnumerable<string> GetUserListByDate(string reportTimeStartTime)
     {
-        var YYYYMM = DateTime.Parse(reportTimeStartTime).ToString("yyyyMM");
-        return _maimDbClient.Query<string>("Service_BettransRng_PG2_UserList_Get", new DynamicParameters(new { YYYYMM = YYYYMM }));
+        return _maimDbClient.Query<string>("Service_BettransRng_PG2_UserList_Get", new DynamicParameters(new { _startTime = reportTimeStartTime }));
     }
 }

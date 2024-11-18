@@ -157,7 +157,7 @@ namespace ThirdParty.PG2
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_PG2_Detail_Get",
-                new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report);
+                new { getBetDetail.TransId }, DataBase.Report);
             var tpCurrency = new TpCurrency()
             {
                 ExchangeRate = tpCustInfo.ExchangeRate,

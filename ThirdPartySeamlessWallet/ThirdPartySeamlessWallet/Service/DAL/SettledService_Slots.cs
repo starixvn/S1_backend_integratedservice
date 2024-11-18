@@ -7550,9 +7550,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         #region PG2
         
-        public bool InsertBettrans_PG2(DateTime partitionTime, BettingDataRNG_PG2 data, MySqlTransaction trans)
+        public bool InsertBettrans_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
         {
-            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PG2_Ins", data, trans);
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_Ins", trans, data);
 
             if (result == 0)
             {
@@ -7606,10 +7606,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result != 0;
         }
 
-        public bool CancelBettrans_PG2(DateTime partitionTime, int sq, MySqlTransaction trans)
+        public bool CancelBettrans_PG2(int sq, MySqlTransaction trans)
         {
             var query = new { SQ = sq, TicketType = BettransType.CancelBet, TicketStatus = TicketStatus.Refund };
-            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PG2_CancelBet_Set", query, trans);
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_CancelBet_Set",trans,query);
 
             if (result == 0)
             {
@@ -7618,9 +7618,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public bool InsertBettrans_BetAndPayout_PG2(DateTime partitionTime, BettingDataRNG_PG2 data, MySqlTransaction trans)
+        public bool InsertBettrans_BetAndPayout_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
         {
-            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PG2_BetAndPayout_Ins", data, trans);
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_BetAndPayout_Ins", trans, data);
             return result != 0;
         }
 
