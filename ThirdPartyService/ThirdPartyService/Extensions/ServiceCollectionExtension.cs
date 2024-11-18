@@ -1,4 +1,5 @@
 ﻿using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
@@ -18,7 +19,7 @@ namespace ThirdPartyService.Extensions
 
             //檢查是否有BackupDB連線字串
             if (!string.IsNullOrEmpty(reportBackupDB1) && !string.IsNullOrEmpty(reportBackupDB2))
-            
+
             {
                 // 設定ReportDB連線順序
                 services.AddSingleton(provider => new MySqlClient(provider, DataBase.Report, reportDBConn, new List<string>()
@@ -96,11 +97,25 @@ namespace ThirdPartyService.Extensions
             return services;
         }
 
-        public static IServiceCollection AddDbApiLog(this IServiceCollection services, IConfiguration configuration) {
+        public static IServiceCollection AddDbApiLog(this IServiceCollection services, IConfiguration configuration)
+        {
             const string PayloadLogConfigPath = "PayloadLog";
             return services
                 .Configure<PayloadLogConfig>(configuration.GetSection(PayloadLogConfigPath))
                 .AddSingleton<IPayloadLogger, PayloadLogService>();
+        }
+
+        public static void AddWebProxy(this IServiceCollection services)
+        {
+            var provider = services.BuildServiceProvider();
+            var configBll = provider.GetRequiredService<ConfigBLL>();
+            var config = configBll.GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
+
+            if (!string.IsNullOrWhiteSpace(config.ProxyHost))
+            {
+                ThirdPartyHelperBase.proxyHost = config.ProxyHost;
+                ThirdPartyHelperBase.proxyPort = config.ProxyPort;
+            }
         }
     }
 }

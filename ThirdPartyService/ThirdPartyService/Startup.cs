@@ -53,10 +53,6 @@ namespace ThirdPartyService
 
             services.AddSingleton<TemporaryLogSentryService>();
 
-            ThirdPartyCore.ThirdPartyHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
-
-            ThirdPartyCore.ThirdPartyHelperBase.proxyPort = Configuration.GetValue<int>("ProxyPort");
-
             //services.AddSingleton<Microsoft.Extensions.Hosting.IHostedService, WorkerService>();
             services.AddControllers();
 
@@ -70,6 +66,7 @@ namespace ThirdPartyService
             services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
+            services.AddWebProxy();
 
             // 處理SiteLanguage
             services.AddOptionListByDB<SiteLanguageObject>("SiteLanguage_Get", new { LanguageGroup = "TP" });
