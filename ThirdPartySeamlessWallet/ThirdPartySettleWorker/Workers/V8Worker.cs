@@ -71,7 +71,7 @@ namespace ThirdPartySettleWorker.Workers
             var isError = false;
             // 統一使用一款處理worker執行
             var gametype = (GameType)state;
-            var bettransGet = "Service_BettransPK_V8_Settle_Get";
+            var bettransGet = "Service_BettransPK_V8_Settle_Get_V2";
             var bettransSet = "Service_BettransPK_V8_Settle_Set";
             var wagerGet = "Service_TpWagerPK_V8_Settle_Get";
             var wagerSet = "Service_TpWagerPK_V8_Settle_Set_V2";
@@ -173,6 +173,12 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = gameId,
                         };
 
+                        if (CheckCancel(bettrans))
+                        {
+                            betRecordInfo.TicketStatus = TicketStatus.Refund;
+                            betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                        }
+
                         var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
                         if (result == 1)
                         {
@@ -229,10 +235,26 @@ namespace ThirdPartySettleWorker.Workers
             {
                 return true;
             }
+            if (CheckCancel(bettrans))
+            {
+                // 不驗證金額，直接以cancel狀態結算
+                return true;
+            }
             var dWagerWinLost = _tools.Floor(wager.WinLostAmount, 2);
             var dBettransWinLost = _tools.Floor(bettrans.Sum(x => x.WinLostAmount), 2);
             var dDiffWinLost = Math.Abs(dWagerWinLost - dBettransWinLost);
             return dDiffWinLost <= 0.5m;
+        }
+
+        private static bool CheckCancel(IEnumerable<SettleData> bettrans)
+        {
+            // 跳過金額驗證及判斷結算注單狀態
+            if (bettrans.Any(i => i.TicketStatus == 1))
+            {
+                // 正常流程不會有cancel的結算注單，只有人工處理才會塞入結算(TpUnsettle)讓注單重結
+                return true;
+            }
+            return false;
         }
     }
 }
