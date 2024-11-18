@@ -827,9 +827,9 @@ namespace ThirdPartyWager.Extensions
         }
         
         private IServiceCollection AddPG(IServiceCollection services) {
-            services.AddSingleton<WagerPGService>();
-            services.AddSingleton<TicketPGBLL>();
-            services.AddHostedService<TicketPG>();
+            // services.AddSingleton<WagerPGService>();
+            // services.AddSingleton<TicketPGBLL>();
+            // services.AddHostedService<TicketPG>();
             return services;
         }
     }
