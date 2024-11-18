@@ -24,8 +24,12 @@ builder.Host.UseSerilog((context, Configuration) =>
                 excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails()
-        .Enrich.WithProperty("ApplicationName", "ThirdPartyWager")
-        .WriteTo.UDPSink("10.18.200.193", 31853, new Serilog.Formatting.Json.JsonFormatter())
+        .Enrich.WithProperty("ApplicationName", builder.Configuration.GetValue<string>("ServiceName"))
+        .Enrich.WithProperty("Env", builder.Configuration.GetValue<string>("env"))
+        .WriteTo.UDPSink(
+            builder.Configuration.GetValue<string>("OpenSearch:Uri"),
+            builder.Configuration.GetValue<int>("OpenSearch:Port"),
+            new Serilog.Formatting.Json.JsonFormatter())
         .WriteTo.Sentry(o =>
         {
             // Debug and higher are stored as breadcrumbs (default is Information)
