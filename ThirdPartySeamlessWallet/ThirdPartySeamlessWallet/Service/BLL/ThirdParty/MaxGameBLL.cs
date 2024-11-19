@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Controllers;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -21,6 +22,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly Log2File _log2File;
         private readonly Tp _commonTp;
         private const string _testCurrency = "UUS";
+        private readonly ILogger<MaxGameBLL> _logger;
 
         private readonly Dictionary<string, Tp> _gameOfTpId = new()
         {
@@ -93,6 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _settledService = provider.GetRequiredService<SettledService>();
             _tpBetLimitData = provider.GetRequiredService<IEnumerable<TpBetLimit>>();
             _log2File = provider.GetRequiredService<Log2File>();
+            _logger = provider.GetRequiredService<ILogger<MaxGameBLL>>();
         }
 
         #region Api Verify & Process
@@ -133,6 +136,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)tpId, operatorCustId, (int)gameType);
 
+            var limitInfo = _tpBetLimitData.Where(i => i.GameType == (int)gameType)
+                .FirstOrDefault(item => item.CurrencyId == tpCustInfo.CurrencyId);
+            _logger.LogInformation("tpId: "+ tpId + " ,Payload.GameType:"+getReq.Payload.GameType+" GameType: " + gameType+ " limitInfo: " + JsonConvert.SerializeObject(limitInfo));
             // 取出對方支援的Min/Max預設設定
             var limit = JsonConvert.DeserializeObject<Limit>(_tpBetLimitData.Where(i => i.GameType == (int)gameType).FirstOrDefault(item => item.CurrencyId == tpCustInfo.CurrencyId).LimitGroup);
 
