@@ -95,7 +95,7 @@ namespace ThirdPartySettleWorker.Workers
                         //    continue;
                         //}
 
-                        var winlostAmount = betData.Sum(x => x.Win);
+                        var winlostAmount = betData.Sum(x => x.Win)-betData.Sum(x=>x.Bet);
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
