@@ -81,6 +81,12 @@ namespace ThirdPartyWager.Workers
                         }
                     }
                 }
+
+                var diff = nowTime - timerTime;
+                if (nowTime > timerTime && diff.TotalMinutes > 60)
+                {
+                    quick = 1;
+                }
             }
             catch (Exception ex)
             {
