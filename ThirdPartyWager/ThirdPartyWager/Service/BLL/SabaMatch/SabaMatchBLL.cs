@@ -63,6 +63,8 @@ public class SabaMatchBLL
                 _logger.LogInformation("UpdateHotMatch run successfully");
             }
 
+            _sabaMatchService.UpdateStatusMatch();
+
         }
         catch (Exception ex)
         {

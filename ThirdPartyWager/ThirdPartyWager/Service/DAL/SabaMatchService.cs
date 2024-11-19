@@ -18,4 +18,9 @@ public class SabaMatchService
         return await _mySqlClient.ExecuteAsync("Service_SabaMatch_Set", request);
     }
 
+    public int UpdateStatusMatch()
+    {
+        return _mySqlClient.Execute("Service_HotMatch_Status_Set");
+    }
+
 }
