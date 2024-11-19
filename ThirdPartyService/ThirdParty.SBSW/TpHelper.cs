@@ -2,7 +2,6 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
@@ -430,21 +429,58 @@ namespace ThirdParty.SBSW
         private string ChangeTransIdToString(string json)
         {
             var jObject = JObject.Parse(json);
-            if (jObject["BetDetails"] != null)
-            {
-                jObject["BetDetails"][0]["trans_id"] = jObject["BetDetails"][0]["trans_id"].ToString();
-            }
 
-            if (jObject["BetNumberDetails"] != null)
-            {
-                jObject["BetNumberDetails"][0]["trans_id"] = jObject["BetNumberDetails"][0]["trans_id"].ToString();
-            }
+            UpdateBetDetails(jObject);
 
-            if (jObject["BetVirtualSportDetails"] != null)
-            {
-                jObject["BetVirtualSportDetails"][0]["trans_id"] = jObject["BetVirtualSportDetails"][0]["trans_id"].ToString();
-            }
+            UpdateBetNumberDetails(jObject);
+
+            UpdateBetVirtualSportDetails(jObject);
+
             return jObject.ToString();
+        }
+
+        private static void UpdateBetDetails(JObject json)
+        {
+            var node = json["BetDetails"];
+            if (node is null)
+            {
+                return;
+            }
+
+            var betDetail = json["BetDetails"][0];
+
+            betDetail["trans_id"] = betDetail["trans_id"].ToString();
+            betDetail["parlay_ref_no"] = betDetail["parlay_ref_no"].ToString();
+
+            if (betDetail["ParlayData"] is null)
+            {
+                return;
+            }
+
+            foreach(var parlayTicket in betDetail["ParlayData"])
+            {
+                parlayTicket["parlay_id"] = parlayTicket["parlay_id"].ToString();
+            }
+        }
+
+        private static void UpdateBetNumberDetails(JObject json)
+        {
+            if (json["BetNumberDetails"] is null)
+            {
+                return;
+            }
+
+            json["BetNumberDetails"][0]["trans_id"] = json["BetNumberDetails"][0]["trans_id"].ToString();
+        }
+
+        private static void UpdateBetVirtualSportDetails(JObject json)
+        {
+            if (json["BetVirtualSportDetails"] is null)
+            {
+                return;
+            }
+
+            json["BetVirtualSportDetails"][0]["trans_id"] = json["BetVirtualSportDetails"][0]["trans_id"].ToString();
         }
 
         private DeviceType GetDeviceType(string device)
