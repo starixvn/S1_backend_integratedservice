@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Manual
         private static string _env;
         internal static async Task Main(string[] args)
         {
-            _env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+            _env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "PROD";
             Console.WriteLine($"Environment:{_env}");
             var host = CreateHostBuilder(args)
                 .Build();

@@ -40,7 +40,7 @@ namespace ThirdPartySeamlessWallet.Core.Extensions
                 return remoteUrls;
             }
 
-            if (!environment.EnvironmentName.Equals("Local", StringComparison.OrdinalIgnoreCase))
+            if (!environment.EnvironmentName.Equals("LOCAL", StringComparison.OrdinalIgnoreCase))
             {
                 return remoteUrls;
             }

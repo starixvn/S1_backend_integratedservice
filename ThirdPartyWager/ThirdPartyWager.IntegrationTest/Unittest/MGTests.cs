@@ -26,7 +26,7 @@ namespace ThirdPartyWager.IntegrationTest.Unittest
             var serviceCollection = new ServiceCollection();
             var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
             {
-                EnvironmentName = "Local",
+                EnvironmentName = "LOCAL",
             });
 
             var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();

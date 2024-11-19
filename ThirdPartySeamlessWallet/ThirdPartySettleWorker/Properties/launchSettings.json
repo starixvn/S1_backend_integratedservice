@@ -4,7 +4,7 @@
       "commandName": "Project",
       "commandLineArgs": "Nova", // Nova or Leobet
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Local"
+        "ASPNETCORE_ENVIRONMENT": "LOCAL"
       }
     }
   }

@@ -14,7 +14,7 @@
             switch (environment.EnvironmentName)
             {
                 case "Development":
-                case "Local":
+                case "LOCAL":
                     return "D";
 
                 case "SIT":

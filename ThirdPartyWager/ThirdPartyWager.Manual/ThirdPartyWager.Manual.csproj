@@ -25,10 +25,10 @@
       <None Update="AT.yaml">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="appsettings.Local.json">
+      <None Update="appsettings.LOCAL.json">
         <DependentUpon>appsettings.json</DependentUpon>
       </None>
-      <None Update="appsettings.Production.json">
+      <None Update="appsettings.PROD.json">
         <DependentUpon>appsettings.json</DependentUpon>
       </None>
       <None Update="appsettings.Development.json">

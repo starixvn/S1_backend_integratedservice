@@ -145,7 +145,7 @@ namespace CommonService.Service.BLL
 
             var parameters = JsonConvert.SerializeObject(acknowledgeVerifySms);
             //TODO: Mock Sms SkyLine for Development and LOCAL environment
-            if (_environment == "Development" || _environment == "Local")
+            if (_environment == "Development" || _environment == "LOCAL")
             {
                 return SendSkyLineSMSMock(apiResult, oTPLog, _environment);
             }
@@ -266,7 +266,7 @@ namespace CommonService.Service.BLL
 
             var parameters = JsonConvert.SerializeObject(acknowledgeVerifySms);
             //TODO: Mock Sms SkyLine for Development and LOCAL environment
-            if (_environment == "Development" || _environment == "Local")
+            if (_environment == "Development" || _environment == "LOCAL")
             {
                 return SendSkyLineSMSMock(apiResult, oTPLog, _environment);
             }

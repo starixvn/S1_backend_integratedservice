@@ -34,7 +34,7 @@ namespace ThirdParty.AMB.Tests
 
             var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
             {
-                EnvironmentName = "Local",
+                EnvironmentName = "LOCAL",
             });
 
             builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
