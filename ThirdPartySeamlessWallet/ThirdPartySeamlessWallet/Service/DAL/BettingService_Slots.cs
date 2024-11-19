@@ -2280,30 +2280,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public bool InsertBettransRng_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
         {
             var p = new DynamicParameters(data);
-
-            //p.Add("username", data.username);
-            //p.Add("agent", data.agent);
-            //p.Add("type", data.type);
-            //p.Add("amount", data.amount);
-            //p.Add("product", data.product);
-            //p.Add("category", data.category);
-            //p.Add("gameName", data.gameName);
-            //p.Add("roundId", data.roundId);
-            //p.Add("refId", data.refId);
-            //p.Add("timestamp", data.timestamp);
-            //p.Add("isFeatureBuy", data.isFeatureBuy);
-            //p.Add("isFreeSpin", data.isFreeSpin);
-            //p.Add("FromAPIType", (int)data.FromAPIType);
-            //p.Add("TicketType", (int)data.TicketType);
-            //p.Add("TicketStatus", (int)data.TicketStatus);
-
             var result = _mainDbClient.Execute("Service_BettransRng_PG2_Ins", trans, p);
 
-            if (result == 0)
-            {
-                return false;
-            }
-            return true;
+            return result != 0;
         }
 
         public bool SetBalance_PG2(TpCustInfo tpCustInfo, BettingDataRNG_PG2 data, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
