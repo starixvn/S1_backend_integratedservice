@@ -3,6 +3,7 @@
     public class Common
     {
         private readonly IWebHostEnvironment environment;
+
         public Common(IWebHostEnvironment environment)
         {
             this.environment = environment;
@@ -10,24 +11,24 @@
 
         public string GetEnv()
         {
-            if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "Local")
+            switch (environment.EnvironmentName)
             {
-                return "D";
-            }
-            else if (environment.EnvironmentName == "Staging")
-            {
-                return "S";
-            }
-            else if (environment.EnvironmentName == "Production")
-            {
-                return "P";
-            }
-            else if (environment.EnvironmentName == "QA")
-            {
-                return "Q";
-            }
+                case "Development":
+                case "Local":
+                    return "D";
 
-            return "P";
+                case "SIT":
+                    return "S";
+
+                case "UAT":
+                    return "U";
+
+                case "PROD":
+                    return "P";
+
+                default:
+                    return "D";
+            }
         }
     }
 }

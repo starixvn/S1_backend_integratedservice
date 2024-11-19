@@ -115,7 +115,6 @@ namespace ThirdPartyService.Service.BLL
                     }
                 }
 
-
                 TpCustInfo freeCustInfo = new TpCustInfo();
                 freeCustInfo.SiteId = tpInfo.SiteId;
                 freeCustInfo.CustId = tpInfo.CustId;
@@ -142,10 +141,9 @@ namespace ThirdPartyService.Service.BLL
 
                 var configEnv = configuration.GetValue<string>("Environment");
 
-
                 // Test account only allow login for saba
                 // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
-                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && configEnv == null &&
+                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "PROD" && configEnv == null &&
                     tpInfo.TpId != 1 && tpInfo.TpId != 58)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
@@ -157,7 +155,7 @@ namespace ThirdPartyService.Service.BLL
                     var currencyId = tpCustInfoResult.Data.CurrencyId;
                     var tpBetLimit = thirdPartyHelper.GetTPBetLimit(currencyId, int.Parse(tpGameType));
 
-                    if(tpBetLimit != null && tpBetLimit.DefaultGroup != null)
+                    if (tpBetLimit != null && tpBetLimit.DefaultGroup != null)
                     {
                         inputs.Add("betLimitGroup", tpBetLimit.DefaultGroup);
                     }
@@ -205,7 +203,7 @@ namespace ThirdPartyService.Service.BLL
 
                 // Test account create 3rd party only for saba
                 // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
-                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1 && tpTransfer.TpId != 58)
+                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "PROD" && tpTransfer.TpId != 1 && tpTransfer.TpId != 58)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = "This Account is for Testing.";
@@ -1335,7 +1333,7 @@ namespace ThirdPartyService.Service.BLL
                 var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 #if DEBUG
-                if (env.EnvironmentName != "Production" && tpId == (int)TpEnum.NineW)
+                if (env.EnvironmentName != "PROD" && tpId == (int)TpEnum.NineW)
                 {
                     custInfoList = custInfoList.Where(x => !NineWWrongCustList.Any(y => y == x.CustId));
                 }
@@ -1416,7 +1414,7 @@ namespace ThirdPartyService.Service.BLL
                 foreach (var cust in custInfoList)
                 {
 #if DEBUG
-                    if (env.EnvironmentName != "Production" && cust.TpId == (int)TpEnum.PT)
+                    if (env.EnvironmentName != "PROD" && cust.TpId == (int)TpEnum.PT)
                     {
                         if (PTWrongCustList.Contains(cust.CustId))
                         {
