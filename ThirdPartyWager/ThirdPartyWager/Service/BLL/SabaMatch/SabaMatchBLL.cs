@@ -78,6 +78,6 @@ public class SabaMatchBLL
 
     private string CreateQuery()
     {
-        return $"sportType=1&leagueIds={_hotMatchConfigModel.MajorLeague}&isLive=false&Bettype=1&from={DateTime.Now:yyyy-MM-ddTHH:mm:ss}&to={DateTime.Now.AddDays(3):yyyy-MM-ddTHH:mm:ss}&vendorId={_hotMatchConfigModel.VendorId}&vendorMemberId={_hotMatchConfigModel.VendorMemberId}";
+        return $"sportType=1&leagueIds={_hotMatchConfigModel.MajorLeague}&isLive=false&Bettype=1&from={DateTime.Now:yyyy-MM-ddTHH:mm:ss}&to={DateTime.Now.AddDays(7):yyyy-MM-ddTHH:mm:ss}&vendorId={_hotMatchConfigModel.VendorId}&vendorMemberId={_hotMatchConfigModel.VendorMemberId}";
     }
 }

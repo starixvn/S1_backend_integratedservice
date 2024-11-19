@@ -25,7 +25,7 @@ public class Match
     [JsonProperty("leagueName")]
     public string LeagueName { get; init; } = default!;
 
-    [JsonProperty("kickOffTime")]
+    [JsonProperty("GlobalShowTime")]
     public DateTime KickOffTime { get; init; }
 
     [JsonProperty("teamInfo")]
