@@ -18,7 +18,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
-        private readonly PartitionService _partitionService;
         private readonly ILogger<EdayWorker> _logger;
         private readonly string _tpName;
         
@@ -28,14 +27,14 @@ namespace ThirdPartySettleWorker.Workers
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            _partitionService = provider.GetRequiredService<PartitionService>();
             _logger = provider.GetRequiredService<ILogger<EdayWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
+            LogContext.PushProperty("TP", _tpName);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation($"Start {_tpName} ExecuteAsync Step 1");
+            _logger.LogWarning($"Start {_tpName} ExecuteAsync Step 1");
             _timer = new Timer(DoEdaySettle, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -51,7 +50,7 @@ namespace ThirdPartySettleWorker.Workers
             LogContext.PushProperty("TP", _tpName);
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
 
-            _logger.LogInformation($"DoEdaySettle {_tpName} Step 2");
+            _logger.LogWarning($"DoEdaySettle {_tpName} Step 2");
             
             var forContinue = false;
             var isError = false;
@@ -66,7 +65,7 @@ namespace ThirdPartySettleWorker.Workers
             try
             {
                 
-                _logger.LogInformation($"DoEdaySettle {_tpName} Step 3");
+                _logger.LogWarning($"DoEdaySettle {_tpName} Step 3");
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
                 if (!tpUnsettleList.Any())
                 {
@@ -79,7 +78,7 @@ namespace ThirdPartySettleWorker.Workers
                 foreach (var wager in tpUnsettleList)
                 {
 
-                    _logger.LogInformation($"DoEdaySettle {wager.TransId} Step 4");
+                    _logger.LogWarning($"DoEdaySettle {wager.TransId} Step 4");
                     var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleDataEday>(getSP, wager, DataBase.Main);
                     var wagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleDataEday>(getWager,
                         new { TransId = wager.TransId }, DataBase.Wager).FirstOrDefault();
@@ -116,6 +115,7 @@ namespace ThirdPartySettleWorker.Workers
                                 _ => SettlementType.SettledForInvalid
                             };
                         }
+                        _logger.LogWarning($"DoEdaySettle {wager.TransId} Step 5");
                         
                         if (transType != SettlementType.UnSettled)
                         {
@@ -152,6 +152,7 @@ namespace ThirdPartySettleWorker.Workers
                                 GameID = unsettled.GameId,
                             };
                         }
+                        _logger.LogWarning($"DoEdaySettle {wager.TransId} Step 6");
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
