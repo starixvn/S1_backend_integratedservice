@@ -58,7 +58,7 @@ builder.Services
 //.AddHostedService<JokerWorker>()
 //.AddHostedService<MGWorker>()
 //.AddHostedService<APWorker>()
-//.AddHostedService<PGWorker>()
+.AddHostedService<PGWorker>()
 //.AddHostedService<YGGWorker>()
 //.AddHostedService<TCGWorker>()
 //.AddHostedService<HBWorker>()
