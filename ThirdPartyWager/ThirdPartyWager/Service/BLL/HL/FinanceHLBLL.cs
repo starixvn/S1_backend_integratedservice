@@ -1,11 +1,10 @@
 ﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
-    public class FinanceHLBLL :ITpReportBLL
+    public class FinanceHLBLL : ITpReportBLL
     {
         private readonly ILogger<FinanceHLBLL> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -13,7 +12,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiHLBLL _apiHLBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly string _tpName = Tp.HaoLong.ToString();
-        private readonly HLConfig _siteHLConfig;
         private readonly int _timeZone = -4;
 
         public FinanceHLBLL(IServiceProvider provider)
@@ -23,7 +21,6 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiHLBLL = provider.GetRequiredService<ApiHLBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HLConfig>(_tpName);
         }
 
         public TimeCast GetReportTime(DateTime startTime, int day)
@@ -40,7 +37,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            
+
             var tasks = new List<Task<IEnumerable<FincanceDailySummary>>>
             {
                 _commonBLL.GetWagerSummary("Finance_TpWager_HL_Summary_Get", reportTime.startUnix, reportTime.endUnix),
