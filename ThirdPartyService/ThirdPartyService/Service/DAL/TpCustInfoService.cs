@@ -1,6 +1,4 @@
-﻿using System.Data;
-
-using Dapper;
+﻿using Dapper;
 
 using Microsoft.Extensions.Caching.Memory;
 
@@ -73,8 +71,7 @@ namespace ThirdPartyService.Service.DAL
                         return apiResult;
                     }
 
-                    return CreateMember(customer, tpId, true , langId);
-
+                    return CreateMember(customer, tpId, true, langId);
                 }
                 else if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
                          tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
@@ -99,6 +96,7 @@ namespace ThirdPartyService.Service.DAL
 
             return apiResult;
         }
+
         public ApiResult<TpCustInfo> CreateMember(int custId, int tpId, bool isNeedSendRequest)
         {
             var customer = _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
@@ -146,8 +144,8 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_TpId", tpId);
             return _reportDbClient.Query<int>("Service_CustWithoutTpCustInfo_Get", parameter);
         }
-        
-        public IEnumerable<int> GetCustCurrencySiteIdWithoutSabaId(int tpId, int siteId,int currencyId)
+
+        public IEnumerable<int> GetCustCurrencySiteIdWithoutSabaId(int tpId, int siteId, int currencyId)
         {
             var parameter = new DynamicParameters();
             parameter.Add("_TpId", tpId);
@@ -162,7 +160,6 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_TpId", tpId);
             return _reportDbClient.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId });
         }
-        
 
         public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
         {
@@ -177,7 +174,7 @@ namespace ThirdPartyService.Service.DAL
         private bool CheckTpForbidden(int custId, int tpId)
         {
             // priority custid > tpid
-            if (_environment.EnvironmentName != "Production")
+            if (_environment.EnvironmentName != "PROD")
             {
                 if (tpId == (int)TpEnum.PT)
                 {
@@ -199,7 +196,7 @@ namespace ThirdPartyService.Service.DAL
             return false;
         }
 
-        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId, bool isNeedSendRequest ,string langId = "")
+        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId, bool isNeedSendRequest, string langId = "")
         {
             var apiResult = new ApiResult<TpCustInfo>();
 
@@ -226,7 +223,7 @@ namespace ThirdPartyService.Service.DAL
                 CurrencyId = customer.CurrencyId
             };
 
-            if (_environment.EnvironmentName != "Production")
+            if (_environment.EnvironmentName != "PROD")
             {
                 regTpCustInfo.TpUserName = $"{_common.GetEnv()}{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}";
             }
@@ -289,7 +286,7 @@ namespace ThirdPartyService.Service.DAL
             }
             return apiResult;
         }
-        
+
         private string GetCurrencyIsoCode(int currencyId)
         {
             return _currencyList.GetValueOrDefault(currencyId).IsoCode;
