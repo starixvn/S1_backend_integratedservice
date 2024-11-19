@@ -73,7 +73,7 @@ public class PG2Worker : BackgroundService, ISettleWorker
             {
                 try
                 {
-                    var unsettleData = _tpUnSettledBLL.GetTpUnsettleData<SettleDataRNG_PG2>(bettransGet, tpUnsettle,DataBase.Main).First();
+                    var unsettleData = _tpUnSettledBLL.GetTpUnsettleData<SettleDataRNG_PG2>(bettransGet, new { TransId = tpUnsettle.TransId},DataBase.Main).First();
                     if (unsettleData == null)
                     {
                         _logger.LogWarning($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(tpUnsettle)}");

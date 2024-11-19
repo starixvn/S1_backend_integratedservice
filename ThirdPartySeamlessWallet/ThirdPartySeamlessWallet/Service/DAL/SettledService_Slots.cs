@@ -7552,13 +7552,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         public bool InsertBettrans_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
         {
-            var result = _mainDbClient.Execute("Service_BettransRng_PG2_Ins", trans, data);
+            var p = new DynamicParameters(data);
 
-            if (result == 0)
-            {
-                return false;
-            }
-            return true;
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_Ins", trans, p);
+
+            return result != 0;
         }
 
         public bool SetBalance_PG2(TpCustInfo tpCustInfo, BettingDataRNG_PG2 data, TransType transType, string memo,
@@ -7620,7 +7618,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public bool InsertBettrans_BetAndPayout_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
         {
-            var result = _mainDbClient.Execute("Service_BettransRng_PG2_BetAndPayout_Ins", trans, data);
+            var p = new DynamicParameters(data);
+
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_BetAndPayout_Ins", trans, p);
             return result != 0;
         }
 

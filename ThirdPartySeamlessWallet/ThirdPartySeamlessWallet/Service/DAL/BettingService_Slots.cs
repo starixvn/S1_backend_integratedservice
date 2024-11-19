@@ -2341,13 +2341,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public bool InsertBettransRng_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
         {
-            var result = _mainDbClient.Execute("Service_BettransRng_PG2_Ins", trans, data);
+            var p = new DynamicParameters(data);
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_Ins", trans, p);
 
-            if (result == 0)
-            {
-                return false;
-            }
-            return true;
+            return result != 0;
         }
 
         public bool SetBalance_PG2(TpCustInfo tpCustInfo, BettingDataRNG_PG2 data, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
