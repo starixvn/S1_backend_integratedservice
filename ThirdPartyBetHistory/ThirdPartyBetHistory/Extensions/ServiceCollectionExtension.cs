@@ -55,17 +55,26 @@ namespace ThirdPartyBetHistory.Extensions
 
             foreach (var siteConfig in sabaSiteConfigList)
             {
-                services.AddSingleton(provider =>
+                var sabaConfig = JsonConvert.DeserializeObject<SabaConfig>(siteConfig.ConfigValue);
+                if (IsSabaConfigValid(sabaConfig))
                 {
-                    var TpBetHelper = (IThirdPartyBetHelper)Activator.CreateInstance(type, new object[] { provider });
-                    TpBetHelper.Tp = tp;
-                    TpBetHelper.SiteId = siteConfig.SiteId;
-                    TpBetHelper.SabaConfig = JsonConvert.DeserializeObject<SabaConfig>(siteConfig.ConfigValue);
-                    return TpBetHelper;
-                });
+                    services.AddSingleton(provider =>
+                    {
+                        var TpBetHelper = (IThirdPartyBetHelper)Activator.CreateInstance(type, new object[] { provider });
+                        TpBetHelper.Tp = tp;
+                        TpBetHelper.SiteId = siteConfig.SiteId;
+                        TpBetHelper.SabaConfig = sabaConfig;
+                        return TpBetHelper;
+                    });
+                }
             }
 
             return services;
+        }
+
+        private static bool IsSabaConfigValid(SabaConfig sabaConfig)
+        {
+            return sabaConfig != null && !string.IsNullOrWhiteSpace(sabaConfig.ApiUrl);
         }
 
         public static IServiceCollection AddOptionListByDB<T>(this IServiceCollection services, string sql, object parameters = null)
