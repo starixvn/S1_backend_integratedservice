@@ -170,7 +170,7 @@ namespace ThirdParty.Eday
                 RefTransId = getBetDetail.TransId,
                 TpUserName = wagerDetail.GetValueOrDefault("player")?.ToString(),
                 UTCBetTime = DateTime.Parse(wagerDetail.GetValueOrDefault("UTCBetTime")?.ToString()),
-                UTCSettledTime = DateTime.Parse(wagerDetail.GetValueOrDefault("UTCSettledTime")?.ToString()),
+                UTCSettledTime = DateTime.Parse(wagerDetail.GetValueOrDefault("UTCSettleTime")?.ToString()),
                 Stake = (decimal)wagerDetail.GetValueOrDefault("amount"),
                 WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winTotal") 
             };
