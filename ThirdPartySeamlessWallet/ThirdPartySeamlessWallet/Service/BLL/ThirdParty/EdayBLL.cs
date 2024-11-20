@@ -260,7 +260,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 settleData.TicketType = (int)BettransType.Payout;
                                 settleData.SettleFlag = (int)SettleFlag.EndGame;
                                 roundUpdateDAL = CreateRoundUpdateDAL(settleData, request.roundCode, request.timestamp,
-                                    request.txType,request.txId,request.gameCode);
+                                    request.txType,request.txId,request.gameCode,request.eventId);
                             }
                             else
                             {
@@ -268,7 +268,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 settleData.TicketType = (int)BettransType.Payout;
                                 settleData.SettleFlag = (int)SettleFlag.EndGame;
                                 roundUpdateDAL = CreateRoundUpdateDAL(settleData, request.roundCode, request.timestamp,
-                                    request.txType,request.txId,request.gameCode);
+                                    request.txType,request.txId,request.gameCode,request.eventId);
                             }
                             result = RoundUpdate_Eday(roundUpdateDAL, out var afterAmount);
                             break;
@@ -278,7 +278,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             settleData.TicketType = (int)BettransType.Payout;
                             settleData.SettleFlag = (int)SettleFlag.Running;
                             roundUpdateDAL = CreateRoundUpdateDAL(settleData, request.roundCode, request.timestamp,
-                                request.txType,request.txId,request.gameCode);
+                                request.txType,request.txId,request.gameCode,request.eventId);
                             result = RoundUpdateVoidDraw_Eday(roundUpdateDAL, out afterAmount);
                             break;
                         //Void round
@@ -287,7 +287,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             settleData.TicketType = (int)BettransType.CancelBet;
                             settleData.SettleFlag = (int)SettleFlag.EndGame;
                             roundUpdateDAL = CreateRoundUpdateDAL(settleData, request.roundCode, request.timestamp,
-                                request.txType,request.txId,request.gameCode);
+                                request.txType,request.txId,request.gameCode,request.eventId);
                             result = RoundUpdateVoidRound_Eday(roundUpdateDAL, out afterAmount);
                             break;
                     }

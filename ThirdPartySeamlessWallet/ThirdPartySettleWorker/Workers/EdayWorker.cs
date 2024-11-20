@@ -62,7 +62,6 @@ namespace ThirdPartySettleWorker.Workers
             try
             {
                 
-                _logger.LogWarning($"DoEdaySettle {_tpName} Step 3");
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
                 if (!tpUnsettleList.Any())
                 {
@@ -118,7 +117,7 @@ namespace ThirdPartySettleWorker.Workers
                             betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
-                                Stake = unsettled.Stake,
+                                Stake = Math.Abs(unsettled.Stake),
                                 TpUserName = unsettled.Account,
                                 ValidBet = unsettled.ValidBet,
                                 WinlostAmount = unsettled.WinLostAmount,
@@ -135,7 +134,7 @@ namespace ThirdPartySettleWorker.Workers
                             betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
-                                Stake = unsettled.Stake,
+                                Stake = Math.Abs(unsettled.Stake),
                                 TpUserName = unsettled.Account,
                                 ValidBet = unsettled.ValidBet,
                                 WinlostAmount = 0,
@@ -146,6 +145,11 @@ namespace ThirdPartySettleWorker.Workers
                                 SettlementType = transType,
                                 GameID = unsettled.GameId,
                             };
+                        }
+                        
+                        if (transType == SettlementType.SettledForInvalid)
+                        {
+                            betRecordInfo.TicketStatus = TicketStatus.Refund;
                         }
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
