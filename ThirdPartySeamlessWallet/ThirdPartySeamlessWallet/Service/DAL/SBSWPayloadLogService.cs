@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.DAL;
 
@@ -28,7 +29,7 @@ public class SBSWPayloadLogService
         _logger = provider.GetRequiredService<ILogger<SBSWPayloadLogService>>();
     }
 
-    public virtual void LogDetailedPayload(string content, PayloadLogMeta meta = null) {
+    public virtual void LogDetailedPayload(string seq, string content, PayloadLogMeta meta = null) {
         if (!_config.Enabled) return;
         
         var action = meta?.Action 
@@ -37,58 +38,51 @@ public class SBSWPayloadLogService
         if (_config.ExcludedActions.Contains(action)) return;
 
         try {
-            var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
-            var payload = getReq?.Payload?.ToString() ?? "{}";
-            
-            var gameType = meta?.GameType
-                ?? JsonConvert.DeserializeObject<DetailedRequestBodyPayload>(payload)?.GameType
-                ?? "Unknown"; 
-
             var environment = _environmentName;
 
             var logParams = new DynamicParameters(new {
-                getReq.Seq,
-                getReq.TimeStamp,
-                Payload = payload,
+                Seq=seq,
+                Payload= content,
+                TimeStamp=DateTime.UtcNow,
                 Action = action,
-                GameType = gameType,
-                Environment = environment,
+                EnvironmentName= environment,
+                GameType= string.Empty
             });
 
             _partitionService.Execute(
-                DateTime.Now,
+                DateTime.UtcNow,
                 InsertDetailedPayloadSpName,
                 logParams
             );
 
         } catch (Exception ex) {
-            SentrySdk.CaptureException(ex);
+            _logger.LogError(ex.Message);
         }
-
     }
 
-    public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent, PayloadLogMeta meta = null) {
-        if (!_config.Enabled) return;
+    public virtual void UpdateDetailedPayLoadWithResponse(string seq, object responseContent, PayloadLogMeta meta = null) {
+        if (!_config.Enabled)
+        {
+            return;
+        }
 
         var action = meta?.Action 
             ?? (new StackTrace().GetFrame(1).GetMethod().Name)
             ?? "Unknown";
-        if (_config.ExcludedActions.Contains(action)) return;
-        
-        var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent);
-        
-        if (responseContent is string) {
-            responseContent = JsonConvert.DeserializeObject(responseContent.ToString() ?? string.Empty);
+        if (_config.ExcludedActions.Contains(action))
+        {
+            return;
         }
+
         var response = JsonConvert.SerializeObject(responseContent,Formatting.Indented);
         var logParams = new DynamicParameters(new {
-            getReq.Seq,
+            Seq = seq,
             Response = response
         });
 
         try {
             _partitionService.Execute(
-                DateTime.Now, 
+                DateTime.UtcNow, 
                 UpdateDetailedResponseSpName,
                 logParams
             );
