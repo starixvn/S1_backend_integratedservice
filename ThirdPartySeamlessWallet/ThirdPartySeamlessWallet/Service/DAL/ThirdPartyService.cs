@@ -19,11 +19,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.QueryFirst<TpCheck>("Service_TpCheck_Get", new { TpId = tpId, TpUserName = tpUserName });
         }
 
+        [Obsolete("Please use SiteConfig Get Setting")]
         public ThirdPartySetting GetThirdPartySetting(int tpId)
         {
             return _mainDbClient.QueryFirst<ThirdPartySetting>("Tp_Get", new { TpId = tpId });
         }
 
+        [Obsolete("Please use SiteConfig Get Setting")]
         public ThirdPartySetting GetThirdPartyBySite(int tpId, int siteId)
         {
             return _mainDbClient.QueryFirst<ThirdPartySetting>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId });

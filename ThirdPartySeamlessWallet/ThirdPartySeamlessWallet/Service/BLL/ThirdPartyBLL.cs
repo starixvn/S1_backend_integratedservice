@@ -25,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             ServerInfoData = new ConcurrentDictionary<string, ServerInfo>();
         }
 
+        [Obsolete("Please use ConfigBLL.GetConfigValuesBySiteId")]
         public ThirdPartySetting GetThirdPartySetting(int tpId)
         {
             if (!ThirdPartySettingContainer.ContainsKey(tpId))
@@ -37,6 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return ThirdPartySettingContainer.ContainsKey(tpId) ? ThirdPartySettingContainer[tpId] : null;
         }
 
+        [Obsolete("Please use ConfigBLL.GetConfigValuesBySiteId")]
         public ThirdPartySetting GetThirdPartyBySite(int tpId, int siteId)
         {
             string sKet = $"{tpId}_{siteId}";
@@ -315,6 +317,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     break;
                 case (int)Tp.FastSpin:
                     gameType = GameType.FastSpin_RNG;
+                    break;
+                case (int)Tp.DragonGaming:
+                    gameType = GameType.DragonGaming_RNG;
                     break;
                 default:
                     break;

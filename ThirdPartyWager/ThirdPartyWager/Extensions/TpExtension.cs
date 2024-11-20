@@ -25,13 +25,13 @@ namespace ThirdPartyWager.Extensions
                 { Tp.OneGaming, AddOneGaming},
                 { Tp.Sexy, AddSexy},
                 { Tp.CQ9, AddCQ9},
-                { Tp.CF, AddCF},
+                //{ Tp.CF, AddCF},
                 { Tp.EBet, AddEBet},
                 { Tp.WM, AddWM},
-                { Tp.Kiss918, AddKiss918},
-                { Tp.Mega, AddMega},
+                //{ Tp.Kiss918, AddKiss918},
+                //{ Tp.Mega, AddMega},
                 { Tp.One789, AddOne789},
-                { Tp.Iconic, AddIconic},
+                //{ Tp.Iconic, AddIconic},
                 { Tp.V8, AddV8},
                 //{ Tp.N2Live, AddN2Live},
                 { Tp.AMB, AddAMB},
@@ -59,9 +59,15 @@ namespace ThirdPartyWager.Extensions
                 { Tp.BNG, AddBNG},
                 { Tp.HaoLong, AddHL},
                 { Tp.NLC, AddNLC},
-                { Tp.NTConnect, AddNTConnect },        
+                { Tp.MaxGame, AddMaxGame},
+                { Tp.SabaPlay, AddSabaPlay},
+                { Tp.UuSlots, AddUuSlots},
+                { Tp.Live22, AddLive22},
+                { Tp.FastSpin, AddFastSpin},
+                { Tp.NTConnect, AddNTConnect },
                 { Tp.GA, AddGA},
                 { Tp.WonCasino, AddWonCasino},
+                { Tp.DragonGaming, AddDragonGaming},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -70,7 +76,6 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<WagerSABLL>();
             services.AddSingleton<ApiSABLL>();
-            services.AddSingleton<WagerRedoSABLL>();
             services.AddSingleton<FinanceSABLL>();
 
             services.AddHostedService<WagerSA>();
@@ -86,12 +91,13 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<WagerAGBLL>();
             services.AddSingleton<ApiAGBLL>();
-            services.AddSingleton<WagerRedoAGBLL>();
             services.AddSingleton<FinanceAGBLL>();
+            services.AddSingleton<TicketAGBLL>();
 
             services.AddHostedService<WagerAG>();
             services.AddHostedService<WagerRedoAG>();
             services.AddHostedService<FinanceAG>();
+            services.AddHostedService<TicketAG>();
 
             return services;
         }
@@ -303,9 +309,11 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerOne789BLL>();
             services.AddSingleton<ApiOne789BLL>();
             services.AddSingleton<FinanceOne789BLL>();
+            services.AddSingleton<TicketOne789BLL>();
 
             services.AddHostedService<WagerOne789>();
             services.AddHostedService<FinanceOne789>();
+            services.AddHostedService<TicketOne789>();
 
             return services;
         }
@@ -365,7 +373,7 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<FinanceAMBBLL>();
             services.AddSingleton<WagerAMBBLL>();
             services.AddSingleton<WagerAMBService>();
-            
+
             services.AddHostedService<FinanceAMB>();
             services.AddHostedService<WagerAMB>();
             services.AddHostedService<WagerRedoAMB>();
@@ -686,6 +694,61 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
+        private IServiceCollection AddMaxGame(IServiceCollection services)
+        {
+            services.AddSingleton<WagerMaxGameService>();
+
+            services.AddSingleton<ApiMaxGameBLL>();
+            services.AddSingleton<TicketMaxGameBLL>();
+
+            services.AddHostedService<TicketMaxGame>();
+
+            return services;
+        }
+        private IServiceCollection AddSabaPlay(IServiceCollection services)
+        {
+            services.AddSingleton<WagerSabaPlayService>();
+
+            services.AddSingleton<TicketSabaPlayBLL>();
+
+            services.AddHostedService<TicketSabaPlay>();
+
+            return services;
+        }
+
+        private IServiceCollection AddUuSlots(IServiceCollection services)
+        {
+            services.AddSingleton<WagerUuSlotsService>();
+
+            services.AddSingleton<TicketUuSlotsBLL>();
+
+            services.AddHostedService<TicketUuSlots>();
+
+            return services;
+        }
+
+        private IServiceCollection AddLive22(IServiceCollection services)
+        {
+            services.AddSingleton<WagerLive22Service>();
+
+            services.AddSingleton<TicketLive22BLL>();
+
+            services.AddHostedService<TicketLive22>();
+
+            return services;
+        }
+
+        private IServiceCollection AddFastSpin(IServiceCollection services)
+        {
+            services.AddSingleton<WagerFastSpinService>();
+
+            services.AddSingleton<TicketFastSpinBLL>();
+
+            services.AddHostedService<TicketFastSpin>();
+
+            return services;
+        }
+
         private IServiceCollection AddGA(IServiceCollection services)
         {
             services.AddSingleton<WagerGAService>();
@@ -700,7 +763,7 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-                    
+
         private IServiceCollection AddNTConnect(IServiceCollection services)
         {
             services.AddSingleton<WagerNTConnectService>();
@@ -711,7 +774,7 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<WagerNTConnect>();
             services.AddHostedService<FinanceNTConnect>();
-            
+
             return services;
         }
 
@@ -726,6 +789,21 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerWonCasino>();
             services.AddHostedService<WagerRedoWonCasino>();
             services.AddHostedService<FinanceWonCasino>();
+
+            return services;
+        }
+
+        private IServiceCollection AddDragonGaming(IServiceCollection services)
+        {
+            services.AddSingleton<WagerDragonGamingService>();
+
+            services.AddSingleton<WagerDragonGamingBLL>();
+            services.AddSingleton<FinanceDragonGamingBLL>();
+            services.AddSingleton<ApiDragonGamingBLL>();
+
+            services.AddHostedService<WagerDragonGaming>();
+            services.AddHostedService<WagerRedoDragonGaming>();
+            services.AddHostedService<FinanceDragonGaming>();
 
             return services;
         }

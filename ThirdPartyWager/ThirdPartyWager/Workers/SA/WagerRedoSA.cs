@@ -9,21 +9,20 @@ namespace ThirdPartyWager.Workers
     {
         private Timer _timer;
         private readonly ILogger<WagerRedoSA> _logger;
-        private readonly WagerRedoSABLL _wagerRedoSABLL;
+        private readonly WagerSABLL _wagerSABLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly DateTimeHelper _dateTimeHelper;
-        private readonly int _intervalMins = 60;
+        private readonly int _timeRange = 60;//in minutes
+        private readonly int _quickTime = 120; // in seconds
+        private readonly int _runTime = 60; // in minutes
         private readonly int _tpId = (int)Tp.SA;
         private readonly string _tpName = Tp.SA.ToString();
         private readonly int _tpType = (int)WagerTimerType.RedoWager;
-        private readonly int _timeZone = 8;
 
         public WagerRedoSA(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerRedoSA>>();
-            _wagerRedoSABLL = provider.GetRequiredService<WagerRedoSABLL>();
+            _wagerSABLL = provider.GetRequiredService<WagerSABLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,31 +35,42 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var quick = 0;
+
+            var quick = false;
+            var failed = 0;
 
             try
             {
-                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
-                DateTime timerTime = (dataTpTimer == null) ? DateTime.Now.AddMinutes(-2 * _intervalMins) : dataTpTimer.StartTime.AddSeconds(1);
-                int last = _intervalMins;
-
-                var time = _dateTimeHelper.GetTimeByHour(last, _timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
-                if (time.endUnix < cvTime)
+                var tasks = new List<Task>();
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var site in siteList)
                 {
-                    var result = await _wagerRedoSABLL.RedoWagersAsync(_tpId, time.startTime, time.endTime, time.startUnix, time.endUnix);
-                    if (result)
+                    if (site.TicketKey == 0)
                     {
-                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+                        continue;
                     }
-                }
 
-                var ts = DateTime.Now - timerTime;
-                var diffMin = (int)ts.TotalMinutes;
-                if (diffMin >= 120)
-                {
-                    quick = 1;
+                    var siteId = site.SiteId;
+                    tasks.Add(Task.Run(() =>
+                    {
+                        try
+                        {
+                            var res = _wagerSABLL.ExecWagerRedoWorker(siteId, _tpType, _timeRange);
+                            if (res.Result == true)
+                            {
+                                quick = true;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, ex.Message);
+                            Interlocked.Increment(ref failed);
+                        }
+                    }));
                 }
+                var t = Task.WhenAll(tasks);
+                t.Wait();
+
             }
             catch (Exception ex)
             {
@@ -68,7 +78,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = (quick == 1) ? TimeSpan.FromSeconds(120) : TimeSpan.FromMinutes(_intervalMins);
+                var dueTimeSpan = (quick) ? TimeSpan.FromSeconds(_quickTime) : TimeSpan.FromMinutes(_runTime);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

@@ -11,22 +11,24 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiAllBetBLL _apiAllBetBLL;
+        private readonly CommonBLL _commonBLL;
         private readonly WagerAllBetService _wagerAllBetService;
         private readonly ILogger<WagerAllBetBLL> _logger;
         private IEnumerable<TpCurrency> _currencyList;
         private readonly int _tpId = (int)Tp.Allbet;
         private readonly IWebHostEnvironment _env;
-        private readonly AllBetConfig _siteAllBetConfig;
+        private readonly Dictionary<int, AllBetConfig> _siteConfigDic;
 
         public WagerAllBetBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiAllBetBLL = provider.GetRequiredService<ApiAllBetBLL>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
             _wagerAllBetService = provider.GetRequiredService<WagerAllBetService>();
             _logger = provider.GetRequiredService<ILogger<WagerAllBetBLL>>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
             _env = provider.GetRequiredService<IWebHostEnvironment>();
-            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AllBetConfig>(Tp.Allbet.ToString());
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
@@ -34,50 +36,97 @@ namespace ThirdPartyWager.Service.BLL
             var msg = "FATAL_ERROR";
             try
             {
-                
+
                 if (_env.IsDevelopment())
                 {
                     _currencyList = _currencyList.Take(1);
                 }
-                foreach (var currency in _currencyList)
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                var serverList = _commonBLL.GetSiteList();
+                foreach (var site in siteList)
                 {
-                    try
+                    if (site.TicketKey == 0)
                     {
-                        Thread.Sleep(15000);
-                        // pagination
-                        var pageIndex = 1;
-                        var pageRowCnt = 1;
+                        continue;
+                    }
 
-                        var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == currency.TpCurrencyId)?.Agent;
-                        while (pageRowCnt >= 1)
+                    var _siteAllBetConfig = _siteConfigDic[site.SiteId];
+                    var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
+
+                    foreach (var currency in _currencyList.Where(x => currencyList.Contains(x.CurrencyId)))
+                    {
+                        try
                         {
-                            // bet                     
-                            var dataWager = _apiAllBetBLL.GetBetListByTime(agent, startTime, endTime, pageIndex);
-                            if (dataWager == null)
+                            Thread.Sleep(15000);
+                            // pagination
+                            var pageIndex = 1;
+                            var pageRowCnt = 1;
+
+                            var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == currency.TpCurrencyId)?.Agent;
+                            while (pageRowCnt >= 1)
+                            {
+                                // bet                     
+                                var dataWager = _apiAllBetBLL.GetBetListByTime(agent, startTime, endTime, pageIndex, site.SiteId);
+                                if (dataWager == null)
+                                {
+                                    msg = "THIRD_PARTY_ERROR";
+                                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                                    return false;
+                                }
+
+                                // error condition
+                                if (dataWager.resultCode != "OK")
+                                {
+                                    msg = "THIRD_PARTY_ERROR";
+                                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                                    return false;
+                                }
+
+                                pageRowCnt = dataWager.data.list.Count();
+                                if (pageRowCnt == 0)
+                                {
+                                    msg = "NO_DATA";
+                                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                                    break;
+                                }
+
+                                // insert wager to db
+                                foreach (var bet in dataWager.data.list.OrderBy(item => item.betTime))
+                                {
+                                    try
+                                    {
+                                        _wagerAllBetService.InsertWager(bet);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        msg = $"INSERT_WAGER(WAGERID: {bet.betNum} )";
+                                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                                        return false;
+                                    }
+                                }
+                                pageIndex++;
+                            }
+
+
+                            // modified bet
+                            var modifyWager = _apiAllBetBLL.GetModifiedBetListByTime(agent, startTime, endTime, site.SiteId);
+                            if (modifyWager.resultCode != "OK")
                             {
                                 msg = "THIRD_PARTY_ERROR";
-                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(modifyWager)}");
                                 return false;
                             }
 
-                            // error condition
-                            if (dataWager.resultCode != "OK")
-                            {
-                                msg = "THIRD_PARTY_ERROR";
-                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                                return false;
-                            }
-
-                            pageRowCnt = dataWager.data.list.Count();
-                            if (pageRowCnt == 0)
-                            {
-                                msg = "NO_DATA";
-                                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                                break;
-                            }
+                        var pageRowCntOfModify = modifyWager.data.total;
+                        if (pageRowCntOfModify == 0)
+                        {
+                            msg = "NO_DATA";
+                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(modifyWager)}");
+                            continue;
+                        }
 
                             // insert wager to db
-                            foreach (var bet in dataWager.data.list.OrderBy(item => item.betTime))
+                            foreach (var bet in modifyWager.data.list)
                             {
                                 try
                                 {
@@ -90,47 +139,14 @@ namespace ThirdPartyWager.Service.BLL
                                     return false;
                                 }
                             }
-                            pageIndex++;
                         }
-
-
-                        // modified bet
-                        var modifyWager = _apiAllBetBLL.GetModifiedBetListByTime(agent, startTime, endTime);
-                        if (modifyWager.resultCode != "OK")
+                        catch (Exception ex)
                         {
-                            msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(modifyWager)}");
-                            return false;
+                            _logger.LogError(ex, $"{currency.TpCurrencyId}Agent GetWagersAsync error. \r\n{ex.Message}");
                         }
-
-                        var pageRowCntOfModify = modifyWager.data.total;
-                        if (pageRowCntOfModify == 0)
-                        {
-                            msg = "NO_DATA";
-                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(modifyWager)}");
-                            break;
-                        }
-
-                        // insert wager to db
-                        foreach (var bet in modifyWager.data.list)
-                        {
-                            try
-                            {
-                                _wagerAllBetService.InsertWager(bet);
-                            }
-                            catch (Exception ex)
-                            {
-                                msg = $"INSERT_WAGER(WAGERID: {bet.betNum} )";
-                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
-                                return false;
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"{currency.TpCurrencyId}Agent GetWagersAsync error. \r\n{ex.Message}");
                     }
                 }
+
                 msg = "FINISH";
                 _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
                 return true;
@@ -153,7 +169,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     try
                     {
-                        var result = _apiAllBetBLL.GetBetByBetNum(chcek.betNum);
+                        var result = _apiAllBetBLL.GetBetByBetNum(chcek.betNum, chcek.client);
                         if (result.resultCode == "OK")
                         {
                             _wagerAllBetService.InsertWager(result.data);

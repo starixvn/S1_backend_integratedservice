@@ -7360,5 +7360,193 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region DragonGaming
+
+        public int CancelBetRNG_DragonGaming(TpCustInfo tpCustInfo, BettingData_DragonGaming refundData, string originalTransactionId, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int result = 0;
+            afterAmount = 0;
+
+            var tpId = Tp.DragonGaming;
+            var tpGameType = GameType.DragonGaming_RNG;
+            var tpCategory = TpCategory.Slots;
+            var SetSpName = "Service_BettransRng_DragonGaming_CancelBet_Set";
+            var InsSpName = "Service_BettransRng_DragonGaming_Ins";
+            var GetSpName = "Service_BettransRng_DragonGaming_Cancel_Exist_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var p = new DynamicParameters(refundData);
+                p.Add("SettleFlag", (int)SettleFlag.Settled);
+
+                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.Bet, transaction_id = originalTransactionId });
+
+                if (check is not null)
+                {
+                    result = _mainDbClient.Execute(SetSpName, new { refundData.round_id, refundData.note }, conn, trans);
+
+                    if (result > 0 && refundData.amount != 0)
+                    {
+                        // bonuscode bet/refund 無須異動額度
+                        result = PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(refundData.amount),
+                            (int)tpId,
+                            refundData.round_id,
+                            (int)tpGameType,
+                            tpCategory,
+                            refundData.round_id,
+                            TransType.Refunds,
+                            null,
+                            out _,
+                            "CancelBet",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                }
+                else
+                {
+                    var cancelcheck = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.CancelBet, transaction_id = originalTransactionId });
+
+                    if (cancelcheck is not null)
+                    {
+                        // had cancel
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return 1;
+                    }
+
+                    var cancelInsertResult = _mainDbClient.Execute(InsSpName, p, conn, trans);
+                    if (cancelInsertResult > 0)
+                    {
+                        // insert cancel record
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return cancelInsertResult;
+                    }
+                }
+
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        public int PayoutRNG_DragonGaming(TpCustInfo tpCustInfo, BettingData_DragonGaming payoutData, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int result = 0;
+            afterAmount = 0;
+
+            var tpId = Tp.DragonGaming;
+            var tpGameType = GameType.DragonGaming_RNG;
+            var tpCategory = TpCategory.Slots;
+            var InsSpName = "Service_BettransRng_DragonGaming_Ins";
+            var GetSpName = "Service_BettransRng_DragonGaming_Exist_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var p = new DynamicParameters(payoutData);
+                p.Add("SettleFlag", (int)SettleFlag.EndGame);
+
+                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { payoutData.round_id });
+
+                if (check is null)
+                {
+                    // no bet or cancel data
+                    return -2;
+                }
+
+                result = _mainDbClient.Execute(InsSpName, p, conn, trans);
+
+                if (result > 0)
+                {
+                    if (payoutData.amount != 0)
+                    {
+                        result = PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(payoutData.amount),
+                        (int)tpId,
+                        payoutData.round_id,
+                        (int)tpGameType,
+                        tpCategory,
+                        payoutData.round_id,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        $"Payout",
+                        out bonusId,
+                        conn,
+                        trans
+                        );
+                    }
+
+                    if (result > 0 && payoutData.round_end_state)
+                    {
+                        result = _tpUnsettleService.InsertTpUnsettle(tpId, tpGameType, payoutData.round_id, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+
+        public int SetSettleFlag_DragonGaming(string transId)
+        {
+            return _mainDbClient.Execute("Service_BettransRng_DragonGaming_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = transId });
+        }
+
+        #endregion
     }
 }

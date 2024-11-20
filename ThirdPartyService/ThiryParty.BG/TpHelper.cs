@@ -18,6 +18,7 @@ public class TpHelper : ThirdPartyHelperBase
     {
         _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<BGConfig>(TpEnum.BG.ToString());
     }
+
     #region Model
 
     private class CreateMemberResult

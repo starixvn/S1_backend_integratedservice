@@ -1,0 +1,102 @@
+﻿using Serilog.Context;
+using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
+
+namespace ThirdPartyWager.Workers
+{
+    public class WagerRedoDragonGaming : BackgroundService
+    {
+        private readonly int _tpId = (int)Tp.DragonGaming;
+        private readonly string _tpName = Tp.DragonGaming.ToString();
+        private readonly int _workerType = (int)WagerTimerType.RedoWager;
+        private readonly string _workerTypeName = WagerTimerType.RedoWager.ToString();
+
+        private readonly WagerDragonGamingBLL _wagerDragonGamingBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly Dictionary<int, DragonGamingConfig> _siteConfigDic;
+        private readonly ILogger<WagerRedoDragonGaming> _logger;
+
+        private Timer _timer;
+        private readonly int timeZone = 0;
+        private bool isFast = false;
+        private readonly int iRangMins = 30;
+        private readonly int intervalMins = 15;
+        private readonly string timeFormat = "yyyy-MM-dd HH:mm:ss";
+
+        public WagerRedoDragonGaming(IServiceProvider provider)
+        {
+            _wagerDragonGamingBLL = provider.GetRequiredService<WagerDragonGamingBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DragonGamingConfig>(_tpName);
+            _logger = provider.GetRequiredService<ILogger<WagerRedoDragonGaming>>();
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            return Task.CompletedTask;
+        }
+
+        private async void DoTask(object state)
+        {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+            try
+            {
+                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _workerType);
+                var nowDateTime = DateTime.Now;
+
+                if (dataTpTimer == null)
+                {
+                    dataTpTimer = new ThirdPartyTimerModel()
+                    {
+                        TpId = _tpId,
+                        Type = _workerType,
+                        StartTime = nowDateTime.AddMinutes(-2 * intervalMins),
+                    };
+                }
+                else
+                {
+                    dataTpTimer.StartTime = dataTpTimer.StartTime.AddSeconds(1);
+                }
+
+                if (dataTpTimer.StartTime <= nowDateTime.AddMinutes(-2 * intervalMins))
+                {
+                    var time = _dateTimeHelper.GetTimeByMinute(iRangMins - 1, timeZone, timeFormat, dataTpTimer.StartTime);
+                    var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                    foreach (var siteInfo in siteList)
+                    {
+                        if (siteInfo.TicketKey == 0) continue;
+                        var _setting = _siteConfigDic[siteInfo.SiteId];
+                        if (_setting == null) continue;
+
+                        await _wagerDragonGamingBLL.GetWagerAsync(_setting, time.startTime.ToString(), time.endTime.ToString(), _workerTypeName.ToString());
+                    }
+                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, _workerType, time.endUnix);
+
+                }
+                isFast = CheckQuick(dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), 20);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{_tpName}_{_workerTypeName}:{ex.Message}");
+            }
+            finally
+            {
+                var dueTimeSpan = isFast ? TimeSpan.FromSeconds(15) : TimeSpan.FromMinutes(intervalMins);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        private bool CheckQuick(DateTime workTime, int delayTime)
+        {
+            var diff = DateTime.Now - workTime;
+            return DateTime.Now > workTime && diff.TotalMinutes > delayTime;
+        }
+    }
+}

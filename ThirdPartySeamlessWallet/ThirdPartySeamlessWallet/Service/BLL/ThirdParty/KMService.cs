@@ -18,6 +18,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly SettledService _settledService;
         private readonly ILogger<KMService> _logger;
         private readonly KMConfig _siteConfig;
+        private readonly Dictionary<string, KMConfig> _siteConfigDic;
 
         public KMService(IServiceProvider provider)
         {
@@ -29,12 +30,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _settledService = provider.GetRequiredService<SettledService>();
             _logger = provider.GetService<ILogger<KMService>>();
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<KMConfig>(Tp.KM.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<KMConfig>(Tp.KM.ToString());
         }
 
         public bool CheckCredentials(string clientId, string clientSecret)
         {
             return string.Equals(clientId, _siteConfig.X_QM_ClientId) &&
                    string.Equals(clientSecret, _siteConfig.X_QM_ClientSecret);
+        }
+        public bool CheckCredentialsBySiteName(string clientId, string clientSecret, string siteName)
+        {
+            var config = _siteConfigDic[siteName];
+            return string.Equals(clientId, config.X_QM_ClientId) &&
+                   string.Equals(clientSecret, config.X_QM_ClientSecret);
         }
 
         public async Task<KMDebitResponse> Debit(KMDebitRequest request)
