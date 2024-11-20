@@ -1,26 +1,31 @@
 using System.Diagnostics;
 using Dapper;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 
 namespace ThirdPartySeamlessWallet.Service.DAL;
 
 public class SBSWPayloadLogService
 {
-    const string InsertDetailedPayloadSpName = "Service_SBSW_Payload_Ins_v2"; 
+    private const string InsertDetailedPayloadSpName = "Service_Bettrans_SBSW_Payload_Ins_v2";
 
-    const string UpdateDetailedResponseSpName = "Service_SBSW_Payload_Set_v2";
+    private const string UpdateDetailedResponseSpName = "Service_Bettrans_SBSW_Payload_Set_v2";
 
     private readonly PartitionService _partitionService;
     private readonly string _environmentName;
 
     private readonly PayloadLogConfig _config;
 
+    private readonly ILogger<SBSWPayloadLogService> _logger;
+
     public SBSWPayloadLogService(IServiceProvider provider)
     {
         _environmentName = provider.GetRequiredService<IWebHostEnvironment>()?.EnvironmentName ?? "Unspecified";
         _partitionService = provider.GetRequiredService<PartitionService>();
         _config = provider.GetService<IOptions<PayloadLogConfig>>().Value;
+        _logger = provider.GetRequiredService<ILogger<SBSWPayloadLogService>>();
     }
 
     public virtual void LogDetailedPayload(string content, PayloadLogMeta meta = null) {
@@ -51,7 +56,7 @@ public class SBSWPayloadLogService
             });
 
             _partitionService.Execute(
-                getReq.TimeStamp,
+                DateTime.Now,
                 InsertDetailedPayloadSpName,
                 logParams
             );
@@ -83,13 +88,14 @@ public class SBSWPayloadLogService
 
         try {
             _partitionService.Execute(
-                getReq.TimeStamp,
+                DateTime.Now, 
                 UpdateDetailedResponseSpName,
                 logParams
             );
 
-        } catch (Exception ex) {
-            SentrySdk.CaptureException(ex);
+        } catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
         }
     }
 }

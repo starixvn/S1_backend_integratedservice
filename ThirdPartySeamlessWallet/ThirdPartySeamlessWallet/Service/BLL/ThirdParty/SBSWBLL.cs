@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>> _requestHandler;
         private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
         private readonly Dictionary<string, SabaConfig> _siteSabaConfigs;
-
+        private readonly SBSWPayloadLogService _payloadLogService;
 
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
@@ -69,26 +69,40 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 .GetConfigValuesBySiteId<SabaConfig>(ThirdParty.ToString())
                 .Where(item => item.Key != 0 && item.Value.OperatorId != null)
                 .ToDictionary(item => item.Value.OperatorId, item => item.Value);
+            _payloadLogService = provider.GetRequiredService<SBSWPayloadLogService>();
         }
 
         public async Task<ReturnObj> SeamlessWallet(string merchant, SBSWTransType transType, string bodyText)
         {
+            ReturnObj response = default;
             try
             {
                 LogContext.PushProperty("Merchant", merchant);
                 LogContext.PushProperty("Action", transType.ToString());
                 _logger.LogInformation(bodyText);
 
-                return await _requestHandler[transType].Invoke(transType, merchant, bodyText);
+                response= await _requestHandler[transType].Invoke(transType, merchant, bodyText);
+                return response;
             }
             catch (SBSWException ex)
             {
-                return new ReturnObj(ex);
+                response= new ReturnObj(ex);
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
-                return new ReturnObj(ReturnCode.UnknownError);
+                response = new ReturnObj(ReturnCode.UnknownError);
+                return response;
+            }
+            finally
+            {
+                var logMeta = new PayloadLogMeta()
+                {
+                    Action = nameof(transType)
+                };
+                _payloadLogService.LogDetailedPayload($"{bodyText} - merchant: {merchant}", logMeta);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(bodyText, response, logMeta);
             }
         }
 

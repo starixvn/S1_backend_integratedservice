@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Service.DAL;
+﻿using Microsoft.Extensions.DependencyInjection;
+using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -59,7 +60,8 @@ namespace ThirdPartySeamlessWallet.Extensions
             const string PayloadLogConfigPath = "PayloadLog";
             return services
                 .Configure<PayloadLogConfig>(configuration.GetSection(PayloadLogConfigPath))
-                .AddSingleton<PayloadLogService>();
+                .AddSingleton<PayloadLogService>()
+                .AddSingleton<SBSWPayloadLogService>();
         }
     }
 }
