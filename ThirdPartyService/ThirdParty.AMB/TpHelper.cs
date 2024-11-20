@@ -12,11 +12,11 @@ namespace ThirdParty.AMB
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly AMBConfig _siteAMBConfig;
+        private readonly Dictionary<int, AMBConfig> _siteConfigDic;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteAMBConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AMBConfig>(TpEnum.AMB.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AMBConfig>(TpEnum.AMB.ToString());
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -26,13 +26,15 @@ namespace ThirdParty.AMB
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+
             var oApiResult = new ApiResult();
             if (tpCustInfo.TpCurrencyId == "THB")
             {
                 var gameTypes = new[] { TpGameType.AMB_Poker, TpGameType.AMB_RNG };
                 foreach (var gameType in gameTypes)
                 {
-                    var result = AMB_CreateMember(gameType, _siteAMBConfig, tpCustInfo.TpCurrencyId, tpCustInfo.TpUserName);
+                    var result = AMB_CreateMember(gameType, config, tpCustInfo.TpCurrencyId, tpCustInfo.TpUserName);
                     if (result.ErrorCode != ErrorCode.Success)
                     {
                         return result;
@@ -41,7 +43,7 @@ namespace ThirdParty.AMB
             }
             else
             {
-                var result = AMB_CreateMember(TpGameType.AMB_RNG, _siteAMBConfig, tpCustInfo.TpCurrencyId, tpCustInfo.TpUserName);
+                var result = AMB_CreateMember(TpGameType.AMB_RNG, config, tpCustInfo.TpCurrencyId, tpCustInfo.TpUserName);
                 if (result.ErrorCode != ErrorCode.Success)
                 {
                     return result;
@@ -54,8 +56,10 @@ namespace ThirdParty.AMB
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
+            ApiResult<UserBalance> oApiResult = new()
+            {
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
         }
 
@@ -66,13 +70,15 @@ namespace ThirdParty.AMB
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+
             var tpGameType = GetInputValue(inputs, "tpGameType");
             var gameId = GetInputValue(inputs, "gameId", true);
             var homeUrl = GetInputValue(inputs, "homeUrl", true);
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var enumGameType = (TpGameType)int.Parse(tpGameType);
             var tpCurrency = GetCurrency(tpCustInfo);
-            var amb = AMBFactory.Create(enumGameType, _siteAMBConfig, tpCurrency);
+            var amb = AMBFactory.Create(enumGameType, config, tpCurrency);
             var result = amb.LaunchGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, TpLangId, HttpPost);
 
             var oApiResult = new ApiResult();
@@ -98,6 +104,8 @@ namespace ThirdParty.AMB
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+
             var tpGameType = (TpGameType)getBetDetail.TpGameTypeOption.Type;
             var roundId = "";
             var gameId = "";
@@ -121,7 +129,7 @@ namespace ThirdParty.AMB
                     throw new ArgumentOutOfRangeException(nameof(tpGameType), tpGameType, null);
             }
 
-            var amb = AMBFactory.Create(tpGameType, _siteAMBConfig, tpCustInfo.TpCurrencyId);
+            var amb = AMBFactory.Create(tpGameType, config, tpCustInfo.TpCurrencyId);
             var gameReport = amb.GetRoundResult(tpCustInfo.TpUserName, roundId, gameId, product, type, HttpPost);
             if (gameReport.status.code != 0)
             {
@@ -206,7 +214,7 @@ namespace ThirdParty.AMB
             };
         }
 
-        private string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
+        private static string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
         {
             if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
             {
