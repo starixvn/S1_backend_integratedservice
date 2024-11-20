@@ -49,8 +49,8 @@ public class SabaMatchBLL
                     AwayIconUrl = r.TeamInfo.AwayIconUrl,
                     LastUpdateTime = DateTime.Now,
                     LastUpdateUser = "Service",
-                    HomeOdds = r.Markets.First().Selections.First(x => x.Key == "h").OddsPrice.DecimalPrice,
-                    AwayOdds = r.Markets.First().Selections.First(x => x.Key == "a").OddsPrice.DecimalPrice,
+                    HomeOdds = r.Markets.First().Selections.First(x => x.Key == "h").OddsPrice.MalayPrice,
+                    AwayOdds = r.Markets.First().Selections.First(x => x.Key == "a").OddsPrice.MalayPrice,
                     Handicap = r.Markets.First().Selections.First(x => x.Key == "h").Point,
                     CreateTime = DateTime.Now,
                     Status = EnableStatus
