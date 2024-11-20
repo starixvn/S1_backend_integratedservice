@@ -151,13 +151,14 @@ namespace ThirdPartySettleWorker.Workers
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
                         {
-                            // if (transType != SettlementType.UnSettled)
-                            // {
-                            //     _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(setSP, betRecordInfo);
-                            // }
+                            
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, wager.TransId);
+                                //TpWager有抓到注單回來並且有狀態才SetSettle
+                                if (transType != SettlementType.UnSettled)
+                                {
+                                    _ = _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, wager.TransId);
+                                }
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
                             });
                         }
