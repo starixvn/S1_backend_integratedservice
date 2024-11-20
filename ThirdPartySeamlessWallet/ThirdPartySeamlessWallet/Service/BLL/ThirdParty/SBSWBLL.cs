@@ -97,12 +97,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             finally
             {
-                var logMeta = new PayloadLogMeta()
-                {
-                    Action = nameof(transType)
-                };
-                _payloadLogService.LogDetailedPayload($"{bodyText} - merchant: {merchant}", logMeta);
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(bodyText, response, logMeta);
+                
             }
         }
 
