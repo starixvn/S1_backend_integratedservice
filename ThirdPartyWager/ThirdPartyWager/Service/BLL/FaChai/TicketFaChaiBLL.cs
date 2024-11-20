@@ -116,6 +116,7 @@ public class TicketFaChaiBLL : ITpRefundBLL
     {
         exec = true;
         var ticketTime = _dateTimeHelper.GetTimeByMinute(_timeRange, _timeZone, _timeFormat, startTime);
+        var cv = DateTimeOffset.UtcNow.AddMinutes(lockPeriod);
         var cvTime = DateTimeOffset.UtcNow.AddMinutes(lockPeriod).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
         if (ticketTime.endUnix > cvTime)
         {
