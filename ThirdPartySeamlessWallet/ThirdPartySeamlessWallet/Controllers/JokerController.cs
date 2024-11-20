@@ -27,7 +27,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly int _thisTp;
         private readonly string _tpName = Tp.Joker.ToString();
-        private readonly JokerConfig _siteConfig;
+        private readonly JokerConfig _defaultConfig;
+        private readonly Dictionary<string, JokerConfig> _siteNameConfigs;
 
         #endregion
 
@@ -46,7 +47,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             _jokerBll = provider.GetService<IJokerBLL>();
             _log2File = provider.GetService<Log2File>();
             _thisTp = (int)Tp.Joker;
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<JokerConfig>(_tpName);
+            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<JokerConfig>(_tpName);
+            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<JokerConfig>(_tpName);
         }
 
         #endregion
@@ -103,7 +105,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [Route("[controller]/authenticate-token")]
-        public AuthenticateTokenRep AuthenticateToken([FromForm] AuthenticateTokenReq authenticateTokenReq)
+        [Route("[controller]/{sitename}/authenticate-token")]
+        public AuthenticateTokenRep AuthenticateToken([FromForm] AuthenticateTokenReq authenticateTokenReq, string sitename = "")
         {
             var logName = $"{_tpName}_AuthenticateToken";
             _log2File.Info(JsonConvert.SerializeObject(authenticateTokenReq), logName);
@@ -115,7 +118,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var dicP = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(authenticateTokenReq)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            if (!CheckSign(authenticateTokenReq.appid, authenticateTokenReq.hash, dicP))
+            if (!CheckSign(authenticateTokenReq.appid, authenticateTokenReq.hash, dicP, sitename))
             {
                 authenticateTokenRep.Status = 5;
                 authenticateTokenRep.Message = "Invalid signature";
@@ -153,7 +156,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/balance")]
-        public Rep Balance([FromForm] BalanceReq balanceReq)
+        [Route("[controller]/{sitename}/balance")]
+        public Rep Balance([FromForm] BalanceReq balanceReq, string sitename = "")
         {
             var logName = $"{_tpName}_Balance";
             Rep rep = new Rep
@@ -163,7 +167,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var dicP = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(balanceReq)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            if (!CheckSign(balanceReq.appid, balanceReq.hash, dicP))
+            if (!CheckSign(balanceReq.appid, balanceReq.hash, dicP, sitename))
             {
                 rep.Status = 5;
                 rep.Message = "Invalid signature";
@@ -184,13 +188,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         #region Slot Action
 
         [Route("[controller]/bet")]
-        public Rep Bet([FromForm] Dictionary<string, string> betReqq)
+        [Route("[controller]/{sitename}/bet")]
+        public Rep Bet([FromForm] Dictionary<string, string> betReqq, string sitename = "")
         {
             var logName = $"{_tpName}_Bet";
             var gameType = (int)GameType.Joker_RNG;
             var betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(betReqq));
 
-            if (!CheckSign(betReq.appid, betReq.hash, betReqq))
+            if (!CheckSign(betReq.appid, betReq.hash, betReqq, sitename))
             {
                 return new Rep
                 {
@@ -271,13 +276,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/settle-bet")]
-        public Rep SettleBet([FromForm] Dictionary<string, string> settleBetReqq)
+        [Route("[controller]/{sitename}/settle-bet")]
+        public Rep SettleBet([FromForm] Dictionary<string, string> settleBetReqq, string sitename = "")
         {
             var logName = $"{_tpName}_SettleBet";
             var gameType = (int)GameType.Joker_RNG;
             var settleBetReq = JsonConvert.DeserializeObject<SettleBetReq>(JsonConvert.SerializeObject(settleBetReqq));
 
-            if (!CheckSign(settleBetReq.appid, settleBetReq.hash, settleBetReqq))
+            if (!CheckSign(settleBetReq.appid, settleBetReq.hash, settleBetReqq, sitename))
             {
                 return new Rep
                 {
@@ -349,14 +355,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/cancel-bet")]
-        public Rep CancelBet([FromForm] Dictionary<string, string> cancelBetReqq)
+        [Route("[controller]/{sitename}/cancel-bet")]
+        public Rep CancelBet([FromForm] Dictionary<string, string> cancelBetReqq, string sitename = "")
         {
             var logName = $"{_tpName}_CancelBet";
             var gameType = (int)GameType.Joker_RNG;
             _log2File.Info(JsonConvert.SerializeObject(cancelBetReqq), logName);
 
             var cancelBetReq = JsonConvert.DeserializeObject<CancelBetReq>(JsonConvert.SerializeObject(cancelBetReqq));
-            if (!CheckSign(cancelBetReq.appid, cancelBetReq.hash, cancelBetReqq))
+            if (!CheckSign(cancelBetReq.appid, cancelBetReq.hash, cancelBetReqq, sitename))
             {
                 return new Rep
                 {
@@ -409,7 +416,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         #region Bonus And Jackpot Action
 
         [Route("[controller]/bonus-win")]
-        public Rep Bonus([FromForm] Dictionary<string, string> bonusReqq)
+        [Route("[controller]/{sitename}/bonus-win")]
+        public Rep Bonus([FromForm] Dictionary<string, string> bonusReqq, string sitename = "")
         {
             var logName = $"{_tpName}_Bonus";
             var gameType = (int)GameType.Joker_RNG;
@@ -431,7 +439,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return rep;
             }
 
-            if (!CheckSign(settleBetReq.appid, settleBetReq.hash, bonusReqq))
+            if (!CheckSign(settleBetReq.appid, settleBetReq.hash, bonusReqq, sitename))
             {
                 return new Rep
                 {
@@ -479,7 +487,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/jackpot-win")]
-        public Rep Jackpot([FromForm] Dictionary<string, string> jackpotReqq)
+        [Route("[controller]/{sitename}/jackpot-win")]
+        public Rep Jackpot([FromForm] Dictionary<string, string> jackpotReqq, string sitename = "")
         {
             var logName = $"{_tpName}_Jackpot";
             var gameType = (int)GameType.Joker_RNG;
@@ -501,7 +510,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return rep;
             }
 
-            if (!CheckSign(settleBetReq.appid, settleBetReq.hash, jackpotReqq))
+            if (!CheckSign(settleBetReq.appid, settleBetReq.hash, jackpotReqq, sitename))
             {
                 return new Rep
                 {
@@ -553,21 +562,24 @@ namespace ThirdPartySeamlessWallet.Controllers
         #region Fish Action
 
         [Route("[controller]/transaction")]
-        public Rep Transaction([FromForm] Dictionary<string, string> parameter)
+        [Route("[controller]/{sitename}/transaction")]
+        public Rep Transaction([FromForm] Dictionary<string, string> parameter, string sitename = "")
         {
-            return FishBet(JokerFishTransType.Transaction, parameter);
+            return FishBet(JokerFishTransType.Transaction, parameter, sitename);
         }
 
         [Route("[controller]/withdraw")]
-        public Rep Withdraw([FromForm] Dictionary<string, string> parameter)
+        [Route("[controller]/{sitename}/withdraw")]
+        public Rep Withdraw([FromForm] Dictionary<string, string> parameter, string sitename = "")
         {
-            return FishBet(JokerFishTransType.Withdraw, parameter);
+            return FishBet(JokerFishTransType.Withdraw, parameter, sitename);
         }
 
         [Route("[controller]/deposit")]
-        public Rep Deposit([FromForm] Dictionary<string, string> parameter)
+        [Route("[controller]/{sitename}/deposit")]
+        public Rep Deposit([FromForm] Dictionary<string, string> parameter, string sitename = "")
         {
-            return FishBet(JokerFishTransType.Deposit, parameter);
+            return FishBet(JokerFishTransType.Deposit, parameter, sitename);
         }
 
         #endregion
@@ -579,11 +591,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("[controller]/join-tournament")]
-        public async Task<JokerResponse> JoinTournamentAsync([FromForm] Dictionary<string, string> parameter)
+        [Route("[controller]/{sitename}/join-tournament")]
+        public async Task<JokerResponse> JoinTournamentAsync([FromForm] Dictionary<string, string> parameter, string sitename = "")
         {
             var request = JsonConvert.DeserializeObject<JoinAndWinRequest>(JsonConvert.SerializeObject(parameter));
 
-            if (!CheckSign(request.appid, request.hash, parameter))
+            if (!CheckSign(request.appid, request.hash, parameter, sitename))
             {
                 return new JokerResponse
                 {
@@ -600,11 +613,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("[controller]/win-tournament")]
-        public async Task<JokerResponse> WinTournamentAsync([FromForm] Dictionary<string, string> parameter)
+        [Route("[controller]{sitename}/win-tournament")]
+        public async Task<JokerResponse> WinTournamentAsync([FromForm] Dictionary<string, string> parameter, string sitename = "")
         {
             var request = JsonConvert.DeserializeObject<JoinAndWinRequest>(JsonConvert.SerializeObject(parameter));
 
-            if (!CheckSign(request.appid, request.hash, parameter))
+            if (!CheckSign(request.appid, request.hash, parameter, sitename))
             {
                 return new JokerResponse
                 {
@@ -621,11 +635,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("[controller]/cancel-join-tournament")]
-        public async Task<JokerResponse> CancelTournamentAsync([FromForm] Dictionary<string, string> parameter)
+        [Route("[controller]/{sitename}/cancel-join-tournament")]
+        public async Task<JokerResponse> CancelTournamentAsync([FromForm] Dictionary<string, string> parameter, string sitename = "")
         {
             var request = JsonConvert.DeserializeObject<CancelRequest>(JsonConvert.SerializeObject(parameter));
 
-            if (!CheckSign(request.appid, request.hash, parameter))
+            if (!CheckSign(request.appid, request.hash, parameter, sitename))
             {
                 return new JokerResponse
                 {
@@ -659,7 +674,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return sBuilder.ToString();
         }
 
-        private Rep FishBet(JokerFishTransType transType, Dictionary<string, string> parameter)
+        private Rep FishBet(JokerFishTransType transType, Dictionary<string, string> parameter, string sitename)
         {
             try
             {
@@ -691,7 +706,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     parameter["endbalance"] = request.endbalance.ToString("0.00");
                 }
 
-                if (!CheckSign(request.appid, request.hash, parameter))
+                if (!CheckSign(request.appid, request.hash, parameter, sitename))
                 {
                     return new Rep
                     {
@@ -769,17 +784,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        private bool CheckSign(string appid, string hash, Dictionary<string, string> data)
+        private bool CheckSign(string appid, string hash, Dictionary<string, string> data,string siteName)
         {
-            var config = _siteConfig;
+            var config = GetSiteConfig(siteName);
             var appIdInfo = new Dictionary<string, string>();
-            foreach (var item in _siteConfig.CurrencyData)
+            foreach (var item in config.CurrencyData)
             {
                 var currency = item.Key;
-                appIdInfo.Add(_siteConfig.CurrencyData[item.Key].AppID, _siteConfig.CurrencyData[item.Key].Secret);
-                if (_siteConfig.CurrencyData[item.Key].AppID != _siteConfig.CurrencyData[item.Key].AppID_Test)
+                appIdInfo.Add(config.CurrencyData[item.Key].AppID, config.CurrencyData[item.Key].Secret);
+                if (config.CurrencyData[item.Key].AppID != config.CurrencyData[item.Key].AppID_Test)
                 {
-                    appIdInfo.Add(_siteConfig.CurrencyData[item.Key].AppID_Test, _siteConfig.CurrencyData[item.Key].Secret_Test);
+                    appIdInfo.Add(config.CurrencyData[item.Key].AppID_Test, config.CurrencyData[item.Key].Secret_Test);
                 }
             }
             var secret = appIdInfo.ContainsKey(appid) ? appIdInfo[appid] : "";
@@ -809,6 +824,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
+        private JokerConfig GetSiteConfig(string siteName)
+        {
+            if (siteName == "")
+            {
+                return _defaultConfig;
+            }
+
+            return _siteNameConfigs.TryGetValue(siteName, out var result) ? result : _defaultConfig;
+        }
         #endregion
     }
 }
