@@ -34,7 +34,6 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogWarning($"Start {_tpName} ExecuteAsync Step 1");
             _timer = new Timer(DoEdaySettle, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -49,8 +48,6 @@ namespace ThirdPartySettleWorker.Workers
         {
             LogContext.PushProperty("TP", _tpName);
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-
-            _logger.LogWarning($"DoEdaySettle {_tpName} Step 2");
             
             var forContinue = false;
             var isError = false;
@@ -77,8 +74,7 @@ namespace ThirdPartySettleWorker.Workers
 
                 foreach (var wager in tpUnsettleList)
                 {
-
-                    _logger.LogWarning($"DoEdaySettle {wager.TransId} Step 4");
+                    
                     var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleDataEday>(getSP, wager, DataBase.Main);
                     var wagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleDataEday>(getWager,
                         new { TransId = wager.TransId }, DataBase.Wager).FirstOrDefault();
@@ -115,7 +111,6 @@ namespace ThirdPartySettleWorker.Workers
                                 _ => SettlementType.SettledForInvalid
                             };
                         }
-                        _logger.LogWarning($"DoEdaySettle {wager.TransId} Step 5");
                         
                         if (transType != SettlementType.UnSettled)
                         {
@@ -152,7 +147,6 @@ namespace ThirdPartySettleWorker.Workers
                                 GameID = unsettled.GameId,
                             };
                         }
-                        _logger.LogWarning($"DoEdaySettle {wager.TransId} Step 6");
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
@@ -163,7 +157,7 @@ namespace ThirdPartySettleWorker.Workers
                             // }
                             Task.Run(() =>
                             {
-                                _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(setSP, betRecordInfo);
+                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, wager.TransId);
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
                             });
                         }
