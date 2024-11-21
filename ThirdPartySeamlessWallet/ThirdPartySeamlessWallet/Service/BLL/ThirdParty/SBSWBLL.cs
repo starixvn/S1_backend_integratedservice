@@ -99,7 +99,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var logMeta = new PayloadLogMeta()
                 {
-                    Action = nameof(transType)
+                    Action = transType.ToString()
                 };
                 var seq = Guid.NewGuid().ToString();
                 _payloadLogService.LogDetailedPayload(seq, bodyText, logMeta);
