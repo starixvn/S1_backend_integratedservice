@@ -106,6 +106,8 @@ namespace ThirdParty.KY
                     oApiResult.ErrorCode = ErrorCode.Fail;
                     oApiResult.RawMessage = errorMessage.ToString();
                     oApiResult.RawErrorCode = json.d.code.ToString();
+                    //TODO: test key logs
+                    oApiResult.Message = $"Agent: {Agent}, Md5key: {Md5key}, DesKey: {DesKey}, currentAt: {currentAt}, timestamp: {timestamp}, timecnv: {timecnv}";
                 }
             }
             return oApiResult;
