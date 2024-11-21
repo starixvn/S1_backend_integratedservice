@@ -131,35 +131,34 @@ namespace ThirdPartyWager.Service.BLL
                         // 15 seconds interval between each call
                         Thread.Sleep(17000);
                     }
-                }
 
-                if (compare)
-                {
-                    bool check = await CompareSummaryAsync(wagerTime, gameType, cp);
-                    if (check)
+                    if (compare)
                     {
-                        msg = "MATCH";
-                        _logger.LogInformation($"{workerName} {msg}");
-                        return true;
-                    }
-                }
-
-                foreach (var wagerItem in wagerData)
-                {
-                    var groups = wagerItem.item.GroupBy(i => (i.round_id));
-
-                    // insert wager to db
-                    foreach (var group in groups)
-                    {
-                        try
+                        bool check = await CompareSummaryAsync(site.SiteId,wagerTime, gameType, cp);
+                        if (check)
                         {
-                            var result = _wagerGPIService.InsertWager(group, gameType);
+                            msg = "MATCH";
+                            _logger.LogInformation($"{workerName} {msg}");
                         }
-                        catch (Exception ex)
+                    }
+
+                    foreach (var wagerItem in wagerData)
+                    {
+                        var groups = wagerItem.item.GroupBy(i => (i.round_id));
+
+                        // insert wager to db
+                        foreach (var group in groups)
                         {
-                            msg = $"INSERT_WAGER(WAGERID: {group.Key} )";
-                            _logger.LogError(ex, $"{workerName} {msg}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
-                            return false;
+                            try
+                            {
+                                var result = _wagerGPIService.InsertWager(group, gameType);
+                            }
+                            catch (Exception ex)
+                            {
+                                msg = $"INSERT_WAGER(WAGERID: {group.Key} )";
+                                _logger.LogError(ex, $"{workerName} {msg}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
+                                return false;
+                            }
                         }
                     }
                 }
@@ -183,11 +182,11 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task<bool> CompareSummaryAsync(TimeCast wagerTime, int gameType, CompareParam cp)
+        private async Task<bool> CompareSummaryAsync(int siteId,TimeCast wagerTime, int gameType, CompareParam cp)
         {
             // table summary
-            var spName = (gameType == (int)GameType.GPI_RNG) ? "Finance_TpWagerRng_GPI_Summary_Get" : "Finance_TpWagerLT_GPI_Summary_Get";
-            var summary = await _commonBLL.GetWagerSummary(spName, wagerTime.startUnix, wagerTime.endUnix - 1);
+            var spName = (gameType == (int)GameType.GPI_RNG) ? "Service_TpWagerRng_GPI_Total_Get" : "Service_TpWagerLT_GPI_Total_Get";
+            var summary = await _commonBLL.GetWagerSummaryBySiteId(spName, wagerTime.startUnix, wagerTime.endUnix - 1,siteId);
             var summaryStake = summary.Sum(x => x.Stake);
             var summaryWinlose = summary.Sum(x => x.WinlostAmount);
 
