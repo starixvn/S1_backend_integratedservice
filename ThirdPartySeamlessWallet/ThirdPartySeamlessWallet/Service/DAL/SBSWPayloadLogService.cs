@@ -45,8 +45,8 @@ public class SBSWPayloadLogService
                 Payload= content,
                 TimeStamp=DateTime.UtcNow,
                 Action = action,
-                EnvironmentName= environment,
-                GameType= string.Empty
+                Environment= environment,
+                GameType= "Unknown"
             });
 
             _partitionService.Execute(
