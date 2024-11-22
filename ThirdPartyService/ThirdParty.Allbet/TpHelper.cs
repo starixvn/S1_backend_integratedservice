@@ -2,6 +2,8 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -15,9 +17,11 @@ namespace ThirdParty.Allbet
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, AllBetConfig> _allSiteConfig;
+        private readonly ILogger<TpHelper> _logger;
 
         public TpHelper(IServiceProvider provider)
         {
+            _logger = provider.GetRequiredService<ILogger<TpHelper>>();
             _allSiteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AllBetConfig>(TpEnum.Allbet.ToString());
         }
 
@@ -65,8 +69,10 @@ namespace ThirdParty.Allbet
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var _siteAllBetConfig = _allSiteConfig[tpCustInfo.SiteId];
+            _logger.LogError($"_siteAllBetConfig={JsonConvert.SerializeObject(_siteAllBetConfig)}");
             var apiUrl = _siteAllBetConfig.ApiUrl;
-            var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == tpCustInfo.TpCurrencyId).Agent; 
+            var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == tpCustInfo.TpCurrencyId).Agent;
+            _logger.LogError($"agent={JsonConvert.SerializeObject(_siteAllBetConfig)}");
             var path = "CheckOrCreate";
             tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{_siteAllBetConfig.Suffix}";
             var parameters = ToJson(new
@@ -75,7 +81,8 @@ namespace ThirdParty.Allbet
                 player = tpCustInfo.TpUserName
             });
             var header = GetAuthData(inputs, path, parameters, _siteAllBetConfig, out var contentType);
-
+            _logger.LogError($"header={JsonConvert.SerializeObject(header)}");
+            _logger.LogError($"apiUrl={apiUrl}/{path}");
             var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
 
             var oApiResult = new ApiResult();
