@@ -51,7 +51,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.UuSlots_RNG, WalletKind.BonusWallet },
             { (int)GameType.Live22_RNG, WalletKind.BonusWallet },
             { (int)GameType.FastSpin_RNG, WalletKind.BonusWallet },
-            { (int)GameType.JILI_RNG, WalletKind.BalanceWallet },
+            { (int)GameType.JILI_RNG, WalletKind.BonusWallet },
             { (int)GameType.Allbet_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PP_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PP_RNG, WalletKind.BonusWallet },
