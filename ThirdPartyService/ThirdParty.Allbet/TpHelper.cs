@@ -68,6 +68,7 @@ namespace ThirdParty.Allbet
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            _logger.LogError($"_allSiteConfig={JsonConvert.SerializeObject(_allSiteConfig)}");
             var _siteAllBetConfig = _allSiteConfig[tpCustInfo.SiteId];
             _logger.LogError($"_siteAllBetConfig={JsonConvert.SerializeObject(_siteAllBetConfig)}");
             var apiUrl = _siteAllBetConfig.ApiUrl;
