@@ -110,7 +110,8 @@
         Live22_RNG = 121,
         FastSpin_RNG = 122,
         DragonGaming_RNG = 123,
-        KY_Poker = 126
+        KY_Poker = 126,
+        KY_Poker_None = 127,
     }
 
 }
