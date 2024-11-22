@@ -60,6 +60,12 @@ namespace ThirdPartySettleWorker.Workers
             return Task.CompletedTask;
         }
 
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            timer?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
+        }
+
         private void DoSettleKY(object state)
         {
             LogContext.PushProperty("TP", _tpName);
