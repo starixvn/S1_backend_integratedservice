@@ -2229,6 +2229,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     token = bettransLTEday.FirstOrDefault().token,
                     //結算時沒有billId,目前想法是RoundCode + playerId 當作結算billId.
                     billId = settleBillId,
+                    transId = settleBillId,
                     player = settleData_Eday.player,
                     //amount 為 RoundUpdate 的 betTotal
                     amount = settleData_Eday.bet,

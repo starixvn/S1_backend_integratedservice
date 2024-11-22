@@ -166,6 +166,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class BettransLTEdayPayoutRequest : EdayBetRequest
     {
         public new string billId { get; set; }
+        public string transId { get; set; }
         public decimal betTotal { get; set; }
         public decimal winTotal { get; set; }
         public int eventId { get; set; }
