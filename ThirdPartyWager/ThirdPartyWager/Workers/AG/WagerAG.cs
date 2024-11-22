@@ -40,10 +40,10 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             var failed = 0;
 
-            if (!_env.IsProduction())
-            {
-                return;
-            }
+            //if (!_env.IsProduction())
+            //{
+            //    return;
+            //}
 
             try
             {
