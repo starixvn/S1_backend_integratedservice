@@ -2336,7 +2336,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<BettingDataRNG_PG2> IsExist_PG2(bool checkEndRound, BettingDataRNG_PG2 data)
         {
             var query = new { CheckEndRound = checkEndRound, refId = data.refId, roundId = data.roundId, FromAPIType = data.FromAPIType };
-            return _mainDbClient.Query<BettingDataRNG_PG2>("Service_BettransRng_PG2_Check", parameters:query);
+            return _mainDbClient.Query<BettingDataRNG_PG2>("Service_BettransRng_PG2_Check", parameters: query);
         }
 
         public bool InsertBettransRng_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
