@@ -56,7 +56,6 @@ namespace ThirdPartySettleWorker.Workers
             var bettransSet = "Service_BettransLC_WE_Settle_Set";
             string logName = $"Settle_WE";
 
-
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
@@ -104,7 +103,7 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = gameId,
                         };
 
-                        var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo);
                         if (result == 1)
                         {
                             SetSettleFlag(bettransSet, gametype, betRecordInfo);

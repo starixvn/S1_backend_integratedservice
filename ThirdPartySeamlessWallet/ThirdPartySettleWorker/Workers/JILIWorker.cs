@@ -112,7 +112,7 @@ namespace ThirdPartySettleWorker.Workers
                         var tt = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.TransTime).DateTime.ToString("yyyyMM");
                         var st = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.ToString("yyyyMM");
 
-                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo);
                         if (result == 1)
                         {
                             var ticketStatus = (int)betRecordInfo.TicketStatus;

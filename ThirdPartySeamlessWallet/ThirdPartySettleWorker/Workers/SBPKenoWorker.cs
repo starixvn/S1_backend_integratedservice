@@ -103,7 +103,7 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = gameId,
                         };
 
-                        var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo);
                         if (result == 1)
                         {
                             SetSettleFlag(bettransSet, gameType, betRecordInfo);

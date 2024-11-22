@@ -31,6 +31,7 @@ namespace ThirdPartySettleWorker.Workers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _logger = provider.GetRequiredService<ILogger<FaChaiWorker>>();
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(Settle, GameType.FaChai_RNG, TimeSpan.Zero, TimeSpan.Zero);
@@ -75,7 +76,6 @@ namespace ThirdPartySettleWorker.Workers
                         //if (wagerData == null)
                         //    continue;
 
-
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, betData.FirstOrDefault()?.MemberAccount);
                         //var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
@@ -112,7 +112,7 @@ namespace ThirdPartySettleWorker.Workers
                             TicketStatus = winlostAmount > 0 ? TicketStatus.Win : winlostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
                         };
 
-                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo);
                         if (result == 1)
                         {
                             Task.Run(() =>

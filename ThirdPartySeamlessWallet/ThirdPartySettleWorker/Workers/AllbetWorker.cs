@@ -12,7 +12,7 @@ namespace ThirdPartySettleWorker.Workers
     public class AllbetWorker : BackgroundService, ISettleWorker
     {
         public Tp Tp { get => Tp.Allbet; }
-       
+
         private Timer _timer;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
@@ -103,7 +103,7 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = gameId,
                         };
 
-                        var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo);
                         if (result == 1)
                         {
                             SetSettleFlag(bettransSet, gametype, betRecordInfo);

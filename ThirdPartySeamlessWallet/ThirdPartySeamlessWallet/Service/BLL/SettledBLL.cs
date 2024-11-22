@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 
 using ThirdPartySeamlessWallet.Service.DAL;
-using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
@@ -21,7 +20,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
-        public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, TpCategory tpCategory, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
+        public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, TpCategory tpCategory = 0, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
         {
             var result = settledService.Settle(tpCustInfo, betRecordInfo, getTpSeamlessBonusType);
             return result;
@@ -67,9 +66,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
         public int PayoutLC_SA(PayoutDataLC_SA payoutDataLC_SA, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.SA, payoutDataLC_SA.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.SA, tpCustInfo.CurrencyId);
 
@@ -93,7 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_BettransLC_SA(Gameid, Username);
         }
 
-        #endregion
+        #endregion SA
 
         #region DG
 
@@ -114,9 +113,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
         public int PayoutLC_DG(BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.DG, bettingDataLC_DG.Username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.DG, tpCustInfo.CurrencyId);
 
@@ -134,10 +133,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
         public IEnumerable<BettingDataLC_DG> GetUnsettledListLC_DG()
         {
             return settledService.GetUnsettledListLC_DG();
         }
+
         public int Get_TpWagerDG_Settle(string TransId, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
         {
             return settledService.Get_TpWagerDG_Settle(TransId, out stake, out validBet, out winLostAmount, out settleTime);
@@ -152,12 +153,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.SetSettleFlag_DG(TransId);
         }
+
         public int SetSettleFlag_TpWagerDG(string transId)
         {
             return settledService.SetSettleFlag_TpWagerDG(transId);
         }
 
-        #endregion
+        #endregion DG
 
         #region AG
 
@@ -182,10 +184,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
         public IEnumerable<DataLC_AG> GetUnsettledListLC_AG()
         {
             return settledService.GetUnsettledListLC_AG();
         }
+
         public int RefundLC_AG(BettingDataLC_AG_Refund bettingDataLC_AG_Refund, out decimal afterAmount)
         {
             string username = bettingDataLC_AG_Refund.Playname.Substring(bettingDataLC_AG_Refund.AgentCode.Length);
@@ -206,22 +210,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
         public IEnumerable<SettleDataLC_AG> Get_PayoutList_AG(string transactionID)
         {
             return settledService.Get_PayoutList_AG(transactionID);
         }
+
         public IEnumerable<BettingDataLC_AG> Get_BetList_AG(string transactionIDs)
         {
             return settledService.Get_BetList_AG(transactionIDs);
         }
+
         public int SetSettleFlag_AG(string transactionID, string transactionIDs)
         {
             return settledService.SetSettleFlag_AG(transactionID, transactionIDs);
         }
+
         public int SetSettleFlag_TpWagerAG(string billNoList)
         {
             return settledService.SetSettleFlag_TpWagerAG(billNoList);
         }
+
         public int Get_TpWagerAG_Settle(string billNoList, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
         {
             var result = settledService.Get_TpWagerAG_Settle(billNoList, out stake, out validBet, out winLostAmount, out settleTime);
@@ -233,13 +242,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_TpWagerAG(TransId);
         }
 
-        #endregion
+        #endregion AG
 
         #region GPI
 
         public int PayoutRNG_GPI(SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.GPI, settledDataRNG_GPI.cust_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.GPI, tpCustInfo.CurrencyId);
 
@@ -261,18 +269,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        
+
         public IEnumerable<SettleDataRNG_GPI> GetUnsettledListRNG_GPI(string transId)
         {
             return settledService.GetUnsettledListRNG_GPI(transId);
         }
-        
+
         public int SetSettleFlagRNG_GPI(string roundId, string custId, int SettleFlag)
         {
             return settledService.SetSettleFlagRNG_GPI(roundId, custId, SettleFlag);
         }
 
-        #endregion
+        #endregion GPI
 
         #region YL
 
@@ -317,9 +325,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
         public int RefundFish_YL(RefundDataFish_YL refundDataFish_YL, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YL, refundDataFish_YL.userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YL, tpCustInfo.CurrencyId);
 
@@ -343,14 +351,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlagFish_YL(TransId);
         }
 
-
-        #endregion
+        #endregion YL
 
         #region Joker
 
         public int SettledRNG_Joker(BettingDataRNG_Joker bettingDataRNG_Joker, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataRNG_Joker.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
 
@@ -386,7 +392,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int DepositFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
 
@@ -430,7 +435,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        #endregion
+        #endregion Joker
 
         #region YGG
 
@@ -506,7 +511,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        #endregion
+        #endregion YGG
 
         #region PP
 
@@ -528,6 +533,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
         public int BonusWinRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, bettingDataRNG_PP.userId);
@@ -542,6 +548,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
         public int CancelBetRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, bettingDataRNG_PP.userId);
@@ -582,7 +589,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PromoBonus_PP(PromoBonus promoBonus, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, promoBonus.UserId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
 
@@ -602,7 +608,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        #endregion
+        #endregion PP
 
         #region SG
 
@@ -628,7 +634,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PayoutRNG_SG(BettingDataRNG_SG bettingDataRNG_SG, int gameType, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.SG, bettingDataRNG_SG.acctId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.SG, tpCustInfo.CurrencyId);
 
@@ -653,13 +658,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_TpWagerRng_SG(TransId);
         }
 
-        #endregion
+        #endregion SG
 
         #region PG
 
         public int SettledRNG_PG(BettingDataRNG_PG bettingDataRNG_PG, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PG, bettingDataRNG_PG.PlayerName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
 
@@ -681,7 +685,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int RewardRNG_PG(AdjustmentDataRNG_PG adjustmentDataRNG_PG, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PG, adjustmentDataRNG_PG.PlayerName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
 
@@ -776,7 +779,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        #endregion
+        #endregion PG
 
         #region Sexy
 
@@ -792,12 +795,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
         public int SettledLC_Sexy(BettingDataLC_Sexy_Settle bettingDataLC_Sexy_Settle, out decimal afterAmount)
         {
-
             foreach (var txn in bettingDataLC_Sexy_Settle.Txns)
             {
-
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, txn.UserId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
                 txn.tpCustInfo = tpCustInfo;
@@ -818,10 +820,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int UnsettledLC_Sexy(Unsettle_VoidRound bettingDataLC_Sexy_Unsettle, out decimal afterAmount)
         {
-
             foreach (var txn in bettingDataLC_Sexy_Unsettle.txns)
             {
-
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, txn.userId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
                 txn.tpCustInfo = tpCustInfo;
@@ -831,12 +831,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
         public int VoidRoundLC_Sexy(Unsettle_VoidRound voidRound, out decimal afterAmount)
         {
-
             foreach (var txn in voidRound.txns)
             {
-
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, txn.userId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
                 txn.tpCustInfo = tpCustInfo;
@@ -849,10 +848,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int VoidTxnLC_Sexy(VoidTxn voidTxn, out decimal afterAmount)
         {
-
             foreach (var txn in voidTxn.txns)
             {
-
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, txn.userId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
                 txn.tpCustInfo = tpCustInfo;
@@ -862,10 +859,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
         public int PrizeLC_Sexy(IEnumerable<Sexy_Treat> sexy_Treats, out decimal afterAmount)
         {
             var sexy_Treat = sexy_Treats.FirstOrDefault();
-
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, sexy_Treat.userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
@@ -885,7 +882,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        #endregion
+
+        #endregion Sexy
 
         #region Sexy (AWC)
 
@@ -1035,7 +1033,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.SetSettleFlag_BettransLC_AWC_Sexy(TransId);
         }
-        #endregion
+
+        #endregion Sexy (AWC)
 
         #region EBet
 
@@ -1216,7 +1215,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return data;
         }
 
-        #endregion
+        #endregion EBet
 
         #region CQ9
 
@@ -1465,7 +1464,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        
+
         public SettleDataRNG_CQ9 GetUnsettledListRNG_CQ9(string transId)
         {
             return settledService.GetUnsettledListRNG_CQ9(transId);
@@ -1485,7 +1484,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.SetSettleFlagFish_CQ9(roundid, SettleFlag);
         }
-        
+
         public SettleDataRNG_CQ9 GetUnsettledListWCC_CQ9(string transId)
         {
             return settledService.GetUnsettledListWCC_CQ9(transId);
@@ -1519,8 +1518,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return data;
         }
 
-
-        #endregion
+        #endregion CQ9
 
         #region WM
 
@@ -1603,7 +1601,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_BettransLC_WM(TransId);
         }
 
-        #endregion
+        #endregion WM
 
         #region Mega
 
@@ -1617,7 +1615,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_TpReportMega(TransId);
         }
 
-        #endregion
+        #endregion Mega
 
         #region Iconic
 
@@ -1693,7 +1691,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        #endregion
+        #endregion Iconic
 
         #region N2Live
 
@@ -1841,7 +1839,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int SetSettleFlag_BettransSmartLC_N2Live(string TransId, int SettleFlag)
         {
-            return settledService.SetSettleFlag_BettransSmartLC_N2Live(TransId,SettleFlag);
+            return settledService.SetSettleFlag_BettransSmartLC_N2Live(TransId, SettleFlag);
         }
 
         public int SetSettleFlag_TpSmartWagerLC_N2Live(string TransId)
@@ -1849,7 +1847,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_TpSmartWagerLC_N2Live(TransId);
         }
 
-        #endregion
+        #endregion N2Live
 
         #region PT
 
@@ -1873,9 +1871,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_TpWagerLC_PT(TransId);
         }
 
-        #endregion
+        #endregion PT
 
         #region MG
+
         public IEnumerable<SettleData> GetUnsettledList_MG(string spName)
         {
             return settledService.GetUnsettledList_MG(spName);
@@ -1891,7 +1890,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_BettransLC_MG(spName, transId, transTime);
         }
 
-        #endregion
+        #endregion MG
 
         #region JILI
 
@@ -2002,7 +2001,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.SetTransactionCheckSettleFlag_JILI(YYYYMM, TransId, SettleFlag);
         }
-        #endregion
+
+        #endregion JILI
 
         #region EVO
 
@@ -2099,8 +2099,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 TicketStatus = TicketStatus.Related,
                 SettleFlag = SettleFlag.EndGame
             };
-
-
         }
 
         public IEnumerable<SettleData> GetUnsettledList_EVO()
@@ -2112,7 +2110,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetUnsettled_EVO(transId);
         }
-        
+
         public int SetSettleFlag_EVO(string TransId)
         {
             return settledService.SetSettleFlag_EVO(TransId);
@@ -2137,14 +2135,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetUnsettledReward_EVO(transId);
         }
-        
+
         public int SetRewardSettleFlag_EVO(int sq)
         {
             return settledService.SetRewardSettleFlag_EVO(sq);
         }
 
-
-        #endregion
+        #endregion EVO
 
         #region Netent
 
@@ -2209,7 +2206,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_Netent(TransId);
         }
 
-        #endregion
+        #endregion Netent
 
         #region RedTiger
 
@@ -2274,7 +2271,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_RedTiger(TransId);
         }
 
-        #endregion
+        #endregion RedTiger
 
         #region NLC
 
@@ -2329,9 +2326,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        #endregion
+        #endregion NLC
 
         #region AP
+
         public int CancelBetRNG_AP(CancelBetDataRNG_AP cancelBetDataRNG_AP, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, cancelBetDataRNG_AP.playerid);
@@ -2354,7 +2352,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int SettledRNG_AP(BettingDataRNG_AP bettingDataRNG_AP, string TpUserName, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, TpUserName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
 
@@ -2377,7 +2374,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int RewardRNG_AP(CPSettleDataRNG_AP rewardDataRNG_AP, string TpUserName, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, TpUserName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
 
@@ -2471,8 +2467,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_BettransRng_AP_Mini(spName, transId, settleTime);
         }
 
-
-        #endregion
+        #endregion AP
 
         #region YGG
 
@@ -2481,7 +2476,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_TpWager_YGG(transId);
         }
 
-        #endregion
+        #endregion YGG
 
         #region Kiss918
 
@@ -2489,7 +2484,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetSettle_TpWager_Kiss918(playSessionID, referenceID);
         }
-        #endregion
+
+        #endregion Kiss918
 
         #region SimplePlay
 
@@ -2533,9 +2529,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        #endregion
+        #endregion SimplePlay
 
         #region Skywind
+
         public int Settled_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, string TpUserName, int gameType, out decimal afterAmount)
         {
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
@@ -2564,7 +2561,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
 
-
             var result = settledService.CancelBet_Skywind(tpCustInfo, cancelBetData_Skywind, gameType, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
@@ -2580,7 +2576,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_TpWager_Skywind(transId);
         }
 
-        #endregion
+        #endregion Skywind
 
         #region Yeebet
 
@@ -2589,7 +2585,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_TpWagerLC_Yeebet(serialnumber);
         }
 
-        #endregion
+        #endregion Yeebet
 
         #region BG
 
@@ -2598,7 +2594,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_TpWagerLC_BG(orderId);
         }
 
-        #endregion
+        #endregion BG
 
         #region SBSW
 
@@ -2612,7 +2608,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSBSWUnsettleList(TpId, TransId, GameType);
         }
 
-        #endregion
+        #endregion SBSW
 
         #region PlayTech
 
@@ -2738,7 +2734,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        #endregion
+        #endregion PlayTech
 
         #region Endorphina
 
@@ -2798,6 +2794,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.EndSessionRNG_Endorphina(tpCustInfo, endSessionData_Endorphina, gameType, out afterAmount);
         }
 
-        #endregion
+        #endregion Endorphina
     }
 }

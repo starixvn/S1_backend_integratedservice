@@ -26,7 +26,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly PartitionService _partitionService;
         private readonly string _tpName;
 
-
         public PPWorker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
@@ -81,7 +80,7 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var bettranList = _partitionService.GetUnsettleDataList<SettleData>(getSP, unsettled);
-                      
+
                         if (!bettranList.Any())
                         {
                             LogContext.PushProperty("TP", _tpName);
@@ -137,7 +136,7 @@ namespace ThirdPartySettleWorker.Workers
                             betRecordInfo.TicketStatus = TicketStatus.Refund;
                         }
 
-                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo);
                         if (result == 1)
                         {
                             Task.Run(() =>
