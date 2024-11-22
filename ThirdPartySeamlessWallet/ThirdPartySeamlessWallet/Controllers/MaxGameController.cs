@@ -323,31 +323,41 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             // 尚未支援 (如要使用要請測試)
             string logName = $"{_thisTp}_FreeSpin";
+            string content = "";
+            dynamic response;
+            var logMeta = new PayloadLogMeta
+            {
+                Action = nameof(VoidGame)
+            };
 
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string content = await reader.ReadToEndAsync();
+                content = await reader.ReadToEndAsync();
+                _payloadLogService.LogDetailedPayload(content, logMeta);
 
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
-                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
+                    return response;
                 }
 
-                var result = _maxGameBLL.FreeSpin(content);
+                response = _maxGameBLL.FreeSpin(content);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
 
-                WriteLogTest($"{sitename}/FreeSpin", content, result);
-
-                return result;
+                return response;
             }
             catch (Exception ex)
             {
                 SentrySdk.CaptureException(ex);
             }
+            response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
 
-            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            return response;
         }
 
         private bool CheckHeader(IHeaderDictionary header, string param, string siteName, string logName)
