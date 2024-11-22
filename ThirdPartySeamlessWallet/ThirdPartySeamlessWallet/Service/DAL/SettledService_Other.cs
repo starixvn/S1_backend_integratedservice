@@ -2124,13 +2124,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 var cancelData = new BettransLTEdayCancelBet()
                 {
-                    billId = cancelData_Eday.billId.ToString(),
+                    billId = cancelData_Eday.billId,
                     player = tpCustInfo.TpUserName,
                     TicketType = cancelData_Eday.TicketType,
                     TicketStatus = cancelData_Eday.TicketStatus,
                     SettleFlag = (int)SettleFlag.EndGame
                 };
                 
+                var cancelBetId = $"{cancelData_Eday.roundCode}_{cancelData_Eday.player}";
                 var p = new DynamicParameters(cancelData);
                 result = _mainDbClient.Execute(CancelSpName, p, conn ,trans);
 
@@ -2140,14 +2141,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         cancelData_Eday.amount,
                         (int)tpId,
-                        cancelData_Eday.billId.ToString(),
+                        cancelData_Eday.billId,
                         (int)tpGameType,
                         tpCategory,
-                        cancelData_Eday.billId.ToString(),
+                        cancelBetId,
                         TransType.Refunds,
                         null,
                         out afterAmount,
-                        "CancelBet",
+                        $"CancelBet {cancelData.billId}",
                         out bonusId,
                         conn,
                         trans,
@@ -2458,7 +2459,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = PayoutV2(
                         tpCustInfo,
-                        voidDrawData_Eday.bet,
+                        //此function為把payout金額收回
+                        voidDrawData_Eday.bet * -1,
                         (int)tpId,
                         voidDrawRoundId,
                         (int)tpGameType,

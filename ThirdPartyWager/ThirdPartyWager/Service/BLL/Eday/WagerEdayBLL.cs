@@ -118,7 +118,8 @@ namespace ThirdPartyWager.Service.BLL
         private void InsertNewEdayWager(WagerEdayBillData wagerData)
         {
             var result = _wagerEdayService.InsertEdayWager(wagerData);
-            if (result == 1)
+            //真的全結算在送去TpUnSettle 這樣STATEMENT只會有一張結算直接覆蓋原有的unsettled
+            if (result == 1 && wagerData.WagerType == 2)
             {
                 _ = _tpUnsettleService.InsertTpUnsettle(Tp.Eday, GameType.Eday_Lottery, wagerData.BillId);
             }

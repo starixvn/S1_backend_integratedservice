@@ -1058,16 +1058,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return -1;
                 }
+
+                var roundBetId = $"{bettingDataLT_Eday.roundCode}_{bettingDataLT_Eday.billId}";
                 
                 bettingDataLT_Eday.player = tpCustInfo.TpUserName;
                 bettingDataLT_Eday.amount *= -1;
                 var p = new DynamicParameters(bettingDataLT_Eday);
+                p.Add("transId",roundBetId);
                 p.Add("ticketCount", 0);
                 p.Add("eventId", 0);
                 p.Add("betTotal", 0.00m);
                 p.Add("winTotal", 0.00m);
                 p.Add("UTCSettleTime", bettingDataLT_Eday.UTCBetTime);
                 p.Add("SettleFlag", (int)SettleFlag.Running);
+                
                 result = _mainDbClient.Execute(InsSpName , p , conn , trans);
                 if (result > 0 && bettingDataLT_Eday.amount != 0)
                 {
@@ -1077,12 +1081,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)tpId,
                         bettingDataLT_Eday.billId,
                         (int)tpGameType,
-                        bettingDataLT_Eday.billId,
+                        roundBetId,
                         out afterAmount,
                         ref bonusId,
                         out _,
                         conn,
-                        trans
+                        trans,
+                        $"{bettingDataLT_Eday.billId}"
                     );
                 }
             
