@@ -1,7 +1,4 @@
-﻿using System.Text.Json;
-
-using Serilog.Context;
-
+﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;

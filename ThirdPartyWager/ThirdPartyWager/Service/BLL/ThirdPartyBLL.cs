@@ -20,6 +20,8 @@ namespace ThirdPartyWager.Service.BLL
             this.tpCustInfoService = tpCustInfoService;
             this.cache = cache;
         }
+
+        [Obsolete("Please use ConfigBLL.GetConfigValuesBySiteId")]
         public Dictionary<string, string> GetThirdPartySetting(int tpId)
         {
             var key = $"Setting_{tpId}";
@@ -30,38 +32,6 @@ namespace ThirdPartyWager.Service.BLL
                 if (dataTpList != null)
                 {
                     setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(dataTpList.Setting);
-                    cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
-                }
-            }
-
-            return setting;
-        }
-        public Dictionary<string, string> GetThirdPartyBySite(int tpId, int siteId)
-        {
-            var key = $"Setting_{tpId}_{siteId}";
-            var setting = cache.Get<Dictionary<string, string>>(key);
-            if (setting == null)
-            {
-                var dataTpList = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
-                if (dataTpList != null)
-                {
-                    setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(dataTpList.Setting);
-                    cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
-                }
-            }
-
-            return setting;
-        }
-        public T GetThirdPartyBySite<T>(int tpId, int siteId)
-        {
-            var key = $"Setting_{tpId}_{siteId}";
-            var setting = cache.Get<T>(key);
-            if (setting == null)
-            {
-                var dataTpList = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
-                if (dataTpList != null)
-                {
-                    setting = JsonConvert.DeserializeObject<T>(dataTpList.Setting);
                     cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
                 }
             }

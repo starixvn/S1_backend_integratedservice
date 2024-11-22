@@ -1,7 +1,4 @@
-﻿using System.Text.Json;
-
 using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
@@ -63,7 +60,6 @@ public class WagerBG : BackgroundService
                         continue;
                     }
                     var currencyData = _setting.CurrencyData[item.TpCurrencyId];
-
                     quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
                     if (!isFast && quick) isFast = true;
                 }

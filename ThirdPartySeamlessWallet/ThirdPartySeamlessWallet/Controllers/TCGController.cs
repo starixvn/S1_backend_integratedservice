@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -9,7 +7,6 @@ using ThirdPartySeamlessWallet.Service.Model;
 namespace ThirdPartySeamlessWallet.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
     public class TCGController : ControllerBase
     {
         private readonly ILogger<TCGController> _logger;
@@ -24,11 +21,13 @@ namespace ThirdPartySeamlessWallet.Controllers
 
 
         [HttpPost]
-        public async Task<dynamic> SeamlessWallet([FromForm] string merchant_code, [FromForm] string @params, [FromForm] string sign)
+        [Route("[controller]")]
+        [Route("[controller]/{sitename}")]
+        public async Task<dynamic> SeamlessWallet([FromForm] string merchant_code, [FromForm] string @params, [FromForm] string sign, [FromRoute] string sitename = "")
         {
             try
             {
-                return await _tcgBLL.SeamlessWallet(merchant_code, @params, sign);
+                return await _tcgBLL.SeamlessWallet(merchant_code, @params, sign, sitename);
             }
             catch (Exception ex)
             {
@@ -42,15 +41,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Route("{merchant_code}")]
-        public async Task<dynamic> Internal([FromRoute] string merchant_code)
+        [Route("[controller]/[action]/{sitename}/{merchant_code}")]
+        public async Task<dynamic> Internal([FromRoute] string merchant_code, [FromBody] TCGRequest request, [FromRoute] string sitename = "")
         {
             try
             {
-                using var reader = new StreamReader(Request.Body);
-                var bodyText = await reader.ReadToEndAsync();
-                var request = JsonConvert.DeserializeObject<TCGRequest>(bodyText);
-                return await _tcgBLL.SeamlessWallet(merchant_code, request);
+                return await _tcgBLL.SeamlessWallet(merchant_code, request, sitename);
             }
             catch (Exception ex)
             {

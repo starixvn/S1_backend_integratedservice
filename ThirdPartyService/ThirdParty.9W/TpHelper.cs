@@ -1,7 +1,10 @@
 ﻿using System.Web;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -12,20 +15,21 @@ using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.NineW
 {
-    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyGetBalanceParticular
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
     {
-        private readonly NineWConfig _siteConfig;
         private const string ContentType = "application/x-www-form-urlencoded";
+        private readonly Dictionary<int, NineWConfig> _siteConfigDic;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NineWConfig>(TpEnum.NineW.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NineWConfig>(TpEnum.NineW.ToString());
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
-            var domain = QueryDomain(_siteConfig);
-            
+            var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
+            var domain = QueryDomain(siteConfig);
+
             var tsCodesObj = new
             {
                 userId = tpCustInfo.TpUserName,
@@ -33,8 +37,8 @@ namespace ThirdParty.NineW
             };
 
             var tsCodes = JsonConvert.SerializeObject(tsCodesObj);
-            var apiUrl = $"{domain.ApiUrl}/{_siteConfig.WebSite}/checkTransferRecord";
-            var sParam = $"cert={_siteConfig.Cert}&tsCodes={tsCodes}";
+            var apiUrl = $"{domain.ApiUrl}/{siteConfig.WebSite}/checkTransferRecord";
+            var sParam = $"cert={siteConfig.Cert}&tsCodes={tsCodes}";
 
             var json = HttpPost(apiUrl, sParam, ContentType, timeOutTime: 300);
             var result = GetCheckTransferRecordResult(TransID, json);
@@ -109,8 +113,9 @@ namespace ThirdParty.NineW
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
-            var domain = QueryDomain(_siteConfig);
-            _ = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, _siteConfig ,domain.ApiUrl);
+            var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
+            var domain = QueryDomain(siteConfig);
+            _ = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, siteConfig, domain.ApiUrl);
             // 暫時加上，9w 限制 1 time pre sec(userid)
             Thread.Sleep(1000);
             return new ApiResult()
@@ -134,10 +139,11 @@ namespace ThirdParty.NineW
                 };
             }
 
-            var domain = QueryDomain(_siteConfig);
-            
-            var apiUrl = $"{domain.ApiUrl}/{_siteConfig.WebSite}/getBalance";
-            var sParam = $"cert={_siteConfig.Cert}&alluser=0&userIds={tpCustInfo.TpUserName}";
+            var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
+            var domain = QueryDomain(siteConfig);
+
+            var apiUrl = $"{domain.ApiUrl}/{siteConfig.WebSite}/getBalance";
+            var sParam = $"cert={siteConfig.Cert}&alluser=0&userIds={tpCustInfo.TpUserName}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);
@@ -183,15 +189,16 @@ namespace ThirdParty.NineW
                 };
             }
 
-            var domain = QueryDomain(_siteConfig);
-            var key = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, _siteConfig ,domain.ApiUrl);
-            
+            var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
+            var domain = QueryDomain(siteConfig);
+            var key = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, siteConfig, domain.ApiUrl);
+
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
                 Message = JsonConvert.SerializeObject(new
                 {
-                    url = $"{domain.ExchangeUrl}/player/{_siteConfig.WebSite}/login",
+                    url = $"{domain.ExchangeUrl}/player/{siteConfig.WebSite}/login",
                     key = key,
                     userId = tpCustInfo.TpUserName,
                 })
@@ -200,14 +207,15 @@ namespace ThirdParty.NineW
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
-            var domain = QueryDomain(_siteConfig);
-            var apiUrl = $"{domain.ApiUrl}/{_siteConfig.WebSite}/deposit";
-            var sParam = $"cert={_siteConfig.Cert}&userId={tpCustInfo.TpUserName}&balance={Amount}&tsCode={TransID}";
+            var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
+            var domain = QueryDomain(siteConfig);
+            var apiUrl = $"{domain.ApiUrl}/{siteConfig.WebSite}/deposit";
+            var sParam = $"cert={siteConfig.Cert}&userId={tpCustInfo.TpUserName}&balance={Amount}&tsCode={TransID}";
 
             if (direction == Direction.ToMain)
             {
-                apiUrl = $"{domain.ApiUrl}/{_siteConfig.WebSite}/withdraw";
-                sParam = $"cert={_siteConfig.Cert}&userId={tpCustInfo.TpUserName}&withdrawtype=0&balance={Amount}&tsCode={TransID}";
+                apiUrl = $"{domain.ApiUrl}/{siteConfig.WebSite}/withdraw";
+                sParam = $"cert={siteConfig.Cert}&userId={tpCustInfo.TpUserName}&withdrawtype=0&balance={Amount}&tsCode={TransID}";
             }
 
             var json = HttpPost(apiUrl, sParam, ContentType);
@@ -301,10 +309,11 @@ namespace ThirdParty.NineW
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var domain = QueryDomain(_siteConfig);
-            
-            var apiUrl = $"{domain.ExchangeUrl}/player/{_siteConfig.WebSite}/logout";
-            var sParam = $"cert={_siteConfig.Cert}&userIds={tpCustInfo.TpUserName}";
+            var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
+            var domain = QueryDomain(siteConfig);
+
+            var apiUrl = $"{domain.ExchangeUrl}/player/{siteConfig.WebSite}/logout";
+            var sParam = $"cert={siteConfig.Cert}&userIds={tpCustInfo.TpUserName}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);
@@ -325,7 +334,7 @@ namespace ThirdParty.NineW
             };
         }
 
-        private string GetKey(string user, string currency, NineWConfig config ,string domain)
+        private string GetKey(string user, string currency, NineWConfig config, string domain)
         {
             var currencyData = config.CurrencyData[currency];
             var apiUrl = $"{domain}/{config.WebSite}/getKey";
@@ -342,58 +351,18 @@ namespace ThirdParty.NineW
             var sParam = $"&cert={config.Cert}";
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<QueryDomainResponse>(json);
-            
+
             if (result.status == "1")
             {
                 var domain = new Domain
                 {
-                    ApiUrl = $"{config.ApiUrl}.{result.Domains?.FirstOrDefault(x => x.priority == 1)?.domain}/api/apiWallet" ,
-                    ExchangeUrl = $"{config.ExchangeUrl}.{result.Domains?.FirstOrDefault(x => x.priority == 1)?.domain}/apiWallet" ,
+                    ApiUrl = $"{config.ApiUrl}.{result.Domains?.FirstOrDefault(x => x.priority == 1)?.domain}/api/apiWallet",
+                    ExchangeUrl = $"{config.ExchangeUrl}.{result.Domains?.FirstOrDefault(x => x.priority == 1)?.domain}/apiWallet",
                 };
                 return domain;
             }
 
             throw new Exception($"9w Query Domain error status is : {result.status}");
-        }
-        
-        /// <summary>
-        /// 取得指定客戶的餘額資料
-        /// </summary>
-        /// <param name="inputs">第三方相關參數</param>
-        /// <param name="tpUserNameString">第三方使用者名稱參數清單</param>
-        /// <param name="tpCurrencyId">第三方幣別</param> 
-        /// <returns></returns>
-        public ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString, string tpCurrencyId)
-        {
-            var domain = QueryDomain(_siteConfig);
-            var apiUrl = $"{domain.ApiUrl}/{_siteConfig.WebSite}/getBalance";
-            var sParam = $"cert={_siteConfig.Cert}&alluser=0&userIds={tpUserNameString}";
-
-            var json = HttpPost(apiUrl, sParam, ContentType, timeOutTime: 120);
-            var result = FromJson<NineWResult>(json);
-
-            if (result.status != "1")
-            {
-                return new ApiResult<List<ReceiveTpUserBalanceModel>>()
-                {
-                    ErrorCode = ErrorCode.Fail,
-                    Message = "fail",
-                    RawErrorCode = result.status,
-                    RawMessage = json,
-                };
-            }
-
-            return new ApiResult<List<ReceiveTpUserBalanceModel>>()
-            {
-                ErrorCode = ErrorCode.Success,
-                Message = "ok",
-                Data = result.BalaceResult.Select(x => new ReceiveTpUserBalanceModel
-                {
-                    TpUserName = x.userId,
-                    Balance = x.balance,
-                    ErrorCode = ErrorCode.Success
-                }).ToList()
-            };
         }
 
         private class NineWResult
@@ -426,7 +395,7 @@ namespace ThirdParty.NineW
         private class QueryDomainResponse
         {
             public string status { get; set; }
-          
+
             [JsonProperty("privateDomains")]
             public List<DomainModel> PrivateDomains { get; set; }
 
@@ -439,7 +408,7 @@ namespace ThirdParty.NineW
             public string domain { get; set; }
             public int priority { get; set; }
         }
-        
+
         private static OddsTypeEnum GetOddsType(string oddsType)
         {
             return oddsType switch

@@ -290,7 +290,7 @@ public class PegasusController : ControllerBase
         return response;
     }
     
-    private PegasusTokenInfo GetTokenInfo(string token)
+    private static PegasusTokenInfo GetTokenInfo(string token)
     {
         var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(token));
         var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);

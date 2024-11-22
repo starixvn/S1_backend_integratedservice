@@ -81,6 +81,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<PartitionService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<TpRoundGenService>();
+            services.AddSingleton<MigrationService>();
 
             /*BLL*/
             services.AddSingleton<TpCustInfoBLL>();
@@ -111,18 +112,20 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IGABLL, GABLL>();
             services.AddTransient<INTConnectBLL, NTConnectBLL>();
             services.AddTransient<IWonCasinoBLL, WonCasinoBLL>();
+            services.AddTransient<IDragonGamingBLL, DragonGamingBLL>();
             services.AddTransient<IPG2BLL, PG2BLL>();
             services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();
             services.AddSingleton<TpUnRewardBLL>();
+            services.AddSingleton<MigrationBLL>();
             services.AddSingleton<KMHeaderFilter>();
             services.AddSingleton<MGHeaderFilter>();
             services.AddSingleton<MGExceptionFilter>();
             services.AddControllers()
                 .AddJsonOptions(options =>
                     {
-                      options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;   
+                        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
                     });
 
             services.AddOptionListByDB<SabaSportTypeOption>("Service_SabaSportType_Get");

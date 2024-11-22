@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
@@ -9,25 +10,27 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiAMBBLL
     {
+        private readonly IConfiguration _configuration;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAMBBLL> _logger;
         private readonly string _tpName = Tp.AMB.ToString();
-        private readonly AMBConfig _siteAMBConfig;
+        private readonly Dictionary<int, AMBConfig> _siteConfigDic;
 
         public ApiAMBBLL(IServiceProvider provider)
         {
+            _configuration = provider.GetRequiredService<IConfiguration>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAMBBLL>>();
-            _siteAMBConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AMBConfig>(_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AMBConfig>(_tpName);
         }
 
-        public async Task<Wager_AMB> GetBetListByTime(string startTime, string endTime, string currency, int gameType)
+        public async Task<Wager_AMB> GetBetListByTime(string startTime, string endTime, string currency, int gameType, int siteId)
         {
-            var settingByGameType = GetTpListByGameType(currency, gameType);
+            var settingByGameType = GetTpListByGameType(currency, gameType, siteId);
             var apiUrl = settingByGameType["ApiUrl"];
             var agent = settingByGameType["Agent"];
             var secretKey = settingByGameType["SecretKey"];
@@ -42,8 +45,8 @@ namespace ThirdPartyWager.Service.BLL
                 endDate = endTime,
                 limit = 1000,
             };
-            // sleep 12 sec
-            Thread.Sleep(12000);
+            // sleep 10 sec
+            Thread.Sleep(10000);
             var sParam = JsonConvert.SerializeObject(param);
 
             // request
@@ -53,9 +56,9 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<CurrencyStats_AMB> GetBetSummaryByTime(string currency, int gameType, string startTime, string endTime, int perPage, int page)
+        public async Task<CurrencyStats_AMB> GetBetSummaryByTime(string currency, int gameType, string startTime, string endTime, int perPage, int page, int siteId)
         {
-            var settingByGameType = GetTpListByGameType(currency, gameType);
+            var settingByGameType = GetTpListByGameType(currency, gameType, siteId);
             var apiUrl = settingByGameType["ApiUrl"];
             var agent = settingByGameType["Agent"];
             var secretKey = settingByGameType["SecretKey"];
@@ -71,8 +74,8 @@ namespace ThirdPartyWager.Service.BLL
                 limit = perPage,
                 page = page
             };
-            // sleep 12 sec
-            Thread.Sleep(12000);
+            // sleep 10 sec
+            Thread.Sleep(10000);
             var sParam = JsonConvert.SerializeObject(param);
 
             // request
@@ -81,28 +84,32 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private Dictionary<string, string> GetTpListByGameType(string currency, int gameType)
+        private Dictionary<string, string> GetTpListByGameType(string currency, int gameType, int siteList)
         {
             var result = new Dictionary<string, string>();
+            var config = _siteConfigDic[siteList];
 
             switch (gameType)
             {
                 case (int)GameType.AMB_Poker:
+                    var pokerCurrencyData = config.PokerCurrencyData[currency];
+
                     result = new Dictionary<string, string>
                     {
-                        { "ApiUrl", _siteAMBConfig.PokerApiUrl },
-                        { "Agent", _siteAMBConfig.PokerAgent },
-                        { "SecretKey", _siteAMBConfig.PokerSecretKey },
+                        { "ApiUrl", pokerCurrencyData.ApiUrl },
+                        { "Agent", pokerCurrencyData.Agent },
+                        { "SecretKey", pokerCurrencyData.SecretKey },
                         { "HeaderKey", "x-amb-signature" }
                     };
                     break;
                 case (int)GameType.AMB_RNG:
-                    var slotCurrencyConfig = _siteAMBConfig.SlotCurrencyAgent.FirstOrDefault(x => x.CurrencyId == currency);
+                    var slotCurrencyData = config.SlotCurrencyData[currency];
+
                     result = new Dictionary<string, string>
                     {
-                        { "ApiUrl", slotCurrencyConfig.SlotApiUrl },
-                        { "Agent", slotCurrencyConfig.Agent },
-                        { "SecretKey", slotCurrencyConfig.SecretKey },
+                        { "ApiUrl", slotCurrencyData.ApiUrl },
+                        { "Agent", slotCurrencyData.Agent },
+                        { "SecretKey", slotCurrencyData.SecretKey },
                         { "HeaderKey", "x-ambslot-signature" }
                     };
                     break;
@@ -118,7 +125,7 @@ namespace ThirdPartyWager.Service.BLL
             request.Headers.Add(headerKey, _common.HMACSHA512(param, secretKey));
             _log2File.InsertRequestLog(_tpName, url, $"{param}\r\n{JsonConvert.SerializeObject(request.Headers)}", "1");
 
-            var response = await _httpHelper.GetClient().SendAsync(request);
+            var response = await _httpHelper.GetClientWithHandler(CreateHandler()).SendAsync(request);
             var result = response.Content.ReadAsStringAsync().Result;
 
             if (!response.IsSuccessStatusCode)
@@ -144,6 +151,22 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             return result;
+        }
+
+        private HttpClientHandler CreateHandler()
+        {
+            var handler = new HttpClientHandler()
+            {
+                AutomaticDecompression = DecompressionMethods.GZip,
+            };
+            if (!string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost")))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
+                    _configuration.GetValue<int>("ProxyPort"));
+            }
+
+            return handler;
         }
     }
 }

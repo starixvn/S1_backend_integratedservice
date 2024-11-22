@@ -69,6 +69,7 @@
         UuSlots = 67,
         Live22 = 68,
         FastSpin = 69,
+        DragonGaming = 70,
         PG2 = 71
     }
 
@@ -124,6 +125,7 @@
         UuSlots_RNG = 120,
         Live22_RNG = 121,
         FastSpin_RNG = 122,
+        DragonGaming_RNG = 123,
         PG2_RNG = 124,
     }
     public enum SettlementType
@@ -179,7 +181,7 @@
         UnSettle = 8,//未結算注單
         Cancel = 9,//已取消注單
     }
-    
+
     public enum WorkerType
     {
         MainWager = 1,                  //使用TicketKey固定持續拉單

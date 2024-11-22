@@ -22,19 +22,6 @@ namespace ThirdParty.AG
             _siteAGConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AGConfig>(TpEnum.AG.ToString());
             _logger = provider.GetRequiredService<ILogger<TpHelper>>();
         }
-        
-        Dictionary<string, string> oddsTypeDic = new Dictionary<string, string>() {
-            {"MYR","GF4B" },
-            {"CNY","C" },
-            {"THB","GF4A" },
-            {"IDR","GF4A" },
-            {"VND","GF4A" },
-            {"USD","GF4A" },
-            {"INR","GF4A" },
-            {"JPY","A" },
-            {"KRW","A" },
-            {"BRL","A" }
-        };
 
         readonly Dictionary<string, int> langIdDic = new Dictionary<string, int>()
         {
@@ -64,6 +51,7 @@ namespace ThirdParty.AG
             public string CommonUrl { get; set; }
             public string SessionUrl { get; set; }
             public string data_cagent { get; set; }
+            public Dictionary<string, string> OddTypeData { get; set; }
         }
 
         #region Response
@@ -85,12 +73,12 @@ namespace ThirdParty.AG
         {
             var actype = tpCustInfo.IsTest ? "0" : "1";
             var config = _siteAGConfig[tpCustInfo.SiteId];
-            var cagent = config.cagent; 
-            var apiUrl = config.ApiUrl; 
-            var Md5key = config.Md5Key; 
-                
+            var cagent = config.cagent;
+            var apiUrl = config.ApiUrl;
+            var Md5key = config.Md5Key;
+
             string _oddtype = null;
-            oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
+            config.OddTypeData.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
             string oddtype = _oddtype;
 
             string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/method=lg/\\\\/actype={actype}/\\\\/password={tpCustInfo.TpPwd}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}";
@@ -171,9 +159,9 @@ namespace ThirdParty.AG
             var GameUrl = config.GameUrl;
             var Md5key = config.Md5Key;
             var SessionUrl = config.SessionUrl;
-            
+
             string _oddtype = null;
-            oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
+            config.OddTypeData.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
             string oddtype = _oddtype;
 
             string balance = GetBalance(tpCustInfo.TpUserName);

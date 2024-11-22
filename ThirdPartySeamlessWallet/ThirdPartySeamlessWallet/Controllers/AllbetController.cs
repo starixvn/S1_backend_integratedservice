@@ -17,22 +17,26 @@ namespace ThirdPartySeamlessWallet.Controllers
     {
         private readonly ILogger<AllbetController> _logger;
         private static IAllbetBll _AllbetBll { get; set; }
-        private readonly AllBetConfig _siteAllBetConfig;
-
+        private readonly AllBetConfig _defaultConfig;
+        private readonly Dictionary<string, AllBetConfig> _siteConfigDic;
 
         public AllbetController(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<AllbetController>>();
             _AllbetBll = new AllbetBll(provider);
-            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
+            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<AllBetConfig>(Tp.Allbet.ToString());
         }
 
         [HttpGet]
         [Route("[controller]/{method}/{username}")]
-        public async Task<dynamic> GetBalanceAsync([FromRoute] string method, [FromRoute] string username)
+        [Route("[controller]/{sitename}/{method}/{username}")]
+        public async Task<dynamic> GetBalanceAsync([FromRoute] string method, [FromRoute] string username, [FromRoute] string sitename = null)
         {
             try
             {
+                var _siteAllBetConfig = sitename == null ? _defaultConfig : _siteConfigDic[sitename];
+
                 if (!Enum.TryParse(method, true, out AllbetType transType))
                 {
                     return new AllBetTransferResponse(AllbetResultCode.InvalidParameters, $"Not Support {method} method.");
@@ -44,7 +48,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var signString = $"GET\n\n\n{date}\n/{method}/{username}";
                 var signature = GetSign(signString, _siteAllBetConfig.PartnerKey);
 
-                CheckSign(authorization, signature);
+                CheckSign(authorization, signature, _siteAllBetConfig);
 
                 return await _AllbetBll.SeamlessWallet(transType, username);
             }
@@ -61,10 +65,13 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/{method}")]
-        public async Task<dynamic> TransferAsync([FromRoute] string method)
+        [Route("[controller]/{sitename}/{method}")]
+        public async Task<dynamic> TransferAsync([FromRoute] string method, [FromRoute] string sitename = null)
         {
             try
             {
+                var _siteAllBetConfig = sitename == null ? _defaultConfig : _siteConfigDic[sitename];
+
                 if (!Enum.TryParse(method, true, out AllbetType transType))
                 {
                     return new AllBetTransferResponse(AllbetResultCode.InvalidParameters,
@@ -82,7 +89,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (@internal.ToString() != "Wager")
                 {
-                    CheckSign(authorization,signature);
+                    CheckSign(authorization,signature, _siteAllBetConfig);
                 }
 
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -100,7 +107,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        private void CheckSign(StringValues authorization, string signature)
+        private void CheckSign(StringValues authorization, string signature, AllBetConfig config)
         {
             var auth = authorization.ToString();
             var operatorId = "";
@@ -109,12 +116,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 operatorId = auth.Substring(3, auth.IndexOf(":", StringComparison.Ordinal) - 3);
             }
 
-            if (operatorId != _siteAllBetConfig.OperatorId)
+            if (operatorId != config.OperatorId)
             {
                 throw new AllbetException(AllbetResultCode.InvalidOperatorId);
             }
 
-            if (authorization != $"AB {_siteAllBetConfig.OperatorId}:{signature}")
+            if (authorization != $"AB {config.OperatorId}:{signature}")
             {
                 throw new AllbetException(AllbetResultCode.InvalidSignature);
             }

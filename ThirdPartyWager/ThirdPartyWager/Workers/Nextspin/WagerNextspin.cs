@@ -16,6 +16,7 @@ namespace ThirdPartyWager.Workers
         private const int TpId = (int)Tp.Nextspin;
         private const int TimeZone = 8;
         private Timer _rngWagerTimer;
+        private Timer _rngRedoWagerTimer;
 
         public WagerNextspin(ThirdPartyBLL thirdPartyBll, DateTimeHelper dateTimeHelper, INextspinBLL nextspinBLL, ILogger<WagerNextspin> logger)
         {
@@ -28,6 +29,7 @@ namespace ThirdPartyWager.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _rngWagerTimer = new Timer(QueryWager, GameType.Nextspin_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            _rngRedoWagerTimer = new Timer(RedoWager, GameType.Nextspin_RNG, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -45,7 +47,7 @@ namespace ThirdPartyWager.Workers
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, (int)tpType);
                 var thisTime = lastTime?.StartTime ?? DateTime.UtcNow;
 
-                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > 3)
+                if ((int)DateTime.UtcNow.Subtract(thisTime).TotalMinutes > 3)
                 {
                     doQuickly = true;
                 }
@@ -56,7 +58,7 @@ namespace ThirdPartyWager.Workers
                     var isSuccess = await _nextspinBLL.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"{tpType} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _logger.LogInformation($"{Tp.Nextspin} {tpType} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
                         _thirdPartyBLL.SetThirdPartyTimer(TpId, (int)tpType, timeCast.endUnix);
                     }
                 }
@@ -70,6 +72,54 @@ namespace ThirdPartyWager.Workers
                 var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(intervalSec) : TimeSpan.FromMinutes(intervalMins);
                 _rngWagerTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private async void RedoWager(object? state)
+        {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", Tp.Nextspin.ToString());
+            var tpType = WagerTimerType.RedoWager;
+            const int dataRangeMins = 60; //查詢60分鐘內的資料  
+            var nextTimeSpan = TimeSpan.FromMinutes(15);//每次查詢間隔15分鐘
+            
+            try
+            {
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, (int)tpType);
+                var thisTime = lastTime?.StartTime ?? DateTime.UtcNow.AddDays(-2);
+
+                if ((int)DateTime.UtcNow.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                {
+                    nextTimeSpan = TimeSpan.FromSeconds(15);//do Quickly 每次查詢間隔15秒
+                }
+
+                if (thisTime < DateTime.UtcNow)
+                {
+                    thisTime = thisTime.AddMinutes(dataRangeMins);
+                    var timeCast = _dateTimeHelper.GetTimeByMinuteRevert(dataRangeMins, TimeZone, "yyyyMMddTHHmmss", thisTime);
+                    var isSuccess = await _nextspinBLL.GetWagersAsync(timeCast.startTime, timeCast.endTime);
+                    if (isSuccess)
+                    {
+                        _logger.LogInformation($"{Tp.Nextspin} {tpType} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _thirdPartyBLL.SetThirdPartyTimer(TpId, (int)tpType, timeCast.endUnix);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{tpType} WagerNextspin.RedoWager.Exception");
+                nextTimeSpan = TimeSpan.FromMinutes(1);
+            }
+            finally
+            {
+                _rngRedoWagerTimer.Change(nextTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            _rngWagerTimer?.Change(Timeout.Infinite, 0);
+            _rngRedoWagerTimer?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
         }
     }
 }

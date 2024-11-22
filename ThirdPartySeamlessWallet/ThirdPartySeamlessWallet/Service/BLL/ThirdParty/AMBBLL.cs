@@ -24,7 +24,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
-        private readonly AMBConfig _siteAMBConfig;
+        private readonly Dictionary<int, AMBConfig> _siteConfigDic;
 
         public string[] HasEndroundTableGameId { get; set; }
 
@@ -46,28 +46,26 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _settledService = provider.GetRequiredService<SettledService>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _siteAMBConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AMBConfig>(ThirdParty.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AMBConfig>(ThirdParty.ToString());
         }
 
         #endregion
-        
+
         #region Model
-        
+
         public class AMBConfig
         {
-            public string PokerAgent { get; set; }
-            public string PokerApiUrl { get; set; }
-            public string PokerSecretKey { get; set; }
-            public List<SlotCurrencyAgent> SlotCurrencyAgent { get; set; }
+            public Dictionary<string, CurrencyDataAMB> PokerCurrencyData { get; set; }
+            public Dictionary<string, CurrencyDataAMB> SlotCurrencyData { get; set; }
         }
-        public class SlotCurrencyAgent
+        public class CurrencyDataAMB
         {
             public string CurrencyId { get; set; }
             public string Agent { get; set; }
-            public string SlotApiUrl { get; set; }
+            public string ApiUrl { get; set; }
             public string SecretKey { get; set; }
         }
-        
+
         #endregion
 
         #region Methods
@@ -97,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
             var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentId(agent, tpCustBalance.TpCurrencyId))
+            if (!CheckAgentId(agent, tpCustBalance.TpCurrencyId, request.username))
             {
                 return new AMBSlotGetBalanceResponse()
                 {
@@ -136,7 +134,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
             var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentId(agent, request.currency))
+            if (!CheckAgentId(agent, request.currency, request.username))
             {
                 return new AMBSlotBetResponse()
                 {
@@ -274,7 +272,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
             var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentId(agent, request.currency))
+            if (!CheckAgentId(agent, request.currency, request.username))
             {
                 return new AMBSlotPayoutResponse()
                 {
@@ -433,7 +431,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
             var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentId(agent, request.currency))
+            if (!CheckAgentId(agent, request.currency, request.username))
             {
                 return new AMBSlotCancelResponse()
                 {
@@ -529,7 +527,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<AMBSlotSettleResponse> SlotSettle(AMBSlotSettleRequest request)
         {
             var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
-            if (!CheckAgentId(agent, request.currency))
+            if (!CheckAgentId(agent, request.currency, request.username))
             {
                 return CreateSettleError(AMBErrorCode.InvalidAgent);
             }
@@ -621,7 +619,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return CreateSettleError(AMBErrorCode.ServiceNotAvailable);
                 }
             }
-            
+
             // 改為注單抓取後再塞TpUnsettle
             // if (data.isEndRound)
             // {
@@ -722,33 +720,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"CheckTpCustInfo Exception:{ex.ToString()}");
-                return false;
-            }
-        }
-
-        private bool GetBalanceForSlotGetBalance(string username, out decimal balance, out string message)
-        {
-            message = string.Empty;
-            balance = 0;
-            try
-            {
-                var result = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, username, (int)GameType);
-
-                if (result == null)
-                {
-                    message = "balance not found.";
-                    _logger.LogError($"GetBalance Fail:{message}");
-                    return false;
-                }
-
-                balance = result.Balance;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                message = "exception happen.";
-                _logger.LogError(ex, $"GetBalance Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"CheckTpCustInfo Exception:{ex}");
                 return false;
             }
         }
@@ -853,7 +825,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"CheckTpCustInfo Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"CheckTpCustInfo Exception:{ex}");
                 return false;
             }
         }
@@ -879,7 +851,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"GetBalance Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"GetBalance Exception:{ex}");
                 return false;
             }
         }
@@ -916,7 +888,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"GetTpCustInfo Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"GetTpCustInfo Exception:{ex}");
                 return false;
             }
         }
@@ -939,7 +911,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"GetTpCurrency Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"GetTpCurrency Exception:{ex}");
                 return false;
             }
         }
@@ -964,7 +936,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"CheckBet Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"CheckBet Exception:{ex}");
                 return false;
             }
         }
@@ -987,7 +959,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"PlaceBet Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"PlaceBet Exception:{ex}");
                 return false;
             }
         }
@@ -1015,7 +987,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"SetBalance Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"SetBalance Exception:{ex}");
                 return false;
             }
         }
@@ -1120,7 +1092,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"CheckTpCustInfo Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"CheckTpCustInfo Exception:{ex}");
                 return false;
             }
         }
@@ -1146,7 +1118,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"GetBalance Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"GetBalance Exception:{ex}");
                 return false;
             }
         }
@@ -1169,7 +1141,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"GetTpCustInfo Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"GetTpCustInfo Exception:{ex}");
                 return false;
             }
         }
@@ -1192,7 +1164,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"GetTpCurrency Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"GetTpCurrency Exception:{ex}");
                 return false;
             }
         }
@@ -1218,7 +1190,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"CheckPayout Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"CheckPayout Exception:{ex}");
                 return false;
             }
         }
@@ -1241,7 +1213,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"PlacePayout Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"PlacePayout Exception:{ex}");
                 return false;
             }
         }
@@ -1271,7 +1243,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"SetBalance Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"SetBalance Exception:{ex}");
                 return false;
             }
         }
@@ -1289,7 +1261,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $" CheckSettle Exception:{ex.ToString()}");
+                _logger.LogError(ex, $" CheckSettle Exception:{ex}");
                 return false;
             }
         }
@@ -1312,7 +1284,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"InsertUnsettle Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"InsertUnsettle Exception:{ex}");
                 return false;
             }
         }
@@ -1409,7 +1381,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"GetTpCustInfo Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"GetTpCustInfo Exception:{ex}");
                 return false;
             }
         }
@@ -1432,7 +1404,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"GetTpCurrency Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"GetTpCurrency Exception:{ex}");
                 return false;
             }
         }
@@ -1478,7 +1450,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"CheckCancel Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"CheckCancel Exception:{ex}");
                 return false;
             }
         }
@@ -1502,7 +1474,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"PlaceBet Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"PlaceBet Exception:{ex}");
                 return false;
             }
         }
@@ -1532,25 +1504,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"SetBalance Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"SetBalance Exception:{ex}");
                 return false;
             }
         }
 
         #endregion
 
-        private string GetCurrentGameTime()
+        private static string GetCurrentGameTime()
         {
             var currentAt = new DateTimeOffset(DateTime.Now);
             return currentAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ");
         }
 
-        private bool CheckAgentId(string agentId, string currencyId)
+        private bool CheckAgentId(string agentId, string currencyId, string username)
         {
             try
             {
-                var slotAgent = _siteAMBConfig.SlotCurrencyAgent.FirstOrDefault(x => x.CurrencyId == currencyId)?.Agent;
-                
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, username);
+                if (tpCustInfo.CustId == 0)
+                {
+                    _logger.LogError($"CheckAgentId Fail: tpCustInfo.CustId is {tpCustInfo.CustId}.");
+                    return false;
+                }
+
+                var config = _siteConfigDic[tpCustInfo.SiteId];
+                var slotAgent = config.SlotCurrencyData[currencyId]?.Agent;
+
                 if (string.IsNullOrWhiteSpace(slotAgent))
                 {
                     _logger.LogError("CheckAgentId Fail: tpinfo.agent is null.");
@@ -1572,7 +1552,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private AMBSlotSettleResponse CreateSettleError(AMBErrorCode errorCode, string message = "")
+        private static AMBSlotSettleResponse CreateSettleError(AMBErrorCode errorCode, string message = "")
         {
             return new AMBSlotSettleResponse()
             {
