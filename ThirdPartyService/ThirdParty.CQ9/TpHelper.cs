@@ -1,5 +1,6 @@
 ﻿using System.Web;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 using ThirdPartyCore;
@@ -16,9 +17,11 @@ namespace ThirdParty.CQ9
     {
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, Dictionary<string, string>> configDic;
+        private readonly ILogger<TpHelper> _logger;
 
         public TpHelper(IServiceProvider provider)
         {
+            _logger = provider.GetRequiredService<ILogger<TpHelper>>();
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.CQ9).ToDictionary(d => d.AppId, d => d.Name);
             configDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.CQ9.ToString());
         }
@@ -83,7 +86,6 @@ namespace ThirdParty.CQ9
         {
             var config = configDic[tpCustInfo.SiteId];
             var testHierarchyCustId = JsonConvert.DeserializeObject<List<long>>(config["TestHierarchyCustId"]);
-
             string ApiUrl = config.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(config["ApiUrl"]) ? config["ApiUrl"] : throw new Exception("ApiUrl");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
@@ -105,12 +107,12 @@ namespace ThirdParty.CQ9
 
             var paramToken = $"API_Token_{tpCustInfo.TpCurrencyId}";
             string API_Token = config.ContainsKey($"{paramToken}") && !string.IsNullOrEmpty(config[$"{paramToken}"]) ? config[$"{paramToken}"] : throw new Exception($"{paramToken}");
-
+            _logger.LogInformation("before Contains");
             if (testHierarchyCustId.Contains(tpCustInfo.CustId))
             {
                 API_Token = config.ContainsKey("API_Token_TEST") && !string.IsNullOrEmpty(config["API_Token_TEST"]) ? config["API_Token_TEST"] : throw new Exception("API_Token_TEST");
             }
-
+            _logger.LogInformation("after Contains");
             // Header
             Dictionary<string, string> headerReq = new Dictionary<string, string>();
             headerReq.Add("Authorization", API_Token);
