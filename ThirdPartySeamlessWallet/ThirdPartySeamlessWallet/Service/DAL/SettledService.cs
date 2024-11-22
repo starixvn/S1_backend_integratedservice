@@ -100,7 +100,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         };
 
-        public int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
+        public int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow, bool isUseBonus = false)
         {
             afterAmount = 0;
             bonusId = 0;
@@ -109,9 +109,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out var custId, out bonusId);
 
-                if (bonusId > 0 || transType == TransType.Prize)
+                if (bonusId > 0 || transType == TransType.Prize || isUseBonus)
                 {
-                    if (bonusId > 0 && custId != tpCustInfo.CustId)
+                    if (bonusId > 0 && custId != tpCustInfo.CustId && !isUseBonus)
                     {
                         return 0;
                     }
