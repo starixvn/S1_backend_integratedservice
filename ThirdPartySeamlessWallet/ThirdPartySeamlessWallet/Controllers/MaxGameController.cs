@@ -327,7 +327,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             dynamic response;
             var logMeta = new PayloadLogMeta
             {
-                Action = nameof(VoidGame)
+                Action = nameof(FreeSpin)
             };
 
             try
