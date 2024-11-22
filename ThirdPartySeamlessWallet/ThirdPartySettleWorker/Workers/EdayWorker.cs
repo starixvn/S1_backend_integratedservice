@@ -201,6 +201,7 @@ namespace ThirdPartySettleWorker.Workers
         
         private class SettleDataEday : SettleData
         {
+            public string billId { get; set; }
             public int BillStatus { get; set; }
             public int BetType { get; set; }
         }

@@ -1087,7 +1087,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         out _,
                         conn,
                         trans,
-                        $"{bettingDataLT_Eday.billId}"
+                        $" {bettingDataLT_Eday.billId} "
                     );
                 }
             
