@@ -55,7 +55,7 @@ namespace ThirdPartyBetHistory.Service.Library
                     // 拿不到Status或延遲太久都換下一個連線
                     if (dbSlaveStatus == null || dbSlaveStatus.Seconds_Behind_Master > 180)
                     {
-                        _logger.LogWarning($"{ReplaceDBString(backupConn)} | DelayTime = {dbSlaveStatus?.Seconds_Behind_Master}");
+                        //_logger.LogWarning($"{ReplaceDBString(backupConn)} | DelayTime = {dbSlaveStatus?.Seconds_Behind_Master}");
                         continue;
                     }
 
