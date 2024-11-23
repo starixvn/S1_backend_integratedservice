@@ -125,4 +125,27 @@
         public int ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
     }
+
+    public class PayloadRequestDailySummaryData_MaxGame {
+        public string GameType { get; set; }
+        public string CheckDate { get; set; }
+        public string AgentId { get; set; }
+        public string AgentKey { get; set; }
+        public string AgentCode { get; set; }
+        public string ExtraInfo { get; set; }
+    }
+
+    public class DailySummaryData_MaxGame {
+        public string Seq { get; set; }
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+        public DateTime TimeStamp { get; set; }
+        public PayloadDailySummaryData_MaxGame Payload { get; set; }
+    }
+
+    public class PayloadDailySummaryData_MaxGame {
+        public string CurrencyISO { get; set; }
+        public decimal TotalWinlose { get; set; }
+        public decimal TotalStake { get; set; }
+    }
 }

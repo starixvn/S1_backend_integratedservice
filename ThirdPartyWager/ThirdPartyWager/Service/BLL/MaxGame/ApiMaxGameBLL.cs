@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Google.Protobuf.WellKnownTypes;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Dynamic;
 using System.Text;
@@ -70,6 +71,40 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
+        public async Task<DailySummaryData_MaxGame> GetDailySummaryDataAsync(MaxGameConfig setting, string tpName, PayloadRequestDailySummaryData_MaxGame parameters) {
+            var uri = "/api/CommonWallet/DailyBetCrossCheck";
+            var url = $"{setting.ApiUrl}{uri}";
+
+            var param = new {
+                Timestamp = GetCurrentTimeFormat(),
+                Seq = Guid.NewGuid().ToString(),
+                Payload = new {
+                    setting.GameType,
+                    parameters.CheckDate,
+                    AgentInfo = new {
+                        parameters.AgentId,
+                        parameters.AgentKey,
+                        parameters.AgentCode,
+                        parameters.ExtraInfo
+                    }
+                }
+            };
+
+            var postdata = JsonConvert.SerializeObject(param, Formatting.None);
+            var r = await DoHttpClientAsync(setting, tpName, url, postdata);
+            var result = JsonConvert.DeserializeObject<DailySummaryData_MaxGame>(r);
+            
+            var additionalLogInfo = new Dictionary<string, object>() {
+                {"Request", JsonConvert.SerializeObject(param, Formatting.Indented) },
+                {"Response",JsonConvert.SerializeObject(result, Formatting.Indented) }
+            };
+            using (_logger.BeginScope(additionalLogInfo)) {
+                _logger.LogInformation($"SABA PLUS API CALL, uri: {uri}");
+
+            }
+            return result;
+
+        }
         public async Task<string> CallSeamlessApi(MaxGameConfig setting, string tpName, string siteName, BettransData_MaxGame bettransDataMaxGame, TicketDataMaxGame ticketDataMaxGame)
         {
             // param
