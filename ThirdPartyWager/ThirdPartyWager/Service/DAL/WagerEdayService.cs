@@ -23,6 +23,7 @@ namespace ThirdPartyWager.Service.DAL
             
             var p = new DynamicParameters();
             p.Add("billId", wager.BillId);
+            p.Add("transId", wager.transId);
             p.Add("player", wager.Player);
             p.Add("totalBet", wager.TotalBet);
             p.Add("totalWin", wager.TotalWin);
