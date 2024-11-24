@@ -830,7 +830,8 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<WagerEday>();
             services.AddHostedService<FinanceEday>();
-            
+            services.AddHostedService<WagerEdayUpdate>();
+
             return services;
         }
     }
