@@ -173,10 +173,10 @@ namespace ThirdPartyWager.Service.BLL
         private void InsertNewEdayWager(WagerEdayBillData wagerData)
         {
             var result = _wagerEdayService.InsertEdayWager(wagerData);
-            //Deal單不用丟結算 純紀錄
+            //Deal單不用丟結算 純紀錄，結算用Bettrans TransId去對
             if (result == 1 && wagerData.WagerType == 1)
             {
-                _ = _tpUnsettleService.InsertTpUnsettle(Tp.Eday, GameType.Eday_Lottery, wagerData.BillId);
+                _ = _tpUnsettleService.InsertTpUnsettle(Tp.Eday, GameType.Eday_Lottery, $"{wagerData.BillId}_{wagerData.RoundCode}");
             }
         }
 
