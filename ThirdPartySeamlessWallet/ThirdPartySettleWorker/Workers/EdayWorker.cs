@@ -87,7 +87,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         var betRecordInfo = new BetRecordInfo();
                         
-                        var unsettled = getUnsettledList.First(x => x.billId == wager.TransId);
+                        var unsettled = getUnsettledList.First(x => x.TransId == wager.TransId);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         
