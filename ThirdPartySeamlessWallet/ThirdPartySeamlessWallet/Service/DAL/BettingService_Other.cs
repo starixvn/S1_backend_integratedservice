@@ -1058,13 +1058,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return -1;
                 }
-
-                var roundBetId = $"{bettingDataLT_Eday.roundCode}_{bettingDataLT_Eday.player}";
                 
+                var edayBetId = $"{bettingDataLT_Eday.billId}_{bettingDataLT_Eday.roundCode}";
                 bettingDataLT_Eday.player = tpCustInfo.TpUserName;
                 bettingDataLT_Eday.amount *= -1;
                 var p = new DynamicParameters(bettingDataLT_Eday);
-                p.Add("transId",roundBetId);
+                p.Add("transId",edayBetId);
                 p.Add("ticketCount", 0);
                 p.Add("eventId", 0);
                 p.Add("betTotal", 0.00m);
@@ -1079,22 +1078,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         bettingDataLT_Eday.amount,
                         (int)tpId,
-                        bettingDataLT_Eday.billId,
+                        edayBetId,
                         (int)tpGameType,
-                        roundBetId,
+                        bettingDataLT_Eday.roundCode,
                         out afterAmount,
                         ref bonusId,
                         out _,
                         conn,
-                        trans,
-                        $" {bettingDataLT_Eday.billId} "
+                        trans
                     );
                 }
             
                 if (result > 0)
                 {
                     //下注完先送去未結算，因為抓單的Wager是用settledTime去抓，若是下注到較晚開獎的遊戲要等到開獎才會有STATEMENT回來
-                    _ = _tpUnsettleService.InsertTpUnsettle(tpId, tpGameType, roundBetId, trans);
+                    _ = _tpUnsettleService.InsertTpUnsettle(tpId, tpGameType, edayBetId, trans);
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 }
                 else

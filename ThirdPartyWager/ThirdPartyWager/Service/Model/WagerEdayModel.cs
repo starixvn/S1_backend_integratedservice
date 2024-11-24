@@ -98,4 +98,16 @@ namespace ThirdPartyWager.Service.Model
         [JsonPropertyName("winAmount")]
         public decimal WinAmount { get; set; }
     }
+    
+    public class EdayBillDetailModel
+    {
+        [JsonPropertyName("resultCode")]
+        public int ResultCode { get; set; }
+
+        [JsonPropertyName("message")]
+        public string Message { get; set; }
+
+        [JsonPropertyName("data")]
+        public WagerEdayBillData Data { get; set; }
+    }
 }

@@ -87,7 +87,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         var betRecordInfo = new BetRecordInfo();
                         
-                        var unsettled = getUnsettledList.FirstOrDefault(x => x.TransId == wager.TransId);
+                        var unsettled = getUnsettledList.First(x => x.billId == wager.TransId);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         
@@ -202,6 +202,7 @@ namespace ThirdPartySettleWorker.Workers
         private class SettleDataEday : SettleData
         {
             public string billId { get; set; }
+            public string transId { get; set; }
             public int BillStatus { get; set; }
             public int BetType { get; set; }
         }

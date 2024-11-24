@@ -1,11 +1,8 @@
 using System.Data;
 using System.Globalization;
 using Dapper;
-
 using MySql.Data.MySqlClient;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -2121,10 +2118,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return -3;
                 }
-                
+
+                var cancelTransId = $"{cancelData_Eday.billId}_{cancelData_Eday.roundCode}";
                 var cancelData = new BettransLTEdayCancelBet()
                 {
-                    billId = cancelData_Eday.billId,
+                    transId = cancelTransId,
                     player = tpCustInfo.TpUserName,
                     TicketType = cancelData_Eday.TicketType,
                     TicketStatus = cancelData_Eday.TicketStatus,
@@ -2141,14 +2139,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         cancelData_Eday.amount,
                         (int)tpId,
-                        cancelData_Eday.billId,
+                        //為了取消bonus
+                        cancelTransId,
                         (int)tpGameType,
                         tpCategory,
                         cancelBetId,
                         TransType.Refunds,
                         null,
                         out afterAmount,
-                        $"CancelBet {cancelData.billId}",
+                        $"CancelBet {cancelData_Eday.billId}",
                         out bonusId,
                         conn,
                         trans,
@@ -2222,6 +2221,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                 }
 
+                //拿最後一筆的且不是取消的billId當派彩單號，要不然有Bonus的話Bonus Payout吃不到
+                var lastUnCancelBillId = bettransLTEday
+                    .Where(i => i.TicketType != (int)BettransType.CancelBet)
+                    .Select(i => i.billId)
+                    .LastOrDefault();                                       
+
                 var settleEdayData = new BettransLTEdayPayoutRequest
                 {
                     txId = settleData_Eday.txId,
@@ -2266,10 +2271,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         payoutAmount,
                         (int)tpId,
-                        settleBillId,
+                        $"{lastUnCancelBillId}_{settleData_Eday.roundCode}",
                         (int)tpGameType,
                         category,
-                        settleBillId,
+                        settleData_Eday.roundCode,
                         TransType.Payout,
                         null,
                         out afterAmount,
@@ -2279,7 +2284,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans,
                         AllowNegative.Allow
                     );
-
 
                     if (result > 0)
                     {
@@ -2363,7 +2367,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         //此function為把payout金額收回
                         voidRoundData_Eday.win * -1,
                         (int)tpId,
-                        voidRoundId,
+                        $"{voidRoundId}",
                         (int)tpGameType,
                         tpCategory,
                         voidRoundId,

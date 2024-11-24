@@ -162,7 +162,7 @@ namespace ThirdParty.Eday
             var wagerDetail = TpBetRecordProvider.DbQueryFirst(spName, new { getBetDetail.TransId }, db);
             var detail = ToJson(wagerDetail);
             var transId =
-                $"{wagerDetail.GetValueOrDefault("roundCode")}_{wagerDetail.GetValueOrDefault("player")}_{wagerDetail.GetValueOrDefault("billId")}";
+                $"{wagerDetail.GetValueOrDefault("billId")}_{wagerDetail.GetValueOrDefault("roundCode")}";
             
             return new LotteryDetail(getBetDetail.TpGameTypeOption)
             {

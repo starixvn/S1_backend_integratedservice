@@ -115,11 +115,66 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
         
+        public async Task<bool> GetEdayBillDetailAsync()
+        {
+            var msg = "FATAL_ERROR";
+            
+            try
+            {
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var site in siteList)
+                {
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+                    
+                    var siteConfig = _siteConfigDic[site.SiteId];
+                    
+                    //因為目前最大結算日為6天，固定拿7天內未結算的單去更新
+                    //拿billId取注單細單並更新回Bettrans，到時候TpWager拉的時候就直接拿billId結算
+                    //Deal單號拿來純紀錄 以免造成後續問題發生跟報表會有異常
+                    var needUpdateEdayBillId = _wagerEdayService.GetEdayBillIdByTime();
+                    
+                    foreach (var item in needUpdateEdayBillId)
+                    {
+                        var wagerEdayData = await _apiEdayBLL.GetBillDetail(item.billId,siteConfig);
+                        if (wagerEdayData.ResultCode != 0)
+                        {
+                            msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"Eday {msg}\r\n{JsonConvert.SerializeObject(wagerEdayData)}");
+                            return false;
+                        }
+    
+                        //結算才做下一筆 其他的一律略過
+                        if (wagerEdayData.Data.BillStatus != 200)
+                        {
+                            continue;
+                        }
+                        
+                        var ticketStatus = 0;
+                        ticketStatus = wagerEdayData.Data.TotalWin > 0.00m ? 1 : 2;
+                        _wagerEdayService.UpdateEdayBillId(wagerEdayData.Data,ticketStatus);
+                    }
+                }
+                
+                msg = "FINISH";
+                _logger.LogInformation($"GetEdayBillDetailAsync {msg}\r\n{DateTime.Now:yyyy-MM-dd} ~ {DateTime.Now:yyyy-MM-dd}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                msg = "FATAL_ERROR";
+                _logger.LogError(ex, $"GetEdayBillDetailAsync {msg}\r\n{ex.Message}");
+                return false;
+            }
+        }
+        
         private void InsertNewEdayWager(WagerEdayBillData wagerData)
         {
             var result = _wagerEdayService.InsertEdayWager(wagerData);
-            //真的全結算在送去TpUnSettle 這樣STATEMENT只會有一張結算直接覆蓋原有的unsettled
-            if (result == 1 && wagerData.WagerType == 2)
+            //Deal單不用丟結算 純紀錄
+            if (result == 1 && wagerData.WagerType == 1)
             {
                 _ = _tpUnsettleService.InsertTpUnsettle(Tp.Eday, GameType.Eday_Lottery, wagerData.BillId);
             }

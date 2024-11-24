@@ -130,7 +130,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     public class BettransLTEdayCancelBet
     {
-        public string billId { get; set; }
+        public string transId { get; set; }
         public string player { get; set; }
         public int TicketType { get; set; } 
         public int TicketStatus { get; set; }
