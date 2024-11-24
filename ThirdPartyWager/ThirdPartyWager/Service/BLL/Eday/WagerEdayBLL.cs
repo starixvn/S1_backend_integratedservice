@@ -71,6 +71,7 @@ namespace ThirdPartyWager.Service.BLL
                                 wager.BillId = wager.BillId.TrimStart('0');
                                 //後續Finance計算用
                                 wager.WagerType = 1;
+                                wager.transId = $"{wager.BillId}_{wager.RoundCode}";
                                 InsertNewEdayWager(wager);
                             }
                             catch (Exception ex)
@@ -215,10 +216,12 @@ namespace ThirdPartyWager.Service.BLL
         {
             //共通資料拿第一筆的資料就好
             var wagerFirst = wager.FirstOrDefault();
+            var edayDealId = $"{wagerFirst.RoundCode}_{wagerFirst.Player}";
             
             return new WagerEdayBillData
             {
-                BillId = $"{wagerFirst.RoundCode}_{wagerFirst.Player}",
+                BillId = edayDealId,
+                transId = edayDealId,
                 Player = wagerFirst.Player,
                 GameCode = wagerFirst.GameCode,
                 RoundCode = wagerFirst.RoundCode,

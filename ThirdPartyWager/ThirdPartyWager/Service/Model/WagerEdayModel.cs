@@ -39,7 +39,7 @@ namespace ThirdPartyWager.Service.Model
     {
         [JsonPropertyName("billId")]
         public string BillId { get; set; }
-
+        public string transId { get; set; }
         [JsonPropertyName("player")]
         public string Player { get; set; }
 
