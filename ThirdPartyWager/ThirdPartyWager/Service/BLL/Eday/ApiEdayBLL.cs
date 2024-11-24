@@ -41,6 +41,24 @@ public class ApiEdayBLL
         return result;
     }
 
+    public async Task<EdayBillDetailModel> GetBillDetail(string billId,EdayConfig siteConfig)
+    {
+        var path = "/apilot/GetBillDetail";
+        var parameters = new Dictionary<string, object>()
+        { 
+            {"billId",billId}
+        };
+        
+        var sParam = JsonConvert.SerializeObject(parameters);
+        
+        var header = GetAuthData( path, sParam ,siteConfig);
+        var r = await HttpPostClientAsync($"{siteConfig.ApiUrl}{path}", sParam, ContentType, header);
+        
+        var result = JsonConvert.DeserializeObject<EdayBillDetailModel>(r);
+        return result;
+        
+    }
+
     private async Task<string> HttpPostClientAsync(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
     {
         var parametersLog = parameters;
