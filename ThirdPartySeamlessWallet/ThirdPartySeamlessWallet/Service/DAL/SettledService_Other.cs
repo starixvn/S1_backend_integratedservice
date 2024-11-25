@@ -2195,6 +2195,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var settleBillId = $"{settleData_Eday.roundCode}_{settleData_Eday.player}";
+                var refTransId = $"{settleData_Eday.roundCode}_{settleData_Eday.player}" ;
                 var bettransLTEday = _mainDbClient.Query<BettransLTEdayDAL>(GetSpName, 
                     commandType: CommandType.StoredProcedure,new { roundCode = settleData_Eday.roundCode , player = tpCustInfo.TpUserName });
 
@@ -2274,7 +2275,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         $"{lastUnCancelBillId}_{settleData_Eday.roundCode}",
                         (int)tpGameType,
                         category,
-                        settleData_Eday.roundCode,
+                        refTransId,
                         TransType.Payout,
                         null,
                         out afterAmount,

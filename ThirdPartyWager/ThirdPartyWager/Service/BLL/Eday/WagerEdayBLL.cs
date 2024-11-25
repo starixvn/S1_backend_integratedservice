@@ -160,7 +160,7 @@ namespace ThirdPartyWager.Service.BLL
                 }
                 
                 msg = "FINISH";
-                _logger.LogInformation($"GetEdayBillDetailAsync {msg}\r\n{DateTime.Now:yyyy-MM-dd} ~ {DateTime.Now:yyyy-MM-dd}");
+                _logger.LogInformation($"GetEdayBillDetailAsync {msg}");
                 return true;
             }
             catch (Exception ex)

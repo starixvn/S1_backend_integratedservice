@@ -1060,6 +1060,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 
                 var edayBetId = $"{bettingDataLT_Eday.billId}_{bettingDataLT_Eday.roundCode}";
+                var refTransId = $"{bettingDataLT_Eday.roundCode}_{bettingDataLT_Eday.player}" ;
                 bettingDataLT_Eday.player = tpCustInfo.TpUserName;
                 bettingDataLT_Eday.amount *= -1;
                 var p = new DynamicParameters(bettingDataLT_Eday);
@@ -1080,7 +1081,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)tpId,
                         edayBetId,
                         (int)tpGameType,
-                        bettingDataLT_Eday.roundCode,
+                        refTransId,
                         out afterAmount,
                         ref bonusId,
                         out _,
