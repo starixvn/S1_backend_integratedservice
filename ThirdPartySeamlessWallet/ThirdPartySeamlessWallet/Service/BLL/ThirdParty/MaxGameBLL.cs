@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using ThirdPartySeamlessWallet.Controllers;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -39,8 +38,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {"lottery", Tp.Lottery },
             { "pocketgames", Tp.PG },
             { "fachai", Tp.FaChai },
-            { "sexycasino", Tp.Sexy },
-            { "worldentertainment", Tp.EBet },
+            { "sexycasino", Tp.AESexy },
+            { "worldentertainment", Tp.WE },
             { "tablegame", Tp.RNGTableGame }
         };
 
@@ -58,9 +57,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.FaChai_RNG, WalletKind.BonusWallet },
             { (int)GameType.RNG_Keno, WalletKind.BonusWallet },
             { (int)GameType.Lottery, WalletKind.BonusWallet },
-            { (int)GameType.Sexy_LiveCasino, WalletKind.BonusWallet },
+            { (int)GameType.AESexy_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PG_RNG, WalletKind.BonusWallet },
-            { (int)GameType.EBet_LiveCasino, WalletKind.BonusWallet },
+            { (int)GameType.WE_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.TableGame_RNG, WalletKind.BonusWallet }
         };
 
@@ -78,9 +77,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.FaChai_RNG, TpCategory.Slots },
             { (int)GameType.RNG_Keno, TpCategory.Lottery },
             { (int)GameType.Lottery, TpCategory.Lottery },
-            { (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino },
+            { (int)GameType.AESexy_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.PG_RNG, TpCategory.Slots },
-            { (int)GameType.EBet_LiveCasino, TpCategory.LiveCasino },
+            { (int)GameType.WE_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.TableGame_RNG, TpCategory.Lottery }
         };
 
@@ -138,7 +137,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var limitInfo = _tpBetLimitData.Where(i => i.GameType == (int)gameType)
                 .FirstOrDefault(item => item.CurrencyId == tpCustInfo.CurrencyId);
-            _logger.LogInformation("tpId: "+ tpId + " ,Payload.GameType:"+getReq.Payload.GameType+" GameType: " + gameType+ " limitInfo: " + JsonConvert.SerializeObject(limitInfo));
+            _logger.LogInformation("tpId: " + tpId + " ,Payload.GameType:" + getReq.Payload.GameType + " GameType: " + gameType + " limitInfo: " + JsonConvert.SerializeObject(limitInfo));
             // 取出對方支援的Min/Max預設設定
             var limit = JsonConvert.DeserializeObject<Limit>(_tpBetLimitData.Where(i => i.GameType == (int)gameType).FirstOrDefault(item => item.CurrencyId == tpCustInfo.CurrencyId).LimitGroup);
 
@@ -391,7 +390,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
                 return _tools.ToJson(response);
             }
-
 
             _log2File.Error($"result={result}", logName);
             return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError));
@@ -857,7 +855,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     CancelBettransSpName = "Service_BettransLC_PP_CancelBet_Set";
                     break;
 
-                case (int)GameType.Sexy_LiveCasino:
+                case (int)GameType.AESexy_LiveCasino:
                     GetTicketNoSpName = "Service_BettransLC_Sexy_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransLC_Sexy_Ins";
                     CancelBettransSpName = "Service_BettransLC_Sexy_CancelBet_Set";
@@ -874,22 +872,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     InsertBettransSpName = "Service_BettransLT_Lottery_Ins";
                     CancelBettransSpName = "Service_BettransLT_Lottery_CancelBet_Set";
                     break;
+
                 case (int)GameType.TableGame_RNG:
                     GetTicketNoSpName = "Service_BettransRng_TableGame_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransRng_TableGame_Ins";
                     CancelBettransSpName = "Service_BettransRng_TableGame_CancelBet_Set";
                     break;
 
-                case (int)GameType.EBet_LiveCasino:
+                case (int)GameType.WE_LiveCasino:
                     GetTicketNoSpName = "Service_BettransLC_WE_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransLC_WE_Ins";
                     CancelBettransSpName = "Service_BettransLC_WE_CancelBet_Set";
                     break;
+
                 case (int)GameType.PG_RNG:
                     GetTicketNoSpName = "Service_BettransRng_PG_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransRng_PG_Ins";
                     CancelBettransSpName = "Service_BettransRng_PG_CancelBet_Set";
                     break;
+
                 default:
                     // GameType.MaxGame_Poker
                     break;

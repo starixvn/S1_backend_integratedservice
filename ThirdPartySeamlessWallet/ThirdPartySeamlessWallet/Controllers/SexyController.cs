@@ -31,8 +31,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _environment = provider.GetRequiredService<IHostEnvironment>();
-            _thisTp = Tp.Sexy;
-            _gameType = (int)GameType.Sexy_LiveCasino;
+            _thisTp = Tp.AESexy;
+            _gameType = (int)GameType.AESexy_LiveCasino;
             // defaultConfig給原本NOVA、GOAL、BWING的商號使用
             _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_thisTp.ToString());
             // 新增商號使用指定siteName

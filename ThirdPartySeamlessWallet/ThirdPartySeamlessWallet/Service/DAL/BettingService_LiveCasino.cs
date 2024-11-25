@@ -160,11 +160,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
-        #region Sexy
+        #region AESexy
         public int PlaceBetLC_Sexy(TpCustInfo tpCustInfo, BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.Sexy_LiveCasino;
+            int gameType = (int)GameType.AESexy_LiveCasino;
 
             afterAmount = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -182,8 +182,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = _mainDbClient.Execute("Service_BettransLC_Sexy_Ins", p, conn, trans);
                 if (result > 0)
                 {
-                    //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, txn.BetAmount * -1, (int)Tp.Sexy, TransType.Wagers, $"Stake: {Math.Abs(txn.BetAmount).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans);
-                    result = PlaceBet(tpCustInfo, Math.Abs(txn.BetAmount) * -1, (int)Tp.Sexy, txn.TxId, gameType, txn.TxId, out afterAmount, ref bonusId, out _, conn, trans);
+                    //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, txn.BetAmount * -1, (int)Tp.AESexy, TransType.Wagers, $"Stake: {Math.Abs(txn.BetAmount).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans);
+                    result = PlaceBet(tpCustInfo, Math.Abs(txn.BetAmount) * -1, (int)Tp.AESexy, txn.TxId, gameType, txn.TxId, out afterAmount, ref bonusId, out _, conn, trans);
 
                     if (result == 0)
                     {
@@ -209,7 +209,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
-        #region Sexy (AWC)
+        #region AESexy (AWC)
 
         public int PlaceBetLC_AWC_Sexy(TpCustInfo tpCustInfo, BetLC_Sexy betLC_Sexy, out decimal afterAmount)
         {
@@ -257,9 +257,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         result = PlaceBet(
                             tpCustInfo,
                             Math.Abs(txn.betAmount) * -1,
-                            (int)Tp.Sexy,
+                            (int)Tp.AESexy,
                             txn.platformTxId,
-                            (int)GameType.Sexy_LiveCasino,
+                            (int)GameType.AESexy_LiveCasino,
                             txn.platformTxId,
                             out afterAmount,
                             ref bonusId,
@@ -345,7 +345,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
                             Math.Abs(txn.tip) * -1,
-                            (int)Tp.Sexy,
+                            (int)Tp.AESexy,
                             TransType.Tip,
                             $"Tip: {Math.Abs(txn.tip):#,##0.##}",
                             txn.platformTxId,
@@ -381,12 +381,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
-        #region EBet
+        #region WE
         public int PlaceBetLC_EBet(TpCustInfo tpCustInfo, BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {
 
             int bonusId = 0;
-            int gameType = (int)GameType.EBet_LiveCasino;
+            int gameType = (int)GameType.WE_LiveCasino;
             afterAmount = 0;
             string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
 
@@ -428,7 +428,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     result = PlaceBet(
                         tpCustInfo,
                         Math.Abs(bettingData_EBet.money) * -1,
-                        (int)Tp.EBet,
+                        (int)Tp.WE,
                         mixUniqueId,
                         gameType,
                         mixUniqueId,
@@ -442,7 +442,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (bonusId > 0 && result > 0)
                     {
                         AddTpBonus(
-                            (int)Tp.EBet,
+                            (int)Tp.WE,
                             bettingData_EBet.seqNo,
                             gameType,
                             tpCustInfo.CustId,

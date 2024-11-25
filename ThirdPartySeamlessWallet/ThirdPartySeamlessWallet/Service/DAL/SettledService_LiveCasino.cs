@@ -511,11 +511,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
-        #region Sexy
+        #region AESexy
         public int CancelBetLC_Sexy(TpCustInfo tpCustInfo, BettingDataLC_Sexy_CancelBet cancelBetTxn, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.Sexy_LiveCasino;
+            int gameType = (int)GameType.AESexy_LiveCasino;
 
             afterAmount = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -534,8 +534,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0)
                 {
                     decimal betAmount = p.Get<decimal>("betAmount");
-                    //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, betAmount, (int)Tp.Sexy, TransType.Refunds, $"Cancel Bet: {betAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans);
-                    result = PayoutV2(tpCustInfo, betAmount, (int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Refunds, null, out afterAmount, "CancelBet", out bonusId, conn, trans);
+                    //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, betAmount, (int)Tp.AESexy, TransType.Refunds, $"Cancel Bet: {betAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans);
+                    result = PayoutV2(tpCustInfo, betAmount, (int)Tp.AESexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Refunds, null, out afterAmount, "CancelBet", out bonusId, conn, trans);
                     if (result == 0)
                     {
                         return 0;
@@ -554,7 +554,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int SettledLC_Sexy(BettingDataLC_Sexy_Settle bettingDataLC_Sexy_Settle, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.Sexy_LiveCasino;
+            int gameType = (int)GameType.AESexy_LiveCasino;
 
             afterAmount = 0;
             int result = 0;
@@ -595,23 +595,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (txn.SettleWinLoss != 0)
                     {
-                        //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, txn.SettleWinLoss, (int)Tp.Sexy, TransType.Payout, $"Payout: {Math.Abs(txn.SettleWinLoss).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans, AllowNegative.Allow);
-                        result = PayoutV2(txn.tpCustInfo, txn.SettleWinLoss, (int)Tp.Sexy, txn.TxId, gameType, TpCategory.LiveCasino, txn.TxId, TransType.Payout, null, out afterAmount, "Payout", out bonusId, conn, trans);
+                        //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, txn.SettleWinLoss, (int)Tp.AESexy, TransType.Payout, $"Payout: {Math.Abs(txn.SettleWinLoss).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans, AllowNegative.Allow);
+                        result = PayoutV2(txn.tpCustInfo, txn.SettleWinLoss, (int)Tp.AESexy, txn.TxId, gameType, TpCategory.LiveCasino, txn.TxId, TransType.Payout, null, out afterAmount, "Payout", out bonusId, conn, trans);
                     }
                     else
                     {
-                        GetTpBonus((int)Tp.Sexy, txn.TxId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
+                        GetTpBonus((int)Tp.AESexy, txn.TxId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
                     }
 
                     if (result > 0)
                     {
                         BetRecordInfo betRecordInfo = new BetRecordInfo();
-                        betRecordInfo.TpId = (int)Tp.Sexy;
+                        betRecordInfo.TpId = (int)Tp.AESexy;
                         betRecordInfo.Stake = txn.BetAmount;
                         betRecordInfo.ValidBet = txn.ValidBet;
                         betRecordInfo.WinlostAmount = txn.WinLoss;
                         betRecordInfo.TransId = txn.TxId;
-                        betRecordInfo.GameType = GameType.Sexy_LiveCasino;
+                        betRecordInfo.GameType = GameType.AESexy_LiveCasino;
                         betRecordInfo.TpUserName = txn.UserId;
                         betRecordInfo.SettledTime = updateTime;
                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
@@ -656,7 +656,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int UnsettledLC_Sexy(Unsettle_VoidRound unsettle, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.Sexy_LiveCasino;
+            int gameType = (int)GameType.AESexy_LiveCasino;
 
             afterAmount = 0;
             int result = 0;
@@ -685,23 +685,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     decimal winLoss = p.Get<decimal>("winLoss");
                     if (settleWinLoss != 0)
                     {
-                        //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, settleWinLoss * -1, (int)Tp.Sexy, TransType.Payout, $"Unsettle: {(settleWinLoss * -1).ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans, AllowNegative.Allow);
-                        result = PayoutV2(txn.tpCustInfo, settleWinLoss * -1, (int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Undo, null, out afterAmount, "Unsettle", out bonusId, conn, trans, AllowNegative.Allow);
+                        //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, settleWinLoss * -1, (int)Tp.AESexy, TransType.Payout, $"Unsettle: {(settleWinLoss * -1).ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans, AllowNegative.Allow);
+                        result = PayoutV2(txn.tpCustInfo, settleWinLoss * -1, (int)Tp.AESexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Undo, null, out afterAmount, "Unsettle", out bonusId, conn, trans, AllowNegative.Allow);
                     }
                     else
                     {
-                        GetTpBonus((int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
+                        GetTpBonus((int)Tp.AESexy, txn.txId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
                     }
 
                     if (result > 0)
                     {
                         BetRecordInfo betRecordInfo = new BetRecordInfo();
-                        betRecordInfo.TpId = (int)Tp.Sexy;
+                        betRecordInfo.TpId = (int)Tp.AESexy;
                         betRecordInfo.Stake = betAmount;
                         betRecordInfo.ValidBet = 0;
                         betRecordInfo.WinlostAmount = 0;
                         betRecordInfo.TransId = txn.txId;
-                        betRecordInfo.GameType = GameType.Sexy_LiveCasino;
+                        betRecordInfo.GameType = GameType.AESexy_LiveCasino;
                         betRecordInfo.TpUserName = txn.userId;
                         betRecordInfo.SettledTime = updateTime.ToUnixTimeSeconds();
                         betRecordInfo.SettlementType = SettlementType.UnSettled;
@@ -751,7 +751,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int VoidRoundLC_Sexy(Unsettle_VoidRound voidRound, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.Sexy_LiveCasino;
+            int gameType = (int)GameType.AESexy_LiveCasino;
 
             afterAmount = 0;
             int result = 0;
@@ -781,23 +781,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (betAmount != 0)
                         {
-                            //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, betAmount, (int)Tp.Sexy, TransType.Refunds, $"VoidRound: {betAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans, AllowNegative.Allow);
-                            result = PayoutV2(txn.tpCustInfo, betAmount, (int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Refunds, null, out afterAmount, "VoidRound", out bonusId, conn, trans, AllowNegative.Allow);
+                            //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, betAmount, (int)Tp.AESexy, TransType.Refunds, $"VoidRound: {betAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans, AllowNegative.Allow);
+                            result = PayoutV2(txn.tpCustInfo, betAmount, (int)Tp.AESexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Refunds, null, out afterAmount, "VoidRound", out bonusId, conn, trans, AllowNegative.Allow);
                         }
                         else
                         {
-                            GetTpBonus((int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
+                            GetTpBonus((int)Tp.AESexy, txn.txId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
                         }
 
                         if (result > 0)
                         {
                             BetRecordInfo betRecordInfo = new BetRecordInfo();
-                            betRecordInfo.TpId = (int)Tp.Sexy;
+                            betRecordInfo.TpId = (int)Tp.AESexy;
                             betRecordInfo.Stake = betAmount;
                             betRecordInfo.ValidBet = 0;
                             betRecordInfo.WinlostAmount = 0;
                             betRecordInfo.TransId = txn.txId;
-                            betRecordInfo.GameType = GameType.Sexy_LiveCasino;
+                            betRecordInfo.GameType = GameType.AESexy_LiveCasino;
                             betRecordInfo.TpUserName = txn.userId;
                             betRecordInfo.SettledTime = updateTime.ToUnixTimeSeconds();
                             betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
@@ -829,7 +829,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int VoidTxnLC_Sexy(VoidTxn voidTxn, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.Sexy_LiveCasino;
+            int gameType = (int)GameType.AESexy_LiveCasino;
 
             afterAmount = 0;
             int result = 0;
@@ -858,23 +858,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     decimal fixAmount = betAmount - settleWinLoss;
                     if (fixAmount != 0)
                     {
-                        //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, fixAmount, (int)Tp.Sexy, TransType.Refunds, $"VoidTxn: {fixAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans, AllowNegative.Allow);
-                        result = PayoutV2(txn.tpCustInfo, fixAmount, (int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Refunds, null, out afterAmount, "VoidTxn", out bonusId, conn, trans, AllowNegative.Allow);
+                        //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, fixAmount, (int)Tp.AESexy, TransType.Refunds, $"VoidTxn: {fixAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans, AllowNegative.Allow);
+                        result = PayoutV2(txn.tpCustInfo, fixAmount, (int)Tp.AESexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Refunds, null, out afterAmount, "VoidTxn", out bonusId, conn, trans, AllowNegative.Allow);
                     }
                     else
                     {
-                        GetTpBonus((int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
+                        GetTpBonus((int)Tp.AESexy, txn.txId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
                     }
 
                     if (result > 0)
                     {
                         BetRecordInfo betRecordInfo = new BetRecordInfo();
-                        betRecordInfo.TpId = (int)Tp.Sexy;
+                        betRecordInfo.TpId = (int)Tp.AESexy;
                         betRecordInfo.Stake = betAmount;
                         betRecordInfo.ValidBet = validBet;
                         betRecordInfo.WinlostAmount = 0;
                         betRecordInfo.TransId = txn.txId;
-                        betRecordInfo.GameType = GameType.Sexy_LiveCasino;
+                        betRecordInfo.GameType = GameType.AESexy_LiveCasino;
                         betRecordInfo.TpUserName = txn.userId;
                         betRecordInfo.SettledTime = updateTime.ToUnixTimeSeconds();
                         betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
@@ -935,8 +935,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         if (sexy_Treat.amount > 0)
                         {
-                            //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, txn.SettleWinLoss, (int)Tp.Sexy, TransType.Payout, $"Payout: {Math.Abs(txn.SettleWinLoss).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans, AllowNegative.Allow);
-                            result = PayoutV2(sexy_Treat.tpCustInfo, sexy_Treat.amount, (int)Tp.Sexy, sexy_Treat.txId, (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino, sexy_Treat.txId, TransType.Prize, null, out afterAmount, $"{sexy_Treat.treatId} Prize", out _, conn, trans);
+                            //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, txn.SettleWinLoss, (int)Tp.AESexy, TransType.Payout, $"Payout: {Math.Abs(txn.SettleWinLoss).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans, AllowNegative.Allow);
+                            result = PayoutV2(sexy_Treat.tpCustInfo, sexy_Treat.amount, (int)Tp.AESexy, sexy_Treat.txId, (int)GameType.AESexy_LiveCasino, TpCategory.LiveCasino, sexy_Treat.txId, TransType.Prize, null, out afterAmount, $"{sexy_Treat.treatId} Prize", out _, conn, trans);
                         }
 
                         if (result > 0)
@@ -968,7 +968,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
-        #region Sexy (AWC)
+        #region AESexy (AWC)
 
         public int CancelBetLC_AWC_Sexy(TpCustInfo tpCustInfo, CancelLC_Sexy cancelLC_Sexy, out decimal afterAmount)
         {
@@ -1010,9 +1010,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         result = PayoutV2(
                             tpCustInfo,
                             stake,
-                            (int)Tp.Sexy,
+                            (int)Tp.AESexy,
                             item.platformTxId,
-                            (int)GameType.Sexy_LiveCasino,
+                            (int)GameType.AESexy_LiveCasino,
                             TpCategory.LiveCasino,
                             item.platformTxId,
                             TransType.Refunds,
@@ -1093,7 +1093,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
                             tip,
-                            (int)Tp.Sexy,
+                            (int)Tp.AESexy,
                             TransType.Tip,
                             $"CancelTip: {tip:#,##0.##}",
                             item.platformTxId,
@@ -1160,9 +1160,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         result = PayoutV2(
                             item.tpCustInfo,
                             stake,
-                            (int)Tp.Sexy,
+                            (int)Tp.AESexy,
                             item.platformTxId,
-                            (int)GameType.Sexy_LiveCasino,
+                            (int)GameType.AESexy_LiveCasino,
                             TpCategory.LiveCasino,
                             item.platformTxId,
                             TransType.Refunds,
@@ -1252,9 +1252,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             result = PayoutV2(
                                 txn.tpCustInfo,
                                 payout,
-                                (int)Tp.Sexy,
+                                (int)Tp.AESexy,
                                 txn.platformTxId,
-                                (int)GameType.Sexy_LiveCasino,
+                                (int)GameType.AESexy_LiveCasino,
                                 TpCategory.LiveCasino,
                                 txn.platformTxId,
                                 TransType.Payout,
@@ -1270,7 +1270,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.Sexy, GameType.Sexy_LiveCasino, txn.platformTxId, trans);
+                            var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.AESexy, GameType.AESexy_LiveCasino, txn.platformTxId, trans);
                             if (insertTpResults <= 0)
                             {
                                 result = 0;
@@ -1290,7 +1290,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 catch (MySqlException mySqlEx)
                 {
                     isError = true;
-                    log2File.Error($"{JsonConvert.SerializeObject(txn)}\r\n{mySqlEx}", $"{Tp.Sexy}_settle", mySqlEx);
+                    log2File.Error($"{JsonConvert.SerializeObject(txn)}\r\n{mySqlEx}", $"{Tp.AESexy}_settle", mySqlEx);
                 }
             }
             return isError ? 0 : result;
@@ -1328,9 +1328,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             result = PayoutV2(
                                 item.tpCustInfo,
                                 payout * -1,
-                                (int)Tp.Sexy,
+                                (int)Tp.AESexy,
                                 item.platformTxId,
-                                (int)GameType.Sexy_LiveCasino,
+                                (int)GameType.AESexy_LiveCasino,
                                 TpCategory.LiveCasino,
                                 item.platformTxId,
                                 TransType.Undo,
@@ -1362,7 +1362,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 catch (MySqlException mySqlEx)
                 {
                     isError = true;
-                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.Sexy}_unsettle", mySqlEx);
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.AESexy}_unsettle", mySqlEx);
                 }
             }
 
@@ -1402,9 +1402,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             result = PayoutV2(
                                 item.tpCustInfo,
                                 payout,
-                                (int)Tp.Sexy,
+                                (int)Tp.AESexy,
                                 item.platformTxId,
-                                (int)GameType.Sexy_LiveCasino,
+                                (int)GameType.AESexy_LiveCasino,
                                 TpCategory.LiveCasino,
                                 item.platformTxId,
                                 TransType.Refunds,
@@ -1420,7 +1420,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            _tpUnsettleService.InsertTpUnsettle(Tp.Sexy, GameType.Sexy_LiveCasino, item.platformTxId, trans);
+                            _tpUnsettleService.InsertTpUnsettle(Tp.AESexy, GameType.AESexy_LiveCasino, item.platformTxId, trans);
                             _mainDbClient.CommitAndDisposeConnection(conn, trans);
                         }
                         else
@@ -1437,7 +1437,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 catch (MySqlException mySqlEx)
                 {
                     isError = true;
-                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.Sexy}_voidSettle", mySqlEx);
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.AESexy}_voidSettle", mySqlEx);
                 }
             }
 
@@ -1476,9 +1476,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             result = PayoutV2(
                                 item.tpCustInfo,
                                 amount,
-                                (int)Tp.Sexy,
+                                (int)Tp.AESexy,
                                 item.promotionTxId,
-                                (int)GameType.Sexy_LiveCasino,
+                                (int)GameType.AESexy_LiveCasino,
                                 TpCategory.LiveCasino,
                                 item.promotionTxId,
                                 TransType.Prize,
@@ -1511,7 +1511,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     else
                     {
                         isError = true;
-                        log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.Sexy}_give", mySqlEx);
+                        log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.AESexy}_give", mySqlEx);
                     }
                 }
             }
@@ -1534,7 +1534,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (check == null)
                     {
                         // no data
-                        log2File.Error($"not exist\r\n{JsonConvert.SerializeObject(item)}", $"{Tp.Sexy}_resettle");
+                        log2File.Error($"not exist\r\n{JsonConvert.SerializeObject(item)}", $"{Tp.AESexy}_resettle");
                         result = -1;
                         continue;
                     }
@@ -1579,9 +1579,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             result = PayoutV2(
                                 item.tpCustInfo,
                                 payout,
-                                (int)Tp.Sexy,
+                                (int)Tp.AESexy,
                                 item.platformTxId,
-                                (int)GameType.Sexy_LiveCasino,
+                                (int)GameType.AESexy_LiveCasino,
                                 TpCategory.LiveCasino,
                                 item.platformTxId,
                                 TransType.Undo,
@@ -1613,7 +1613,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 catch (MySqlException mySqlEx)
                 {
                     isError = true;
-                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.Sexy}_resettle", mySqlEx);
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.AESexy}_resettle", mySqlEx);
                 }
             }
 
@@ -1631,11 +1631,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
-        #region EBet
+        #region WE
         public int PayoutLC_EBet(TpCustInfo tpCustInfo, BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.EBet_LiveCasino;
+            int gameType = (int)GameType.WE_LiveCasino;
 
             afterAmount = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -1704,7 +1704,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         result = PayoutV2(
                             tpCustInfo,
                             bettingData_EBet.money,
-                            (int)Tp.EBet,
+                            (int)Tp.WE,
                             mixUniqueId,
                             gameType,
                             TpCategory.LiveCasino,
@@ -1747,7 +1747,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int PreRefundLC_EBet(TpCustInfo tpCustInfo, BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.EBet_LiveCasino;
+            int gameType = (int)GameType.WE_LiveCasino;
 
             afterAmount = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -1791,7 +1791,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         result = PayoutV2(
                             tpCustInfo,
                             bettingData_EBet.money,
-                            (int)Tp.EBet,
+                            (int)Tp.WE,
                             mixUniqueId,
                             gameType,
                             TpCategory.LiveCasino,
@@ -1834,7 +1834,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int CancelBetLC_EBet(TpCustInfo tpCustInfo, BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.EBet_LiveCasino;
+            int gameType = (int)GameType.WE_LiveCasino;
 
             afterAmount = 0;
             int result = 0;
@@ -1857,7 +1857,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = PayoutV2(
                     tpCustInfo,
                     Math.Abs(bettingData_EBet.money),
-                    (int)Tp.EBet,
+                    (int)Tp.WE,
                     bettingData_EBet.seqNo,
                     gameType, TpCategory.LiveCasino,
                     mixUniqueId,
@@ -1890,7 +1890,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int RefundLC_EBet(TpCustInfo tpCustInfo, RefundListEbet refundListEbet, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.EBet_LiveCasino;
+            int gameType = (int)GameType.WE_LiveCasino;
 
             afterAmount = 0;
             int result = 0;
@@ -1910,7 +1910,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = PayoutV2(
                     tpCustInfo,
                     Math.Abs(refundListEbet.refundMoney),
-                    (int)Tp.EBet,
+                    (int)Tp.WE,
                     refundListEbet.refundSeqNo,
                     gameType, TpCategory.LiveCasino,
                     mixUniqueId,
@@ -1944,7 +1944,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int RefundBatchLC_EBet(TpCustInfo tpCustInfo, BatchRefundList batchRefundList, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.EBet_LiveCasino;
+            int gameType = (int)GameType.WE_LiveCasino;
 
             afterAmount = 0;
             int result = 0;
@@ -1963,7 +1963,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = PayoutV2(
                     tpCustInfo,
                     Math.Abs(batchRefundList.refundMoney),
-                    (int)Tp.EBet,
+                    (int)Tp.WE,
                     batchRefundList.seqNo,
                     gameType, TpCategory.LiveCasino,
                     mixUniqueId,
@@ -2031,9 +2031,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         result = PayoutV2(
                             tpCustInfo,
                             bettingData_EBet.money,
-                            (int)Tp.EBet,
+                            (int)Tp.WE,
                             bettingData_EBet.seqNo,
-                            (int)GameType.EBet_LiveCasino,
+                            (int)GameType.WE_LiveCasino,
                             TpCategory.LiveCasino,
                             bettingData_EBet.seqNo,
                             TransType.Prize,

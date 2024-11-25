@@ -9,24 +9,24 @@ using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
 {
-    public class EBetWorker : BackgroundService, ISettleWorker
+    public class WEWorker : BackgroundService, ISettleWorker
     {
-        public Tp Tp => Tp.EBet;
+        public Tp Tp => Tp.WE;
 
         private Timer _timer;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly PartitionService _partitionService;
-        private readonly ILogger<EBetWorker> _logger;
+        private readonly ILogger<WEWorker> _logger;
         private readonly string _tpName;
 
-        public EBetWorker(IServiceProvider provider)
+        public WEWorker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
-            _logger = provider.GetRequiredService<ILogger<EBetWorker>>();
+            _logger = provider.GetRequiredService<ILogger<WEWorker>>();
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
@@ -34,7 +34,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoSettleLC, GameType.EBet_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoSettleLC, GameType.WE_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 

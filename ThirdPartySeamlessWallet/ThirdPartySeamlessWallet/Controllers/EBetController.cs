@@ -32,9 +32,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             bettingBLL = provider.GetRequiredService<BettingBLL>();
             settledBLL = provider.GetRequiredService<SettledBLL>();
             log2File = provider.GetRequiredService<Log2File>();
-            thisTp = Tp.EBet;
-            gameType = (int)GameType.EBet_LiveCasino;
-            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(Tp.EBet.ToString());
+            thisTp = Tp.WE;
+            gameType = (int)GameType.WE_LiveCasino;
+            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(Tp.WE.ToString());
         }
 
         #region Response

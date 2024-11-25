@@ -181,7 +181,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public TpCustInfo tpCustInfo { get; set; }
     }
 
-    #region Sexy (AWC)
+    #region AESexy (AWC)
 
     public class CommonData_Sexy
     {

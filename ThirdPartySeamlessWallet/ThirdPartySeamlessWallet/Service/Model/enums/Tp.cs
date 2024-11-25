@@ -17,10 +17,10 @@
         Allbet = 12,
         OneGaming = 13,
         PG = 14,
-        Sexy = 15,
+        AESexy = 15,
         CQ9 = 16,
         CF = 17,
-        EBet = 18,
+        WE = 18,
         AWC = 19,
         WM = 20,
         Kiss918 = 21,
@@ -75,5 +75,4 @@
         Lottery = 72,
         RNGTableGame = 73
     }
-
 }

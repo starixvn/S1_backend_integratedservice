@@ -11,24 +11,24 @@ using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
 {
-    public class SexyWorker : BackgroundService, ISettleWorker
+    public class AESexyWorker : BackgroundService, ISettleWorker
     {
-        public Tp Tp { get => Tp.Sexy; }
+        public Tp Tp { get => Tp.AESexy; }
 
         private Timer _timer;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly PartitionService _partitionService;
-        private readonly ILogger<SexyWorker> _logger;
+        private readonly ILogger<AESexyWorker> _logger;
         private readonly string _tpName;
 
-        public SexyWorker(IServiceProvider provider)
+        public AESexyWorker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            _logger = provider.GetRequiredService<ILogger<SexyWorker>>();
+            _logger = provider.GetRequiredService<ILogger<AESexyWorker>>();
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
@@ -36,7 +36,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoSettle, GameType.Sexy_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoSettle, GameType.AESexy_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 

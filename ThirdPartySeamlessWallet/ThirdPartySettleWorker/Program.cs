@@ -106,10 +106,10 @@ builder.Services
 //.AddHostedService<SGWorker>()
 //.AddHostedService<SBOWorker>()
 
-.AddHostedService<EBetWorker>()
+.AddHostedService<WEWorker>()
 .AddHostedService<PPWorker>()
 .AddHostedService<AllbetWorker>()
-.AddHostedService<SexyWorker>()
+.AddHostedService<AESexyWorker>()
 .AddHostedService<RNGKenoWorker>()
 .AddHostedService<JILIWorker>()
 .AddHostedService<FaChaiWorker>()
