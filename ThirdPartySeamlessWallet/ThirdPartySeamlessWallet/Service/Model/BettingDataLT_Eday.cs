@@ -115,15 +115,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string token { get; set; }
         public string player { get; set; }
         public string billId { get; set; }
+        public string transId { get; set; }
         public decimal amount { get; set; }
+        public decimal betTotal { get; set; }
+        public decimal winTotal { get; set; }
+        public int ticketCount { get; set; }
         public long timestamp { get; set; }
         public string roundCode { get; set; }
         public string gameCode { get; set; }
         public int betType { get; set; }
+        public int eventId { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
         public DateTime UTCBetTime { get; set; }
+        public DateTime UTCSettleTime { get; set; }
         public DateTime CreateTime { get; set; }
         public DateTime UpdateTime { get; set; }
     }
