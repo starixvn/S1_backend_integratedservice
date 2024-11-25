@@ -5,25 +5,24 @@ namespace ThirdPartyWager.Service.Library
 {
     public class HttpHelper
     {
+        private readonly HttpClient clientWithProxy;
         private readonly HttpClient client;
         private readonly ILogger<HttpHelper> _logger;
         private readonly IConfiguration _configuration;
 
         public HttpHelper(IHttpClientFactory clientFactory, IConfiguration configuration, IServiceProvider provider)
         {
-            if (!string.IsNullOrEmpty(configuration.GetValue<string>("ProxyHost")))
-            {
-                client = clientFactory.CreateClient("with_proxy");
-            }
-            else
-            {
-                client = clientFactory.CreateClient();
-            }
+            clientWithProxy = !string.IsNullOrEmpty(configuration.GetValue<string>("ProxyHost"))
+                ? clientFactory.CreateClient("with_proxy")
+                : clientFactory.CreateClient();
+            client = clientFactory.CreateClient();
             _configuration = provider.GetRequiredService<IConfiguration>();
             _logger = provider.GetRequiredService<ILogger<HttpHelper>>();
         }
 
         public HttpClient GetClient() => client;
+
+        public HttpClient GetClientWithProxy() => clientWithProxy;
 
         public HttpClient GetClientWithHandler(HttpClientHandler handler) => new HttpClient(handler);
 

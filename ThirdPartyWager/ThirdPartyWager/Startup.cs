@@ -35,10 +35,8 @@ namespace ThirdPartyWager
                 services.AddHttpClient("with_proxy")
                 .ConfigurePrimaryHttpMessageHandler(() => proxy);
             }
-            else
-            {
-                services.AddHttpClient();
-            }
+
+            services.AddHttpClient();
 
             services
                 .AddOpenTelemetry()

@@ -1,5 +1,4 @@
 ﻿using ThirdPartyCore;
-using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
@@ -105,16 +104,12 @@ namespace ThirdPartyService.Extensions
                 .AddSingleton<IPayloadLogger, PayloadLogService>();
         }
 
-        public static void AddWebProxy(this IServiceCollection services)
+        public static void AddWebProxy(this IServiceCollection services, IConfiguration configuration)
         {
-            var provider = services.BuildServiceProvider();
-            var configBll = provider.GetRequiredService<ConfigBLL>();
-            var config = configBll.GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
-
-            if (!string.IsNullOrWhiteSpace(config.ProxyHost))
+            if (!string.IsNullOrWhiteSpace(configuration.GetValue<string>("ProxyHost")))
             {
-                ThirdPartyHelperBase.proxyHost = config.ProxyHost;
-                ThirdPartyHelperBase.proxyPort = config.ProxyPort;
+                ThirdPartyHelperBase.proxyHost = configuration.GetValue<string>("ProxyHost");
+                ThirdPartyHelperBase.proxyPort = configuration.GetValue<int>("ProxyPort");
             }
         }
     }

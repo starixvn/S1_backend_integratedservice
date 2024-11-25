@@ -1,8 +1,5 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using Microsoft.Extensions.Logging;
+﻿using System.Text;
 using Newtonsoft.Json;
-using System.Dynamic;
-using System.Text;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -14,6 +11,7 @@ namespace ThirdPartyWager.Service.BLL
     {
         // 共用SabaPlay所有遊戲: MaxGame、SabaPlay、Live22、UUSlots、FastSpin
         private readonly string _seamlessUrl;
+
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly Log2File _log2File;
@@ -58,30 +56,34 @@ namespace ThirdPartyWager.Service.BLL
             };
             var postdata = JsonConvert.SerializeObject(param, Formatting.None);
             // request
-            var r = await DoHttpClientAsync(setting, tpName, url, postdata);
+            var r = await DoHttpClientWithProxyAsync(setting, tpName, url, postdata);
             var result = JsonConvert.DeserializeObject<TicketDataMaxGame>(r);
             var additionalLogInfo = new Dictionary<string, object>() {
                 {"Request", JsonConvert.SerializeObject(param, Formatting.Indented) },
                 {"Response",JsonConvert.SerializeObject(result, Formatting.Indented) }
             };
-            using (_logger.BeginScope(additionalLogInfo)) {
+            using (_logger.BeginScope(additionalLogInfo))
+            {
                 _logger.LogInformation($"SABA PLUS API CALL, uri: {uri}");
-
             }
             return result;
         }
 
-        public async Task<DailySummaryData_MaxGame> GetDailySummaryDataAsync(MaxGameConfig setting, string tpName, PayloadRequestDailySummaryData_MaxGame parameters) {
+        public async Task<DailySummaryData_MaxGame> GetDailySummaryDataAsync(MaxGameConfig setting, string tpName, PayloadRequestDailySummaryData_MaxGame parameters)
+        {
             var uri = "/api/CommonWallet/DailyBetCrossCheck";
             var url = $"{setting.ApiUrl}{uri}";
 
-            var param = new {
+            var param = new
+            {
                 Timestamp = GetCurrentTimeFormat(),
                 Seq = Guid.NewGuid().ToString(),
-                Payload = new {
+                Payload = new
+                {
                     setting.GameType,
                     parameters.CheckDate,
-                    AgentInfo = new {
+                    AgentInfo = new
+                    {
                         parameters.AgentId,
                         parameters.AgentKey,
                         parameters.AgentCode,
@@ -91,20 +93,20 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             var postdata = JsonConvert.SerializeObject(param, Formatting.None);
-            var r = await DoHttpClientAsync(setting, tpName, url, postdata);
+            var r = await DoHttpClientWithProxyAsync(setting, tpName, url, postdata);
             var result = JsonConvert.DeserializeObject<DailySummaryData_MaxGame>(r);
-            
+
             var additionalLogInfo = new Dictionary<string, object>() {
                 {"Request", JsonConvert.SerializeObject(param, Formatting.Indented) },
                 {"Response",JsonConvert.SerializeObject(result, Formatting.Indented) }
             };
-            using (_logger.BeginScope(additionalLogInfo)) {
+            using (_logger.BeginScope(additionalLogInfo))
+            {
                 _logger.LogInformation($"SABA PLUS API CALL, uri: {uri}");
-
             }
             return result;
-
         }
+
         public async Task<string> CallSeamlessApi(MaxGameConfig setting, string tpName, string siteName, BettransData_MaxGame bettransDataMaxGame, TicketDataMaxGame ticketDataMaxGame)
         {
             // param
@@ -158,6 +160,7 @@ namespace ThirdPartyWager.Service.BLL
                     };
                     param = JsonConvert.SerializeObject(endGameData);
                     break;
+
                 case TypeOfMaxGame.Void:
                 case TypeOfMaxGame.Reject:
                     uri = "/VoidGame";
@@ -184,6 +187,7 @@ namespace ThirdPartyWager.Service.BLL
                     };
                     param = JsonConvert.SerializeObject(voidGameData);
                     break;
+
                 default:
                     /*
                      * TypeOfMaxGame.Running 不處理
@@ -206,7 +210,7 @@ namespace ThirdPartyWager.Service.BLL
             return await DoHttpClientAsync(setting, tpName, seamlessApi, param);
         }
 
-        private async Task<string> DoHttpClientAsync(MaxGameConfig setting, string tpName, string url, string param)
+        private async Task<string> DoHttpClientAsync(HttpClient httpClient, MaxGameConfig setting, string tpName, string url, string param)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(param, Encoding.UTF8, "application/json");
@@ -214,7 +218,7 @@ namespace ThirdPartyWager.Service.BLL
             request.Headers.Add("operator-sign", Encrypt(param, setting));
             _log2File.InsertRequestLog(tpName, url, $"{param}\r\n{JsonConvert.SerializeObject(request.Headers)}", "1");
 
-            var response = await _httpHelper.GetClient().SendAsync(request);
+            var response = await httpClient.SendAsync(request);
             var result = response.Content.ReadAsStringAsync().Result;
 
             if (!response.IsSuccessStatusCode)
@@ -231,6 +235,18 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
+        private async Task<string> DoHttpClientAsync(MaxGameConfig setting, string tpName, string url, string param)
+        {
+            var normalHttpClient = _httpHelper.GetClient();
+            return await DoHttpClientAsync(normalHttpClient, setting, tpName, url, param);
+        }
+
+        private async Task<string> DoHttpClientWithProxyAsync(MaxGameConfig setting, string tpName, string url, string param)
+        {
+            var httpClientWithProxy = _httpHelper.GetClientWithProxy();
+            return await DoHttpClientAsync(httpClientWithProxy, setting, tpName, url, param);
+        }
+
         private string Encrypt(string req, MaxGameConfig config)
         {
             var s = req + config.OperatorKey;
@@ -244,5 +260,4 @@ namespace ThirdPartyWager.Service.BLL
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
     }
-
 }

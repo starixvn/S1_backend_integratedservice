@@ -36,10 +36,4 @@
     <PackageReference Include="Serilog.Sinks.Network" Version="2.0.2.68" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Service\BLL\NewFolder\" />
-  </ItemGroup>
-
-
-
 </Project>

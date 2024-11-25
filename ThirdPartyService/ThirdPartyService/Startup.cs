@@ -66,7 +66,7 @@ namespace ThirdPartyService
             services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
-            services.AddWebProxy();
+            services.AddWebProxy(Configuration);
 
             // 處理SiteLanguage
             services.AddOptionListByDB<SiteLanguageObject>("SiteLanguage_Get", new { LanguageGroup = "TP" });

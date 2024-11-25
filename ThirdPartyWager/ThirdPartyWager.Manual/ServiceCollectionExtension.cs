@@ -2,7 +2,6 @@
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
@@ -35,10 +34,8 @@ namespace ThirdPartyWager.Manual
                 services.AddHttpClient("with_proxy")
                     .ConfigurePrimaryHttpMessageHandler(() => proxy);
             }
-            else
-            {
-                services.AddHttpClient();
-            }
+
+            services.AddHttpClient();
 
             return services;
         }
