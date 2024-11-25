@@ -84,7 +84,12 @@ namespace CommonService.Service.BLL
                         eventData.data.Add(data);
                     }
                     
-                    await _httpHelper.HttpPost1Async(url, null, JsonConvert.SerializeObject(eventData), "application/json");
+                    var responseMessage = await _httpHelper.HttpPost1Async(url, null, JsonConvert.SerializeObject(eventData), "application/json");
+
+                    if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        _faceBookPixelService.DelCustFaceBookData(request.CustId , request.TransId);
+                    }
                 }
                 
                 apiResult.ErrorCode =  ErrorCode.Success;

@@ -17,5 +17,10 @@ namespace CommonService.Service.DAL
         {
             return _mainDbClient.QueryFirst<CustFaceBookData>("Service_CustFaceBookData_Get" ,new { _CustId = custId , _TransId = transId });
         }
+        
+        public int DelCustFaceBookData(int custId , string transId)
+        {
+            return _mainDbClient.Execute("Service_CustFaceBookData_Del" ,new { _CustId = custId , _TransId = transId });
+        }
     }
 }
