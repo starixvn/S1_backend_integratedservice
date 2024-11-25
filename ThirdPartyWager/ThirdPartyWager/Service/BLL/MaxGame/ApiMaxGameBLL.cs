@@ -81,8 +81,7 @@ namespace ThirdPartyWager.Service.BLL
                 Payload = new
                 {
                     setting.GameType,
-                    parameters.CheckDate,
-                    {
+                    parameters.CheckDate
                 }
             };
 

@@ -831,8 +831,8 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<TicketPGBLL>();
             services.AddHostedService<TicketPG>();
 
-            services.AddSingleton<FinancePGBLL>();
-            services.AddHostedService<FinancePG>();
+            // services.AddSingleton<FinancePGBLL>();
+            // services.AddHostedService<FinancePG>();
             return services;
         }
     }
