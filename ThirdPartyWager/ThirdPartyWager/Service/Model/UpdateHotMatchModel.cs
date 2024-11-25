@@ -25,6 +25,10 @@ public class HotMatchInfo
     public string Handicap { get; set; }
     public int? Sort { get; set; }
     public DateTime CreateTime { get; set; }
+
+    public int TpId { get; set; }
+
+    public int GameId { get; set; }
 }
 
 public class HotMatchRequest

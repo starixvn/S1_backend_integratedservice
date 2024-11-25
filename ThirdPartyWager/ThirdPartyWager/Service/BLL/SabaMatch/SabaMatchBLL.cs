@@ -14,6 +14,8 @@ public class SabaMatchBLL
     private readonly HttpHelper _httpHelper;
     private readonly Common _common;
     private const int EnableStatus = 1;
+    private const int SoccerGame = 1;
+    private const int TpId = 41;
 
     public SabaMatchBLL(IServiceProvider provider)
     {
@@ -53,7 +55,9 @@ public class SabaMatchBLL
                     AwayOdds = r.Markets.First().Selections.First(x => x.Key == "a").OddsPrice.MalayPrice,
                     Handicap = r.Markets.First().Selections.First(x => x.Key == "h").Point,
                     CreateTime = DateTime.Now,
-                    Status = EnableStatus
+                    Status = EnableStatus,
+                    TpId = TpId,
+                    GameId = SoccerGame
                 }).ToList();
 
             if (matchList.Count > 0)
