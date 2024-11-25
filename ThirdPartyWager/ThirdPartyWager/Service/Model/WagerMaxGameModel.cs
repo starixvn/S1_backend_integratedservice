@@ -129,10 +129,10 @@
     public class PayloadRequestDailySummaryData_MaxGame {
         public string GameType { get; set; }
         public string CheckDate { get; set; }
-        public string AgentId { get; set; }
-        public string AgentKey { get; set; }
-        public string AgentCode { get; set; }
-        public string ExtraInfo { get; set; }
+        public string AgentId { get; set; } = null;
+        public string AgentKey { get; set; } = null;
+        public string AgentCode { get; set; } = null;
+        public string ExtraInfo { get; set; } = null;
     }
 
     public class DailySummaryData_MaxGame {

@@ -82,13 +82,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     setting.GameType,
                     parameters.CheckDate,
-                    AgentInfo = new
                     {
-                        parameters.AgentId,
-                        parameters.AgentKey,
-                        parameters.AgentCode,
-                        parameters.ExtraInfo
-                    }
                 }
             };
 

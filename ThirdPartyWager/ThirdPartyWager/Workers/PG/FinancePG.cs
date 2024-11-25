@@ -84,7 +84,7 @@ public class FinancePG: BackgroundService
                 new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(reportTime.endUnix);
 
-                var reportData = await _financePGBLL.GetReport(_tpId, null, reportTime);
+            var reportData = await _financePGBLL.GetReport(_tpId, null, reportTime);
         
             int result;
             

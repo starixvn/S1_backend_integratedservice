@@ -77,13 +77,10 @@ public class FinancePGBLL : ITpReportBLL
                     _tpName,
                     new PayloadRequestDailySummaryData_MaxGame() {
                         CheckDate = GetCheckDateFromUnixTimestamp(reportTime.startUnix),
-                        GameType = config.GameType,
-                        AgentCode = "",
-                        AgentId = "",
-                        AgentKey = "",
-                        ExtraInfo = ""
+                        GameType = config.GameType
                     }
                 );
+
             if (dailyBetSummary.ErrorCode != 0)  { 
                 var msg = $"Bet result check API Error {dailyBetSummary.ErrorCode}";
                 _logger.LogError($"{msg}{Environment.NewLine}{JsonConvert.SerializeObject(dailyBetSummary)}");
