@@ -24,10 +24,10 @@
         Allbet = 12,
         OneGaming = 13,
         PG = 14,
-        Sexy = 15,
+        AESexy = 15,
         CQ9 = 16,
         CF = 17,
-        EBet = 18,
+        WE = 18,
         WM = 20,
         Kiss918 = 21,
         Mega = 22,
@@ -86,8 +86,8 @@
         SG_RNG = 15,
         PP_LiveCasino = 16,
         PG_RNG = 17,
-        Sexy_LiveCasino = 18,
-        EBet_LiveCasino = 28, // WorldEntertainment
+        AESexy_LiveCasino = 18,
+        WE_LiveCasino = 28, // WorldEntertainment
         SG_Fish = 31,
         WM_LiveCasino = 32,
         One789_Lottery = 35,
@@ -137,6 +137,7 @@
         Lottery = 125,
         TableGame = 126
     }
+
     public enum SettlementType
     {
         UnSettled = 0,
@@ -144,7 +145,6 @@
         SettledForInvalid = 2,
         SettledForValidNotRollover = 3,
         Cheating = 4
-
     }
 
     public enum TicketStatus
@@ -190,7 +190,7 @@
         UnSettle = 8,//未結算注單
         Cancel = 9,//已取消注單
     }
-    
+
     public enum WorkerType
     {
         MainWager = 1,                  //使用TicketKey固定持續拉單

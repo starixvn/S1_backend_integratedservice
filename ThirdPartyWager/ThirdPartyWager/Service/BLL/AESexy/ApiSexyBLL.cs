@@ -15,7 +15,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common _common;
         private readonly Log2File _log2File;
         private readonly ILogger<ApiSexyBLL> _logger;
-        private readonly string _tpName = Tp.Sexy.ToString();
+        private readonly string _tpName = Tp.AESexy.ToString();
 
         public ApiSexyBLL(
             IServiceProvider provider

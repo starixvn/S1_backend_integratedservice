@@ -31,8 +31,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Lottery, AddLottery},
                 { Tp.PP, AddPragmaticPlay },
                 { Tp.JILI, AddJILI},
-                { Tp.Sexy, AddSexy},
-                { Tp.EBet, AddEBet},
+                { Tp.AESexy, AddAESexy},
+                { Tp.WE, AddWE},
                 { Tp.TableGame, AddTableGame},
                 { Tp.PG, AddPG}
 
@@ -224,13 +224,13 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
-        private IServiceCollection AddSexy(IServiceCollection services)
+        private IServiceCollection AddAESexy(IServiceCollection services)
         {
-            services.AddSingleton<WagerSexyService>();
+            services.AddSingleton<WagerAESexyService>();
 
-            services.AddSingleton<TicketSexyBLL>();
+            services.AddSingleton<TicketAESexyBLL>();
 
-            services.AddHostedService<TicketSexy>();
+            services.AddHostedService<TicketAESexy>();
 
             return services;
         }
@@ -256,11 +256,11 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
-        private IServiceCollection AddEBet(IServiceCollection services)
+        private IServiceCollection AddWE(IServiceCollection services)
         {
-            services.AddSingleton<WagerEBetService>();
-            services.AddSingleton<TicketEBetBLL>();
-            services.AddHostedService<BetResultCheckEBet>();
+            services.AddSingleton<WagerWEService>();
+            services.AddSingleton<TicketWEBLL>();
+            services.AddHostedService<BetResultCheckWE>();
             return services;
         }
 
@@ -825,8 +825,9 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-        
-        private IServiceCollection AddPG(IServiceCollection services) {
+
+        private IServiceCollection AddPG(IServiceCollection services)
+        {
             services.AddSingleton<WagerPGService>();
             services.AddSingleton<TicketPGBLL>();
             services.AddHostedService<TicketPG>();

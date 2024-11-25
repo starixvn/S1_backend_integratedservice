@@ -7,32 +7,32 @@ using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
-    public class TicketSexy : BackgroundService
+    public class BetResultCheckWE : BackgroundService
     {
         private Timer timer;
-        private readonly ILogger<TicketSexy> _logger;
-        private readonly TicketSexyBLL _ticketSexyBLL;
+        private readonly ILogger<BetResultCheckWE> _logger;
+        private readonly TicketWEBLL _ticketWEBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly int _tpId = (int)Tp.Sexy;
-        private readonly string _tpName = Tp.Sexy.ToString();
+        private readonly int _tpId = (int)Tp.WE;
+        private readonly string _tpName = Tp.WE.ToString();
         private readonly int _tpType = (int)WagerTimerType.UnSettle;
-        private readonly int _lockPeriod = -30;// 近30分資料不處理
+        private readonly int _lockPeriod = -30;
         private readonly int _deductTime = -1;
 
-        public TicketSexy(IServiceProvider provider)
+        public BetResultCheckWE(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<TicketSexy>>();
-            _ticketSexyBLL = provider.GetRequiredService<TicketSexyBLL>();
+            _logger = provider.GetRequiredService<ILogger<BetResultCheckWE>>();
+            _ticketWEBLL = provider.GetRequiredService<TicketWEBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoRefund, GameType.Sexy_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
+            timer = new Timer(BetResultCheck, GameType.WE_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
-        private async void DoRefund(object state)
+        private async void BetResultCheck(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
@@ -41,10 +41,7 @@ namespace ThirdPartyWager.Workers
 
             try
             {
-                // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
-
-                // default time
                 var execTime = new ThirdPartyTimerModel()
                 {
                     TpId = _tpId,
@@ -52,12 +49,10 @@ namespace ThirdPartyWager.Workers
                     StartTime = (dataTpTimer == null) ? DateTime.Now.AddHours(-1) : dataTpTimer.StartTime,
                 };
 
-                // get time 
-                TimeCast ticketTime = _ticketSexyBLL.GetTicketTime(execTime.StartTime, _lockPeriod, out bool exec);
+                TimeCast ticketTime = _ticketWEBLL.GetTicketTime(execTime.StartTime, _lockPeriod, out bool exec);
                 if (exec)
                 {
-                    var res = await ExecRefundAsync(gameType, ticketTime);
-                    // update timer
+                    var res = await ExecBetResultCheckAsync(gameType, ticketTime);
                     if (res)
                     {
                         _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, ticketTime.endUnix);
@@ -75,43 +70,39 @@ namespace ThirdPartyWager.Workers
             }
         }
 
-        private async Task<bool> ExecRefundAsync(GameType gameType, TimeCast ticketTime)
+        private async Task<bool> ExecBetResultCheckAsync(GameType gameType, TimeCast ticketTime)
         {
             var result = true;
             try
             {
-                _logger.LogInformation($"Refund Worker Execute Start {_tpId}, {JsonConvert.SerializeObject(ticketTime)}");
+                _logger.LogInformation($"Bet Result Check Worker Execute Start {_tpId}, {JsonConvert.SerializeObject(ticketTime)}");
 
-                // get list
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
-
-                // check tp status and only get first site to run
                 if (!siteList.Any(x => x.Status == 1))
                 {
                     return true;
                 }
 
-                var pendingList = _ticketSexyBLL.GetPendingList((int)gameType, ticketTime);
+                var pendingList = _ticketWEBLL.GetPendingList((int)gameType, ticketTime);
                 if (pendingList == null)
                 {
-                    _logger.LogInformation($"Refund Worker Execute End {_tpId}, Count=0");
+                    _logger.LogInformation($"Bet Result Check Worker Execute End {_tpId}, Count=0");
                     return true;
                 }
 
-                // process
                 foreach (var pending in pendingList)
                 {
-                    var check = await _ticketSexyBLL.CheckTicketStatus(pending, (int)gameType);
+                    var check = await _ticketWEBLL.CheckTicketStatus(pending, (int)gameType);
                     if (!check)
                     {
                         result = false;
                     }
                 }
-                _logger.LogInformation($"Refund Worker Execute End {_tpId}, Count= {pendingList.Count()}");
+                _logger.LogInformation($"Bet Result Check Worker Execute End {_tpId}, Count= {pendingList.Count()}");
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Refund Worker Execute End {_tpId}");
+                _logger.LogInformation($"Bet Result Check Worker Execute End {_tpId}");
                 _logger.LogError(ex, ex.Message);
                 result = false;
             }

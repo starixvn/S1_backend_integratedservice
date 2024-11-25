@@ -8,15 +8,15 @@ using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
-    public class TicketEBetBLL : ITpRefundBLL
+    public class TicketWEBLL : ITpRefundBLL
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiMaxGameBLL _apiMaxGameBLL;
-        private readonly WagerEBetService _wagerEBetService;
-        private readonly ILogger<TicketEBetBLL> _logger;
+        private readonly WagerWEService _wagerWEService;
+        private readonly ILogger<TicketWEBLL> _logger;
         private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
-        private readonly int _tpId = (int)Tp.EBet;
-        private readonly string _tpName = Tp.EBet.ToString();
+        private readonly int _tpId = (int)Tp.WE;
+        private readonly string _tpName = Tp.WE.ToString();
         private readonly IEnumerable<ServerInfo> _serverList;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeRange = 10;
@@ -25,12 +25,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _delay = 3600;
         private readonly int _delayTimeRange = 60;
 
-        public TicketEBetBLL(IServiceProvider provider)
+        public TicketWEBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
-            _wagerEBetService = provider.GetRequiredService<WagerEBetService>();
-            _logger = provider.GetRequiredService<ILogger<TicketEBetBLL>>();
+            _wagerWEService = provider.GetRequiredService<WagerWEService>();
+            _logger = provider.GetRequiredService<ILogger<TicketWEBLL>>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
             _serverList = provider.GetRequiredService<CommonBLL>().GetSiteList();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
@@ -38,7 +38,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public IEnumerable<dynamic> GetPendingList(int gameType, TimeCast ticketTime)
         {
-            return _wagerEBetService.GetPendingList(ticketTime);
+            return _wagerWEService.GetPendingList(ticketTime);
         }
 
         public async Task<bool> CheckTicketStatus(dynamic bettrans, int gameType)

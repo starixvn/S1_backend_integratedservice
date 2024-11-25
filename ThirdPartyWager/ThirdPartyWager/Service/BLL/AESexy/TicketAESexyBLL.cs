@@ -8,15 +8,15 @@ using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
-    public class TicketRNGKenoBLL : ITpRefundBLL
+    public class TicketAESexyBLL : ITpRefundBLL
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiMaxGameBLL _apiMaxGameBLL;
-        private readonly WageRNGKenoService _wagerKenoService;
-        private readonly ILogger<TicketRNGKenoBLL> _logger;
-        private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
-        private readonly int _tpId = (int)Tp.RNGKeno;
-        private readonly string _tpName = Tp.RNGKeno.ToString();
+        private readonly WagerAESexyService _wagerSexyService;
+        private readonly ILogger<TicketAESexyBLL> _logger;
+        private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;// 共用maxgameconfig model
+        private readonly int _tpId = (int)Tp.AESexy;
+        private readonly string _tpName = Tp.AESexy.ToString();
         private readonly IEnumerable<ServerInfo> _serverList;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeRange = 10;
@@ -25,12 +25,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _delay = 3600;
         private readonly int _delayTimeRange = 60;
 
-        public TicketRNGKenoBLL(IServiceProvider provider)
+        public TicketAESexyBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
-            _wagerKenoService = provider.GetRequiredService<WageRNGKenoService>();
-            _logger = provider.GetRequiredService<ILogger<TicketRNGKenoBLL>>();
+            _wagerSexyService = provider.GetRequiredService<WagerAESexyService>();
+            _logger = provider.GetRequiredService<ILogger<TicketAESexyBLL>>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
             _serverList = provider.GetRequiredService<CommonBLL>().GetSiteList();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
@@ -38,7 +38,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public IEnumerable<dynamic> GetPendingList(int gameType, TimeCast ticketTime)
         {
-            return _wagerKenoService.GetPendingList(ticketTime);
+            return _wagerSexyService.GetPendingList(ticketTime);
         }
 
         public async Task<bool> CheckTicketStatus(dynamic bettrans, int gameType)

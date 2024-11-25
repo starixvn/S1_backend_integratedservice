@@ -13,8 +13,8 @@ namespace ThirdPartyWager.Workers
         private readonly FinanceSexyBLL _financeSexyBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
-        private readonly int _tpId = (int)Tp.Sexy;
-        private readonly string _tpName = Tp.Sexy.ToString();
+        private readonly int _tpId = (int)Tp.AESexy;
+        private readonly string _tpName = Tp.AESexy.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
         private Timer timer;
