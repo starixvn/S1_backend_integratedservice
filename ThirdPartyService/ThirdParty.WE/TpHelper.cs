@@ -1,19 +1,18 @@
-﻿using System.Web;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
-namespace ThirdParty.EBet
+namespace ThirdParty.WE
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<int, EBetConfig> _siteConfigDic;
+        private readonly Dictionary<int, WEConfig> _siteConfigDic;
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
@@ -21,7 +20,7 @@ namespace ThirdParty.EBet
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<EBetConfig>(TpEnum.EBet.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<WEConfig>(TpEnum.WE.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
@@ -127,6 +126,7 @@ namespace ThirdParty.EBet
         {
             throw new NotImplementedException();
         }
+
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = _siteConfigDic[tpCustInfo.SiteId];
@@ -263,7 +263,7 @@ namespace ThirdParty.EBet
             };
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(EBet), ApiUrl, header, postdata, result);
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(WE), ApiUrl, header, postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 
@@ -292,7 +292,7 @@ namespace ThirdParty.EBet
             return oApiResult;
         }
 
-        private string Encrypt(string req, EBetConfig config)
+        private string Encrypt(string req, WEConfig config)
         {
             var s = req + config.OperatorKey;
             var sign = ToMD5(s);

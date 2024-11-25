@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
 

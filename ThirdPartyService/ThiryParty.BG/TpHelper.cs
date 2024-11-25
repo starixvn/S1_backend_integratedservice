@@ -7,6 +7,7 @@ using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.BG;

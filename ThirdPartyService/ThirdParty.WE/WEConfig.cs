@@ -1,8 +1,8 @@
 ﻿using ThirdPartyCore.Model;
 
-namespace ThirdParty.EBet
+namespace ThirdParty.WE
 {
-    internal class EBetConfig : TpSiteConfig
+    internal class WEConfig : TpSiteConfig
     {
         public string OperatorPwd { get; set; }
         public string OperatorKey { get; set; }

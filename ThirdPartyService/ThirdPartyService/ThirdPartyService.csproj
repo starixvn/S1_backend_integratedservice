@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty.9W\ThirdParty.NineW.csproj" />
+    <ProjectReference Include="..\ThirdParty.AESexy\ThirdParty.AESexy.csproj" />
     <ProjectReference Include="..\ThirdParty.AG\ThirdParty.AG.csproj" />
     <ProjectReference Include="..\ThirdParty.Allbet\ThirdParty.Allbet.csproj" />
     <ProjectReference Include="..\ThirdParty.AMB\ThirdParty.AMB.csproj" />
@@ -29,7 +30,6 @@
     <ProjectReference Include="..\ThirdParty.CQ9\ThirdParty.CQ9.csproj" />
     <ProjectReference Include="..\ThirdParty.CryptoSports\ThirdParty.CryptoSports.csproj" />
     <ProjectReference Include="..\ThirdParty.DG\ThirdParty.DG.csproj" />
-    <ProjectReference Include="..\ThirdParty.EBet\ThirdParty.EBet.csproj" />
     <ProjectReference Include="..\ThirdParty.END\ThirdParty.END.csproj" />
     <ProjectReference Include="..\ThirdParty.EVO\ThirdParty.EVO.csproj" />
     <ProjectReference Include="..\ThirdParty.FaChai\ThirdParty.FaChai.csproj" />
@@ -67,7 +67,6 @@
     <ProjectReference Include="..\ThirdParty.Lottery\ThirdParty.Lottery.csproj" />
     <ProjectReference Include="..\ThirdParty.RNGKeno\ThirdParty.RNGKeno.csproj" />
     <ProjectReference Include="..\ThirdParty.SBSW\ThirdParty.SBSW.csproj" />
-    <ProjectReference Include="..\ThirdParty.Sexy\ThirdParty.Sexy.csproj" />
     <ProjectReference Include="..\ThirdParty.SG\ThirdParty.SG.csproj" />
     <ProjectReference Include="..\ThirdParty.SimplePlay\ThirdParty.SimplePlay.csproj" />
     <ProjectReference Include="..\ThirdParty.SPRIBE\ThirdParty.SPRIBE.csproj" />
@@ -76,6 +75,7 @@
     <ProjectReference Include="..\ThirdParty.TF\ThirdParty.TFG.csproj" />
     <ProjectReference Include="..\ThirdParty.UuSlots\ThirdParty.UuSlots.csproj" />
     <ProjectReference Include="..\ThirdParty.V8\ThirdParty.V8.csproj" />
+    <ProjectReference Include="..\ThirdParty.WE\ThirdParty.WE.csproj" />
     <ProjectReference Include="..\ThirdParty.WM\ThirdParty.WM.csproj" />
     <ProjectReference Include="..\ThirdParty.Yeebet\ThirdParty.Yeebet.csproj" />
     <ProjectReference Include="..\ThirdParty.YGG\ThirdParty.YGG.csproj" />

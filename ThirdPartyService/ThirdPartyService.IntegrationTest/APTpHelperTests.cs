@@ -1,11 +1,11 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using NUnit.Framework;
+using ThirdParty.AP;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
-namespace ThirdParty.AP.Tests
+namespace ThirdPartyService.IntegrationTest
 {
     [TestFixture()]
     public class APTpHelperTests

@@ -1,5 +1,6 @@
 ﻿using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail;
 
 namespace ThirdPartyCore
 {

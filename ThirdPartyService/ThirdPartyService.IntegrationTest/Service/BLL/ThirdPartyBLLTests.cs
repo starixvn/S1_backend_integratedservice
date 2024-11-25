@@ -4,25 +4,22 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
-
 using NSubstitute;
-
 using NUnit.Framework;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-
 using ThirdPartyService.Extensions;
 using ThirdPartyService.IntegrationTest.Models;
 using ThirdPartyService.IntegrationTest.Stubs;
+using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 
-namespace ThirdPartyService.Service.BLL.Tests
+namespace ThirdPartyService.IntegrationTest.Service.BLL
 {
     [TestFixture()]
     public class ThirdPartyBLLTests

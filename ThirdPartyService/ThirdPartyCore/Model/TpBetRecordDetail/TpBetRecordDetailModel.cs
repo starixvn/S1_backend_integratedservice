@@ -1,7 +1,7 @@
 ﻿using System.IO.Compression;
 using System.Text;
 
-namespace ThirdPartyCore.Model
+namespace ThirdPartyCore.Model.TpBetRecordDetail
 {
     public class TpBetRecordDetailModel
     {

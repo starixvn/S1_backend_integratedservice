@@ -3,7 +3,7 @@
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-
+using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL

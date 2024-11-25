@@ -1,9 +1,10 @@
 ﻿using FluentAssertions;
 using NUnit.Framework;
+using ThirdParty.NineW;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
-namespace ThirdParty.NineW.Tests
+namespace ThirdPartyService.IntegrationTest
 {
     [TestFixture()]
     public class NineWTpHelperTests

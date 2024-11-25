@@ -1,4 +1,5 @@
 ﻿using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdPartyCore

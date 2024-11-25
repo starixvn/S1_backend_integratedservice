@@ -1,6 +1,6 @@
 ﻿//using static ThirdParty.Saba.TpHelper;
 
-namespace ThirdParty.Saba.Tests
+namespace ThirdPartyService.IntegrationTest
 {
     //[TestFixture()]
     //public class SabaTpHelperTests

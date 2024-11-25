@@ -6,9 +6,10 @@ using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
-namespace ThirdParty.Sexy
+namespace ThirdParty.AESexy
 {
     public class TpHelper : ThirdPartyHelperBase
     {
@@ -16,15 +17,14 @@ namespace ThirdParty.Sexy
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
 
-        private readonly Dictionary<int, SexyConfig> _siteConfigDic;
+        private readonly Dictionary<int, AESexyConfig> _siteConfigDic;
         private readonly TemporaryLogSentryService temporaryLogSentryService;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SexyConfig>(TpEnum.Sexy.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AESexyConfig>(TpEnum.AESexy.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
-
 
         #region Response
 
@@ -47,7 +47,6 @@ namespace ThirdParty.Sexy
         }
 
         #endregion Response
-
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -121,7 +120,7 @@ namespace ThirdParty.Sexy
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(Sexy), ApiUrl, header, postdata, result);
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(AESexy), ApiUrl, header, postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 
@@ -149,7 +148,6 @@ namespace ThirdParty.Sexy
 
             return oApiResult;
         }
-
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
@@ -247,7 +245,7 @@ namespace ThirdParty.Sexy
             };
         }
 
-        private string Encrypt(string req, SexyConfig config)
+        private string Encrypt(string req, AESexyConfig config)
         {
             var s = req + config.OperatorKey;
             var sign = ToMD5(s);

@@ -1,7 +1,4 @@
 ﻿using FluentAssertions;
-using NUnit.Framework;
-using ThirdPartyCore.Model;
-using ThirdPartyCore.Model.enums;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -9,14 +6,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using NUnit.Framework;
+using ThirdParty.AMB;
 using ThirdPartyCore;
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.IntegrationTest.Models;
 using ThirdPartyService.IntegrationTest.Stubs;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 
-namespace ThirdParty.AMB.Tests
+namespace ThirdPartyService.IntegrationTest
 {
     [TestFixture()]
     public class AMBTpHelperTests

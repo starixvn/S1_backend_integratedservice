@@ -1,8 +1,8 @@
 ﻿using ThirdPartyCore.Model;
 
-namespace ThirdParty.Sexy
+namespace ThirdParty.AESexy
 {
-    internal class SexyConfig : TpSiteConfig
+    internal class AESexyConfig : TpSiteConfig
     {
         public string OperatorPwd { get; set; }
         public string OperatorKey { get; set; }

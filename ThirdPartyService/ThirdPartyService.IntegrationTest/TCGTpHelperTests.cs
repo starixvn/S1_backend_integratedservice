@@ -1,32 +1,25 @@
 ﻿using System.Web;
-
 using FluentAssertions;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
-
 using NSubstitute;
-
 using NUnit.Framework;
-
+using ThirdParty.TCG;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-
 using ThirdPartyService.Extensions;
 using ThirdPartyService.IntegrationTest.Models;
-
 using ThirdPartyService.IntegrationTest.Stubs;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 
-namespace ThirdParty.TCG.Tests
+namespace ThirdPartyService.IntegrationTest
 {
     [TestFixture()]
     public class TCGTpHelperTests

@@ -6,6 +6,7 @@ using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 

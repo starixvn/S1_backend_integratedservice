@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
+using ThirdParty.Skywind;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -18,7 +19,7 @@ using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 
-namespace ThirdParty.Skywind.Tests
+namespace ThirdPartyService.IntegrationTest
 {
     [TestFixture()]
     public class SkywindTpHelperTests

@@ -4,6 +4,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.CryptoSports

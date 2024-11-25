@@ -1,9 +1,10 @@
 ﻿using FluentAssertions;
 using NUnit.Framework;
+using ThirdParty.HB;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
-namespace ThirdParty.HB.Tests
+namespace ThirdPartyService.IntegrationTest
 {
     [TestFixture()]
     public class HabaneroTpHelperTests

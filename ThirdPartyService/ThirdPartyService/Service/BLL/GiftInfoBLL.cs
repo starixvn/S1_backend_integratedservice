@@ -1,7 +1,5 @@
-﻿using System.Security.Policy;
-using ThirdPartyService.Service.DAL;
+﻿using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Model;
-using static ThirdParty.EBet.TpHelper;
 
 namespace ThirdPartyService.Service.BLL;
 

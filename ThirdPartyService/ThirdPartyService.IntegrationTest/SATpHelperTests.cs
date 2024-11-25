@@ -1,9 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using ThirdParty.SA;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
-namespace ThirdParty.SA.Tests
+namespace ThirdPartyService.IntegrationTest
 {
     [TestFixture()]
     public class SabaTpHelperTests

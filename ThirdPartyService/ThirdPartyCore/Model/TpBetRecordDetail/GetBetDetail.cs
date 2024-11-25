@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyCore.Model
+﻿namespace ThirdPartyCore.Model.TpBetRecordDetail
 {
     public class GetBetDetail
     {
