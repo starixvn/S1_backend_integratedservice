@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -17,7 +16,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private ConcurrentDictionary<string, TpCountryCode> tpCountryCodeCache = new();
         private readonly ICacheHelper _redisHelper;
         private readonly BonusWalletBLL _bonusWalletBLL;
-        private readonly ILogger<TpCustInfoBLL> _logger;
 
         public TpCustInfoBLL(IServiceProvider provider)
         {
@@ -27,7 +25,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             tools = provider.GetRequiredService<Tools>();
             _redisHelper = provider.GetRequiredService<ICacheHelper>();
             _bonusWalletBLL = provider.GetRequiredService<BonusWalletBLL>();
-            _logger = provider.GetRequiredService<ILogger<TpCustInfoBLL>>();
         }
 
         public TpCustBalance GetBalanceByHalfSecCache(int tpId, string tpUserName, int gameType = 0)
@@ -66,7 +63,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 $"TpCustInfo:{tpId}:{tpUserName}",
                 TimeSpan.FromMinutes(1),
                () => GetTpCustInfo(tpId, tpUserName));
-            _logger.LogError($"tpId={tpId},tpUserName={tpUserName},GetTpCustInfoWithCache={JsonConvert.SerializeObject(tpCustInfo)}");
             return tpCustInfo;
         }
 
@@ -82,7 +78,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public TpCustInfo GetTpCustInfo(int tpId, string tpUserName)
         {
             var tpCustInfo = tpCustInfoService.GetTpCustInfoByTpUserName(tpId, tpUserName);
-            _logger.LogError($"tpId={tpId},tpUserName={tpUserName},GetTpCustInfo={JsonConvert.SerializeObject(tpCustInfo)}");
             return tpCustInfo;
         }
 
