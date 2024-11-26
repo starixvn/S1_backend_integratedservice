@@ -4,6 +4,8 @@ using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using StackExchange.Redis;
+using System.Net;
+using System.Net.Mail;
 
 namespace CommonService
 {
@@ -39,6 +41,7 @@ namespace CommonService
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<AuthBLL>();
             services.AddSingleton<SendGridBLL>();
+            services.AddSingleton<MailSMTPBLL>();
             services.AddSingleton<RestPasswordBLL>();
             services.AddSingleton<IovationBLL>();
 
@@ -72,6 +75,9 @@ namespace CommonService
             services.AddOptionListByDB<SiteLanguageObject>("SiteLanguage_Get", new { LanguageGroup = "CommonService" });
             services.AddSiteLanguage();
             services.AddSingleton<SiteLanguageBLL>();
+
+            // Mail SMTP
+            services.AddSmtpClient(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

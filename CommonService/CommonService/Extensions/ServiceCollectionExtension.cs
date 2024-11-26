@@ -2,6 +2,8 @@
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+using System.Net.Mail;
+using System.Net;
 
 namespace CommonService.Extensions;
 
@@ -62,6 +64,28 @@ public static class ServiceCollectionExtension
             var siteLanguages = siteLanguageGroup.FirstOrDefault(i => i.Key == serverInfo.SiteId) ?? siteLanguageGroup.First(i => i.Key == 0);
             services.AddSingleton(new SiteLanguage(serverInfo, siteLanguages.ToList()));
         }
+
+        return services;
+    }
+
+    public static IServiceCollection AddSmtpClient(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton((sp) =>
+        {
+            var emailSettings = new EmailSettingsOptions();
+            configuration.GetSection("EmailSetting").Bind(emailSettings);
+
+            return new SmtpClient
+            {
+                Host = emailSettings.SmtpServer,
+                Port = emailSettings.Port,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(
+                    emailSettings.Username,
+                    emailSettings.Password),
+                EnableSsl = !string.IsNullOrEmpty(emailSettings.Password)
+            };
+        });
 
         return services;
     }
