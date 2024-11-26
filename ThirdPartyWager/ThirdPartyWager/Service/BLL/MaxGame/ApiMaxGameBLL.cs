@@ -69,19 +69,26 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<DailySummaryData_MaxGame> GetDailySummaryDataAsync(MaxGameConfig setting, string tpName, PayloadRequestDailySummaryData_MaxGame parameters)
-        {
-            var uri = "/api/CommonWallet/DailyBetCrossCheck";
-            var url = $"{setting.ApiUrl}{uri}";
+        public async Task<DailySummaryData_MaxGame> GetDailySummaryDataAsync(dynamic setting, string tpName, PayloadRequestDailySummaryData_MaxGame parameters) {
+            var uri = "/api/OperatorApi/GetDailyTicketSummary";
+            var url = $"{setting.DailySumApiUrl}{uri}";
 
             var param = new
             {
                 Timestamp = GetCurrentTimeFormat(),
                 Seq = Guid.NewGuid().ToString(),
-                Payload = new
-                {
+                Payload = new {
+                    parameters.TargetDate,
+                    TimeZone = 0,
                     setting.GameType,
-                    parameters.CheckDate
+                    TicketStatus = new List<int>() { 
+                        // Need to be reviewed, currently we get all them
+                        (int)MaxGame_TicketStatus.Win,
+                        (int)MaxGame_TicketStatus.Lose,
+                        (int)MaxGame_TicketStatus.Draw,
+                        (int)MaxGame_TicketStatus.Void,
+                        (int)MaxGame_TicketStatus.Refund,
+                    }
                 }
             };
 

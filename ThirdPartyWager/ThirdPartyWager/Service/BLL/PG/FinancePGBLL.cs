@@ -15,7 +15,7 @@ public class FinancePGBLL : ITpReportBLL
     private readonly ApiMaxGameBLL _apiMaxGameBLL;
     private readonly DateTimeHelper _dateTimeHelper;
     private readonly int _timeZone = 0;
-    private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
+    private readonly Dictionary<int, PGConfig> _siteConfigDic;
     private readonly string _tpName = Tp.PG.ToString();
     
     public FinancePGBLL(IServiceProvider provider) {
@@ -24,7 +24,7 @@ public class FinancePGBLL : ITpReportBLL
         _commonBLL = provider.GetService<CommonBLL>();
         _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
         _dateTimeHelper = provider.GetService<DateTimeHelper>();
-        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PGConfig>(_tpName);
     }
 
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -39,12 +39,27 @@ public class FinancePGBLL : ITpReportBLL
             JsonConvert.DeserializeObject<List<PayloadDailySummaryData_MaxGame>>(
                 JsonConvert.SerializeObject(reportData));
 
-        var data = getReportData
-            .GroupBy(i => i.CurrencyISO)
+        var flattenedData = getReportData
+            .Select(i => i.GameTypes)
+            .SelectMany(x => x)
+            .Select(i => i.BettingDate)
+            .SelectMany(x => x)
+            .ToArray();
+
+        var data = flattenedData
+            .GroupBy(i => i.CurrencyIso)
             .Select(g => new {
                 CurrencyId = currencyIdDic[g.Key],
-                Stake = g.Sum(s => s.TotalStake),
-                WinlostAmount = g.Sum(s => s.TotalWinlose),
+                Stake = g.Sum(s => s.Stake),
+                ActualStake = g.Sum(s => s.ActualStake),
+                NetStake = g.Sum(s => s.NetStake),
+                WinLose = g.Sum(s => s.WinLose),
+                JackpotContributionBetCount = g.Sum(s => s.JackpotContributionBetCount),
+                JackpotContribution = g.Sum(s => s.JackpotContribution),
+                JackpotPrizeBetCount = g.Sum(s => s.JackpotPrizeBetCount),
+                JackpotPrize = g.Sum(s => s.JackpotPrize),
+                PromotionPrizeBetCount = g.Sum(s => s.PromotionPrizeBetCount),
+                PromotionPrize = g.Sum(s => s.PromotionPrize)
             });
 
         foreach(var item in data) {
@@ -55,8 +70,8 @@ public class FinancePGBLL : ITpReportBLL
                 CurrencyId = item.CurrencyId,
                 Stake = item.Stake,
                 ValidBet = item.Stake,
-                WinlostAmount = item.WinlostAmount,
-                Payout = item.WinlostAmount > 0 ? item.WinlostAmount : 0,
+                WinlostAmount = item.WinLose - item.NetStake,
+                Payout = item.WinLose
             });
         }
 
@@ -76,7 +91,7 @@ public class FinancePGBLL : ITpReportBLL
                     config,
                     _tpName,
                     new PayloadRequestDailySummaryData_MaxGame() {
-                        CheckDate = GetCheckDateFromUnixTimestamp(reportTime.startUnix),
+                        TargetDate = GetCheckDateFromUnixTimestamp(reportTime.startUnix),
                         GameType = config.GameType
                     }
                 );

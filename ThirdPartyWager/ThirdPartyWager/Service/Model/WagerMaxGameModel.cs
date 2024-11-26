@@ -1,4 +1,6 @@
-﻿namespace ThirdPartyWager.Service.Model
+﻿using ThirdPartyWager.Service.Model.enums;
+
+namespace ThirdPartyWager.Service.Model
 {
     public enum TypeOfMaxGame
     {
@@ -127,12 +129,10 @@
     }
 
     public class PayloadRequestDailySummaryData_MaxGame {
-        public string GameType { get; set; }
-        public string CheckDate { get; set; }
-        public string AgentId { get; set; } = null;
-        public string AgentKey { get; set; } = null;
-        public string AgentCode { get; set; } = null;
-        public string ExtraInfo { get; set; } = null;
+        public string TargetDate { get; set; }
+        public int? TimeZone { get; set; } = null;
+        public string GameType { get; set; } = null;
+        public IEnumerable<int> TicketStatus { get; set; } = Array.Empty<int>();
     }
 
     public class DailySummaryData_MaxGame {
@@ -144,8 +144,32 @@
     }
 
     public class PayloadDailySummaryData_MaxGame {
-        public string CurrencyISO { get; set; }
-        public decimal TotalWinlose { get; set; }
-        public decimal TotalStake { get; set; }
+        public IEnumerable<BettingDataByGameType_MaxGame> GameTypes { get; set; }
+    }
+    public class BettingDataByGameType_MaxGame {
+        public string GameType { get; set; }
+        public IEnumerable<BettingDataByCurrency_MaxGame> BettingDate { get; set; }
+    }
+    public class BettingDataByCurrency_MaxGame {
+        public string CurrencyIso { get; set; }
+        public int BetCount { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ActualStake { get; set; }
+        public decimal NetStake { get; set; }
+        public decimal WinLose { get; set; }
+        public int JackpotContributionBetCount { get; set; }
+        public decimal JackpotContribution { get; set; }
+        public int JackpotPrizeBetCount { get; set; }
+        public decimal JackpotPrize { get; set; }
+        public int PromotionPrizeBetCount { get; set; }
+        public decimal PromotionPrize { get; set;}
+    }
+
+    public enum MaxGame_TicketStatus {
+        Win = 1,
+        Lose = 2,
+        Draw = 3,
+        Void = 4,
+        Refund = 6
     }
 }
