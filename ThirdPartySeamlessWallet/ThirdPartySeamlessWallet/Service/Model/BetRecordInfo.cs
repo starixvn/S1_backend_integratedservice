@@ -37,7 +37,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 _gameID = (value.Length > 50) ? value.Substring(0, 50) : value;
             }
         }
-        public string BetChoice { get; set; }
         private string _gameID = string.Empty;
     }
 

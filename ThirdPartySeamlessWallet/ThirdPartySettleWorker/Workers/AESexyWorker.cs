@@ -89,7 +89,6 @@ namespace ThirdPartySettleWorker.Workers
                         var settledTime = bettrans.Max(x => x.SettleTime);
                         var transTime = bettrans.Min(x => x.TransTime);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
-                        var betChoice = bettrans.FirstOrDefault()?.BetChoice;
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -102,8 +101,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = settledTime,
                             TransTime = transTime,
                             SettlementType = SettlementType.SettledForValid,
-                            GameID = gameId,
-                            BetChoice = betChoice
+                            GameID = gameId
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo);

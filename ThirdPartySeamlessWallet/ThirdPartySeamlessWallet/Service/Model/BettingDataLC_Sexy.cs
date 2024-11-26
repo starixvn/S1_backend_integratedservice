@@ -181,7 +181,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public TpCustInfo tpCustInfo { get; set; }
     }
 
-    #region AESexy (AWC)
+    #region Sexy (AWC)
 
     public class CommonData_Sexy
     {
@@ -391,7 +391,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public dynamic tipInfo { get; set; }
     }
 
-   
     public class ResettleLC_Sexy
     {
         public IList<ResettleDataLC_Sexy> txns { get; set; }
@@ -422,8 +421,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public new string TransId { get; set; }
         public new string GameId { get; set; }
-
-        public string BetChoice { get; set; }
     }
 
     #endregion
