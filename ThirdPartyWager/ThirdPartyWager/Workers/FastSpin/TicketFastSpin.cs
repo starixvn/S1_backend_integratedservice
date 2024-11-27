@@ -97,6 +97,7 @@ namespace ThirdPartyWager.Workers
                     _logger.LogInformation($"Refund Worker Execute End {_tpId}, Count=0");
                     return true;
                 }
+                _logger.LogInformation($"List ticket {_tpName} is pending:  {JsonConvert.SerializeObject(pendingList.Select(p => p.TicketNo))}");
 
                 // process
                 foreach (var pending in pendingList)

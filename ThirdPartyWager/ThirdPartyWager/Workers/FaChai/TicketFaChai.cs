@@ -98,17 +98,12 @@ public class TicketFaChai : BackgroundService
                 return true;
             }
 
-            
+            _logger.LogInformation($"List ticket {_tpName} is pending:  {JsonConvert.SerializeObject(pendingList.Select(p=>p.TicketNo))}");
 
             // process
             foreach (var pending in pendingList)
             {
-                if (pending is null)
-                {
-                    _logger.LogInformation($"[FaChai] ticket pending is null");
-                    continue;
-                }
-
+                
                 var check = await _ticketFaChaiBLL.CheckTicketStatus(pending, (int)gameType);
                 if (!check)
                 {
