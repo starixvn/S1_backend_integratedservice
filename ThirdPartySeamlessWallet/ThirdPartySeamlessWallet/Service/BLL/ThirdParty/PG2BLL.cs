@@ -108,7 +108,7 @@ public class PG2BLL : IPG2BLL
             username = request.UserName,
             agent = request.Agent,
             type = request.Type,
-            amount = Math.Abs(request.Amount) * -1,  //Bet為減項
+            amount = Math.Abs(request.Amount) * -1,  //Bet API amount為下注金額，是負數
             product = request.Product,
             category = request.Category,
             gameName = request.GameName,
@@ -384,9 +384,11 @@ public class PG2BLL : IPG2BLL
             };
         }
 
-        if (data.betAmount != 0)
+        //因ComboRound沒有下注金額，會影響bonus流程，所以用ParentRoundId檢查是否為同一筆下注
+        var isComboRound = _bettingService.IsExistParentRoundId_PG2(false, data);
+        if (data.betAmount != 0 || isComboRound)
         {
-            result = _bettingService.SetBalance_PG2(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+            result = _bettingService.SetBalance_PG2(tpCustInfo, data, isComboRound,out afterAmount, ref bonusId, conn, trans);
             if (!result)
             {
                 await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
@@ -600,7 +602,7 @@ public class PG2BLL : IPG2BLL
         bonusId = 0;
         try
         {
-            var result = _bettingService.SetBalance_PG2(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+            var result = _bettingService.SetBalance_PG2(tpCustInfo, data, false,out afterAmount, ref bonusId, conn, trans);
 
             if (!result)
             {
