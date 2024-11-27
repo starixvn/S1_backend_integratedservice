@@ -123,7 +123,7 @@
   <data name="lbl_DepositReject" xml:space="preserve">
     <value>การทำธุรกรรมการฝากล้มเหลว! โปรดติดต่อเจ้าหน้าที่ แชทสด 24/7 เพื่อขอความช่วยเหลือเพิ่มเติม</value>
   </data>
-  <data name="lbl_ForgottenPassword" xml:space="preserve">
+  <data name="lbl_ForgottenPasswordEmailContent" xml:space="preserve">
     <value>&lt;!DOCTYPE html&gt;
 &lt;html&gt;
   &lt;body&gt;
@@ -131,12 +131,12 @@
       &lt;h1 style="color: #008CBA;"&gt;PASSWORD RESET REQUEST&lt;/h1&gt;
       &lt;p&gt;Dear valued member,&lt;/p&gt;
       &lt;p&gt;We received your password reset request. Please click on the button below to reset your password.&lt;/p&gt;
-      &lt;a href="{resetpwdurl}" style="background-color: #008CBA; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;"&gt;Reset Password&lt;/a&gt;
+      &lt;a href="{0}" style="background-color: #008CBA; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;"&gt;Reset Password&lt;/a&gt;
       &lt;br&gt;&lt;br&gt;
       &lt;p&gt;The link will expire in an hour. If you didn't make this request, please ignore this email or let us know. We take your account security seriously.&lt;/p&gt;
       &lt;br&gt;
       &lt;p&gt;Your sincerely,&lt;/p&gt;
-      &lt;p&gt;Nova88 Support&lt;/p&gt;
+      &lt;p&gt;{1} Support&lt;/p&gt;
     &lt;/div&gt;
     &lt;footer&gt;
       &lt;p style="font-size: 10px;"&gt;THIS EMAIL WAS SENT FROM A NOTIFICATION-ONLY ADDRESS, PLEASE DO NOT REPLY.&lt;/p&gt;
@@ -145,7 +145,7 @@
   &lt;/body&gt;
 &lt;/html&gt;</value>
   </data>
-  <data name="lbl_VerifyEmail" xml:space="preserve">
+  <data name="lbl_VerifyEmailContent" xml:space="preserve">
     <value>&lt;!DOCTYPE html&gt;
 &lt;html&gt;
   &lt;body&gt;
@@ -154,7 +154,7 @@
       &lt;p&gt;Hello,&lt;/p&gt;
       &lt;p&gt;You have selected this email address as your preferred email address. 
       To verify this email address belongs to you, please click the link to verify your email address:&lt;/p&gt;
-      &lt;a href="{verifyemailurl}" style="background-color: #008CBA; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;"&gt;Verify&lt;/a&gt;
+      &lt;a href="{0}" style="background-color: #008CBA; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;"&gt;Verify&lt;/a&gt;
       &lt;br&gt;&lt;br&gt;
       &lt;h3&gt;Why you received this email&lt;/h3&gt;
       &lt;p&gt;We require verification whenever an email address is selected as your preferred email address. 
@@ -162,7 +162,7 @@
       &lt;p&gt;If you did not make this request, please disregard this email. No reward will be paid out without verification.&lt;/p&gt;
       &lt;br&gt;
       &lt;p&gt;Kind regards,&lt;/p&gt;
-      &lt;p&gt;Nova88 Support&lt;/p&gt;
+      &lt;p&gt;{1} Support&lt;/p&gt;
     &lt;/div&gt;
     &lt;footer&gt;
       &lt;p style="font-size: 10px;"&gt;THIS EMAIL WAS SENT FROM A NOTIFICATION-ONLY ADDRESS, PLEASE DO NOT REPLY.&lt;/p&gt;
@@ -170,5 +170,11 @@
     &lt;/footer&gt;
   &lt;/body&gt;
 &lt;/html&gt;</value>
+  </data>
+  <data name="lbl_ForgottenPasswordEmailSubject" xml:space="preserve">
+    <value>[{0}] Password Reset Request</value>
+  </data>
+  <data name="lbl_VerifyEmailSubject" xml:space="preserve">
+    <value>[{0}] Verification Reward</value>
   </data>
 </root>

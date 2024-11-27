@@ -47,13 +47,12 @@ namespace CommonService.Service.BLL
 
                     if (isUsingMailSMTP)
                     {
-                        sendMailResult = await _smtpMailBll.SendMailAsync(custInfo, new { verifyemailurl = verificationUrl }, TemplateType.VerificationMail);
+                        sendMailResult = await _smtpMailBll.SendMailAsync(custInfo, verificationUrl, TemplateType.VerificationMail);
                     }
                     else
                     {
                         sendMailResult = await _sendGridBll.SendMailAsync(custInfo, new { verifyemailurl = verificationUrl }, TemplateType.VerificationMail);
                     }
-
 
                     if (sendMailResult.ErrorCode == ErrorCode.Success)
                     {

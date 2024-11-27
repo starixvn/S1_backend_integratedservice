@@ -3,6 +3,9 @@ using System.Net.Mime;
 using System.Text;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using static CommonService.Service.Model.SendGridResetPassword;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace CommonService.Service.BLL
 {
@@ -10,21 +13,28 @@ namespace CommonService.Service.BLL
     {
         private readonly IConfiguration _configuration;
         private readonly SmtpClient _smtpClient;
+        private readonly SelLangBLL _selLangBLL;
+        private readonly AuthBLL _authBLL;
 
-        public MailSMTPBLL(IConfiguration configuration, SmtpClient smtpClient)
+        public class EmailDetails
+        {
+            public string Subject { get; init; }
+            public string Content { get; init; }
+        }
+
+        public MailSMTPBLL(IConfiguration configuration, IServiceProvider provider, SmtpClient smtpClient)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _selLangBLL = provider.GetRequiredService<SelLangBLL>();
+            _authBLL = provider.GetRequiredService<AuthBLL>();
             _smtpClient = smtpClient;
         }
 
-        public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, dynamic dynamicTemplateData, TemplateType type)
+        public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string dynamicUrl, TemplateType type)
         {
-            string subject = "Zephyr Test SMTP"; 
-            string verifyEmailUrl = dynamicTemplateData.verifyemailurl;
-
-            var to = new MailAddressCollection { new MailAddress(custInfo.Email) };
-
-            return await PublishHtmlAsync(to, new MailAddressCollection(), new MailAddressCollection(), subject, verifyEmailUrl);
+            var emailDetails = MakeEmailContext(custInfo, dynamicUrl, type);
+            var mailTo = new MailAddressCollection { new MailAddress(custInfo.Email) };
+            return await PublishHtmlAsync(mailTo, new MailAddressCollection(), new MailAddressCollection(), emailDetails.Subject, emailDetails.Content);
         }
 
         private async Task<ApiResult> PublishHtmlAsync(
@@ -92,5 +102,28 @@ namespace CommonService.Service.BLL
                 ErrorCode = ErrorCode.Success
             };
         }
+
+        private EmailDetails MakeEmailContext(CustInfoProfile custInfo, string dynamicUrl, TemplateType type)
+        {
+            var userLang = custInfo.UserLang;
+            var siteName = custInfo.SiteName;
+
+            var mailContent = string.Empty;
+            var mailSubject = string.Empty;
+
+            if (type == TemplateType.VerificationMail)
+            {
+                mailSubject = string.Format(_selLangBLL.GetResourceValue("lbl_VerifyEmailSubject", userLang), siteName);
+                mailContent = string.Format(_selLangBLL.GetResourceValue("lbl_VerifyEmailContent", userLang), dynamicUrl, siteName);
+            } else if (type == TemplateType.ResetPassword)
+            {
+                var key = _authBLL.ApplyToken(custInfo);
+                var resetPasswordUrl = $"{dynamicUrl}?key={key}";
+                mailSubject = string.Format(_selLangBLL.GetResourceValue("lbl_ForgottenPasswordEmailSubject", userLang), siteName);
+                mailContent = string.Format(_selLangBLL.GetResourceValue("lbl_ForgottenPasswordEmailContent", userLang), resetPasswordUrl, siteName);
+            }
+            return new EmailDetails { Subject = mailSubject, Content = mailContent};
+        }
+
     }
 }
