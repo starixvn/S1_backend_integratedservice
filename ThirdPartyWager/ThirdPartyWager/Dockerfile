@@ -1,7 +1,7 @@
 FROM hub.nexdev.net/base/dotnet/core/sdk:6.0 as builder
 
 COPY . .
-WORKDIR ThirdPartyWager
+WORKDIR ThirdPartyWager/ThirdPartyWager
 RUN dotnet restore
 RUN dotnet publish "ThirdPartyWager.csproj" -c Release -o /app
 
