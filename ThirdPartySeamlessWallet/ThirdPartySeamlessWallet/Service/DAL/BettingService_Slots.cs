@@ -2353,7 +2353,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 tpCustInfo,
                 data.betAmount == 0 ? data.amount : data.betAmount * -1,
                 (int)Tp.PG2,
-                data.roundId,
+                data.parentRoundId, //用parentRoundId記錄TpSeamlessBonus，TpBetRecord才能正確紀錄BonusId
                 (int)GameType.PG2_RNG,
                 data.refId,  //RefId
                 out afterAmount,
