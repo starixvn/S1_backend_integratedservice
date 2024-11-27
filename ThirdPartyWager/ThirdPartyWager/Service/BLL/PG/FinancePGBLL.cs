@@ -1,5 +1,6 @@
 using System;
 using Newtonsoft.Json;
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -49,7 +50,7 @@ public class FinancePGBLL : ITpReportBLL
         var data = flattenedData
             .GroupBy(i => i.CurrencyIso)
             .Select(g => new {
-                CurrencyId = currencyIdDic[g.Key],
+                CurrencyId = currencyIdDic.GetValue(g.Key),
                 Stake = g.Sum(s => s.Stake),
                 ActualStake = g.Sum(s => s.ActualStake),
                 NetStake = g.Sum(s => s.NetStake),
