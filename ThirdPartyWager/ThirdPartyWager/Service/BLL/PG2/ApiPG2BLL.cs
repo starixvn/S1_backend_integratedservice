@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -25,20 +26,21 @@ public class ApiPG2BLL
         _wagerPG2Service = provider.GetRequiredService<WagerPG2Service>();
     }
 
-    public async Task<CurrencyStats_PG2> GetBetSummaryByDate(dynamic setting, string apiKey, string currency, int gameType, string reportTimeStartTime,
-        string reportTimeEndTime, int perPage, int page)
+    public async Task<CurrencyStats_PG2> GetBetSummaryByDate(dynamic setting, string apiKey, string currency, int gameType, TimeCast timeCast, int perPage, int page)
     {
         var apiUrl = setting.ApiUrl;
         var agent = setting.CurrencyData[currency].Agent;
 
         var url = $"{apiUrl}/seamless/report/date";
-        var userList = _wagerPG2Service.GetUserListByDate(reportTimeStartTime);
+        //我方時間為+0所以-8
+        var userTime = DateTime.ParseExact(timeCast.startTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture).AddHours(-8).ToString("yyyy-MM-dd HH:mm:ss");
+        var userList = _wagerPG2Service.GetUserListByDate(userTime);
 
         var param = new
         {
             agent = agent,
-            startDate = reportTimeStartTime,
-            endDate = reportTimeEndTime,
+            startDate = timeCast.startTime,
+            endDate = timeCast.endTime,
             userList = userList,
             page = page,
             limit = perPage
