@@ -26,9 +26,9 @@ namespace CommonService.Service.Model
 
     public class PixelRequest
     {
+        public string TransId { get; set; }
         public int SiteId { get; set; }
         public int CustId { get; set; }
-        public int CurrencyId { get; set; }
         public decimal Value { get; set; }
         public string Url { get; set; }
         public List<FaceBookPixel> PixelEvent { get; set; }
@@ -49,6 +49,11 @@ namespace CommonService.Service.Model
 
     public class UserData
     {
+        public string fbp { get; set; }
+        public string fbc { get; set; }
+        public string em { get; set; }
+        public string client_ip_address { get; set; }
+        public string client_user_agent { get; set; }
         public List<string> external_id { get; set; }
     }
 
@@ -64,4 +69,13 @@ namespace CommonService.Service.Model
         public List<PixelEvent> data { get; set; }
     }
   
+    public class CustFaceBookData
+    {
+        public string Ip { get; set; }
+        public string Fbc { get; set; }
+        public string Fbp { get; set; }
+        public string UserAgent { get; set; }
+        public string IsoCode { get; set; }
+        public string Email { get; set; }
+    }
 }

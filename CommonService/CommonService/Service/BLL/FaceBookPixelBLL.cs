@@ -11,17 +11,17 @@ namespace CommonService.Service.BLL
         private readonly ILogger<FaceBookPixelBLL> _logger;
         private readonly HttpHelper _httpHelper;
         private readonly Dictionary<int, FaceBookPixelConfig> _faceBookPixelConfig;
-        private readonly CurrencyService _currencyService;
         private readonly Tools _tools;
+        private readonly FaceBookPixelService _faceBookPixelService;
         
-        
+       
         public FaceBookPixelBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FaceBookPixelBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _faceBookPixelConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FaceBookPixelConfig>("FaceBookPixelConfig");
-            _currencyService = provider.GetRequiredService<CurrencyService>();
             _tools = provider.GetRequiredService<Tools>();
+            _faceBookPixelService = provider.GetRequiredService<FaceBookPixelService>();
         }
 
         public async Task<ApiResult> SendAsync(PixelRequest request)
@@ -45,11 +45,19 @@ namespace CommonService.Service.BLL
                     {
                         data = new List<PixelEvent>()
                     };
-
+                    
+                    var custFaceBookData = _faceBookPixelService.GetCustFaceBookData(request.CustId , request.TransId);
+                    if (custFaceBookData is null)
+                    {
+                        apiResult.ErrorCode =  ErrorCode.Fail;
+                        apiResult.Message = "Can't get cust facebook data";
+                        return apiResult;
+                    }
+                    
                     var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    var email = custFaceBookData.Email is null ? "" : _tools.SHA256(custFaceBookData.Email);
                     var custSha = _tools.SHA256(request.CustId.ToString());
-                    var isoCode = _currencyService.GetCurrency().FirstOrDefault(x => x.CurrencyId == request.CurrencyId)?.IsoCode;
-                
+                    
                     foreach (var pixelEvent in request.PixelEvent)
                     {
                         var data = new PixelEvent
@@ -58,11 +66,16 @@ namespace CommonService.Service.BLL
                             event_time = now,
                             user_data = new UserData
                             {
+                                fbp = custFaceBookData.Fbp,
+                                fbc = custFaceBookData.Fbc,
+                                em = email,
+                                client_ip_address = custFaceBookData.Ip,
+                                client_user_agent = custFaceBookData.UserAgent,
                                 external_id = new List<string> {custSha}
                             },
                             custom_data = new CustomData
                             {
-                                currency = isoCode,
+                                currency = custFaceBookData.IsoCode,
                                 value = request.Value
                             },
                             event_source_url = request.Url,
@@ -71,8 +84,12 @@ namespace CommonService.Service.BLL
                         eventData.data.Add(data);
                     }
                     
-                    await _httpHelper.HttpPost1Async(url, null, JsonConvert.SerializeObject(eventData), "application/json");
-                 
+                    var responseMessage = await _httpHelper.HttpPost1Async(url, null, JsonConvert.SerializeObject(eventData), "application/json");
+
+                    if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        _faceBookPixelService.DelCustFaceBookData(request.CustId , request.TransId);
+                    }
                 }
                 
                 apiResult.ErrorCode =  ErrorCode.Success;

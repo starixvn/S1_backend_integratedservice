@@ -35,6 +35,7 @@ namespace CommonService
             services.AddSingleton<AuthService>();
             services.AddSingleton<IovationService>();
             services.AddSingleton<OTPSMSService>();
+            services.AddSingleton<FaceBookPixelService>();
 
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<AuthBLL>();
