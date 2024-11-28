@@ -12,7 +12,7 @@ public class FinancePG2BLL : ITpReportBLL
     private readonly CommonBLL _commonBLL;
     private readonly ApiPG2BLL _apiPG2BLL;
     private readonly DateTimeHelper _dateTimeHelper;
-    private readonly int _timeZone = 8; // 報表帶入參數為日期格式，對方API預設+8
+    private readonly int _timeZone = 0; 
     private readonly int _gameType = (int)GameType.PG2_RNG;
     private readonly int _tpId = (int)Tp.PG2;
     private readonly IEnumerable<TpCurrency> _tpCurrencyList;
