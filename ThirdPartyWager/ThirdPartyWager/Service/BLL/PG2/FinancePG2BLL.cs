@@ -12,7 +12,7 @@ public class FinancePG2BLL : ITpReportBLL
     private readonly CommonBLL _commonBLL;
     private readonly ApiPG2BLL _apiPG2BLL;
     private readonly DateTimeHelper _dateTimeHelper;
-    private readonly int _timeZone = 8; // 報表帶入參數為日期格式，對方API預設+8
+    private readonly int _timeZone = 0; // 報表帶入參數為日期格式，對方API預設+8
     private readonly int _gameType = (int)GameType.PG2_RNG;
     private readonly int _tpId = (int)Tp.PG2;
     private readonly IEnumerable<TpCurrency> _tpCurrencyList;
@@ -101,7 +101,7 @@ public class FinancePG2BLL : ITpReportBLL
                 var perPage = 500;
                 while (page <= totalPage)
                 {
-                    CurrencyStats_PG2 getWagerSummary = await _apiPG2BLL.GetBetSummaryByDate(setting, apiKey, currency, _gameType, reportTime, perPage, page);
+                    CurrencyStats_PG2 getWagerSummary = await _apiPG2BLL.GetBetSummaryByDate(setting, apiKey, currency, _gameType, reportTime.startTime, reportTime.endTime, perPage, page);
                     if (getWagerSummary.status.code != 0)
                     {
                         var msg = "THIRD_PARTY_ERROR";
@@ -110,7 +110,7 @@ public class FinancePG2BLL : ITpReportBLL
                         throw systemException;
                     }
 
-                    if (getWagerSummary.status.code == 0 && !getWagerSummary.data.transactions.Any() && getWagerSummary.data.totalPageAmount == 0)
+                    if (getWagerSummary.status.code == 0 && getWagerSummary.data.transactions == null && getWagerSummary.data.totalPageAmount == 0)
                     {
                         var msg = "NO_DATA";
                         _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
@@ -132,11 +132,11 @@ public class FinancePG2BLL : ITpReportBLL
 
     public TimeCast GetReportTime(DateTime startTime, int day)
     {
-        var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd HH:mm:ss", startTime);
+        var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd", startTime);
         var cvTime = DateTimeOffset.Now.AddDays(day).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
         if (reportTime.endUnix > cvTime)
         {
-            reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd HH:mm:ss", startTime.AddDays(-1));
+            reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd", startTime.AddDays(-1));
         }
         return reportTime;
     }
