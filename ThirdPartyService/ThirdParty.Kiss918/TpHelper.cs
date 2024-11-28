@@ -261,7 +261,7 @@ namespace ThirdParty.Kiss918
             var gameCode = detailList.GetFirstStringValue("gameID");
             return tpGameType.CategoryId switch
             {
-                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = gameCode,
                     Game = GetGameName(gameCode),

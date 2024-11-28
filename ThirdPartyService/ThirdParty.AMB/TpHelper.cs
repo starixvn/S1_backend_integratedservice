@@ -190,7 +190,7 @@ namespace ThirdParty.AMB
                     DeviceType = DeviceType.None,
                     IP = string.Empty,
                 },
-                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = detailList.GetFirstStringValue("gameId"),
                     Game = detailList.GetFirstStringValue("game"),

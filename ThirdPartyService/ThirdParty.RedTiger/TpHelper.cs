@@ -287,7 +287,7 @@ namespace ThirdParty.RedTiger
                 var gameCode = detailList.GetFirstStringValue("GameDetailsId");
                 return tpGameType.CategoryId switch
                 {
-                    TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                     {
                         GameID = gameCode,
                         Game = GetGameName(gameCode),
@@ -313,7 +313,7 @@ namespace ThirdParty.RedTiger
                 }
                 return tpGameType.CategoryId switch
                 {
-                    TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                     {
                         GameID = detail.GetStringValue("gameId"),
                         Game = detail.GetStringValue("gameType"),

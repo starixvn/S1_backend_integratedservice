@@ -65,7 +65,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                     }
-
                 }
             }
             catch (MySqlException mySqlEx)
@@ -106,7 +105,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
+        #endregion GPI
 
         #region Joker
 
@@ -267,7 +266,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          tpId: (int)Tp.Joker,
                          tpTransId: string.IsNullOrWhiteSpace(bettingDataFish_Joker.roundid) ? refId : bettingDataFish_Joker.roundid,
                          gameType: (int)GameType.Joker_Fish,
-                         tpCategory: TpCategory.Fish,
+                         tpCategory: TpCategory.Fishing,
                          refId: refId,
                          TransType.Payout,
                          betData: null,
@@ -376,7 +375,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return (result > 0) ? true : false;
         }
 
-        #endregion
+        #endregion Joker
 
         #region YGG
 
@@ -391,7 +390,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 using (MySqlConnection conn = _mainDbClient.GetMySqlConnection())
                 {
-
                     conn.Open();
 
                     using (var trans = conn.BeginTransaction())
@@ -401,7 +399,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         string SpName = "Service_BettransRngV2_YGG_Ins";
                         result = _mainDbClient.Execute(SpName, trans, parameters);
-
 
                         if (result > 0)
                         {
@@ -439,7 +436,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             result = -1;
                             _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                         }
-
                     }
                 }
             }
@@ -519,7 +515,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
+        #endregion YGG
 
         #region PP
 
@@ -617,6 +613,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         public int BonusWinRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
         {
             afterAmount = 0;
@@ -673,7 +670,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = _mainDbClient.Execute("Service_BettransLC_PP_CancelBet_Set", trans, p);
             }
 
-
             if (result > 0)
             {
                 decimal cancelStake = p.Get<decimal>("CancelStake");
@@ -719,6 +715,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         public int PromoBonus_PP(TpCustInfo tpCustInfo, PromoBonus promoBonus, out decimal afterAmount)
         {
             GameType gameType = GameType.PP_RNG;
@@ -773,6 +770,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         public int AdjustmentRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -865,7 +863,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        #endregion
+
+        #endregion PP
 
         #region SG
 
@@ -884,7 +883,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var category = gameType switch
                 {
                     (int)GameType.SG_RNG => TpCategory.Slots,
-                    (int)GameType.SG_Fish => TpCategory.Fish,
+                    (int)GameType.SG_Fish => TpCategory.Fishing,
                     (int)GameType.SG_Table => TpCategory.P2P,
                     _ => throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null)
                 };
@@ -896,9 +895,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     case (int)GameType.SG_Table:
                         cancelSetSp = "Service_BettransRng_SG_CancelBet_Set";
                         break;
+
                     case (int)GameType.SG_Fish:
                         cancelSetSp = "Service_BettransFish_SG_CancelBet_Set";
                         break;
+
                     default:
                         throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null);
                 }
@@ -971,9 +972,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         case (int)GameType.SG_Table:
                             cancelInsSp = "Service_BettransRng_SG_CancelBet_Ins";
                             break;
+
                         case (int)GameType.SG_Fish:
                             cancelInsSp = "Service_BettransFish_SG_CancelBet_Ins";
                             break;
+
                         default:
                             throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null);
                     }
@@ -1136,7 +1139,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.QueryFirst<SettleData_SG>("Service_TpWagerRng_SG_Settle_Get_V2", new { TransId = TransId });
         }
 
-        #endregion
+        #endregion SG
 
         #region PG
 
@@ -1551,9 +1554,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             };
         }
 
-        #endregion
+        #endregion PG
 
         #region CQ9
+
         public int PayoutRNG_CQ9(TpCustInfo tpCustInfo, EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, ref decimal afterAmount)
         {
             int bonusId = 0;
@@ -2097,7 +2101,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int RewardRNG_CQ9(TpCustInfo tpCustInfo, PayoffDataRNG_CQ9 payoffDataRNG_CQ9, out decimal afterAmount)
         {
-            // third party did not provide gametype use default cq9 slot 
+            // third party did not provide gametype use default cq9 slot
             int gameType = (int)GameType.CQ9_RNG;
 
             afterAmount = 0;
@@ -2253,7 +2257,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                     }
                 }
-
             }
             catch (MySqlException mySqlEx)
             {
@@ -2345,7 +2348,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return data;
         }
 
-        #endregion
+        #endregion CQ9
 
         #region Mega
 
@@ -2359,7 +2362,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.Execute("Service_TpReportRng_Mega_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
-        #endregion
+        #endregion Mega
 
         #region Iconic
 
@@ -2392,7 +2395,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (bettingDataRNG_Iconic.amount != 0)
                     {
-
                         result = PayoutV2(
                             tpCustInfo,
                             bettingDataRNG_Iconic.amount,
@@ -2409,7 +2411,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             conn,
                             trans
                         );
-
                     }
 
                     if (result > 0)
@@ -2479,7 +2480,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             conn,
                             trans
                         );
-
                     }
 
                     if (result > 0)
@@ -2585,7 +2585,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = 2
                 });
 
-
                 var gameType = (int)GameType.Iconic_Fish;
                 result = _mainDbClient.Execute("Service_BettransFish_Iconic_Ins", trans, p);
 
@@ -2593,7 +2592,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (bettingDataFish_Iconic.amount != 0)
                     {
-
                         result = walletService.SetBalance(
                             tpCustInfo.CustId,
                             tpCustInfo.SiteId,
@@ -2634,7 +2632,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
+        #endregion Iconic
 
         #region YL Fishing
 
@@ -2714,6 +2712,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         public int RefundFish_YL(TpCustInfo tpCustInfo, RefundDataFish_YL refundDataFish_YL, out decimal afterAmount)
         {
             afterAmount = 0;
@@ -2796,10 +2795,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         public IEnumerable<SettleData> GetUnsettledListFish_YL()
         {
             return _mainDbClient.Query<SettleData>("Service_BettransFish_YL_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
+
         public int SetSettleFlagFish_YL(string TransId)
         {
             var result = _mainDbClient.Execute("Service_BettransFish_YL_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId });
@@ -2836,7 +2837,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             };
         }
 
-        #endregion
+        #endregion YL Fishing
 
         #region PT
 
@@ -2850,9 +2851,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.Execute("Service_TpWagerRng_PT_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId });
         }
 
-        #endregion
+        #endregion PT
 
         #region MG
+
         public async Task<MGPayoutResult> PayoutRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
@@ -2994,7 +2996,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-
                 var bettransMg = await _mainDbClient.QueryAsync<BettransRng_MG>("Service_BettransRng_MG_txnId_Get", new { txnId = cancelDataRng_MG.txnId });
                 var bettrans = bettransMg.ToList();
 
@@ -3043,7 +3044,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var betId = (!string.IsNullOrEmpty(cancelDataRng_MG.betId)) ? cancelDataRng_MG.betId : bet.BetId;
 
-
                 var result = _mainDbClient.Execute("Service_BettransRng_MG_CancelBet_Set", new { betId, cancelDataRng_MG.txnId }, conn, trans);
                 if (result > 0)
                 {
@@ -3087,6 +3087,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw;
             }
         }
+
         public IEnumerable<SettleData> GetUnsettledList_MG(string spName)
         {
             return _mainDbClient.Query<SettleData>(spName, commandType: CommandType.StoredProcedure);
@@ -3124,7 +3125,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return tpGameType;
         }
 
-        #endregion
+        #endregion MG
 
         #region JILI
 
@@ -3803,13 +3804,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData_JILI> GetUnsettledList_JILI(int category)
         {
-            string sp = (category == (int)TpCategory.Fish) ? "Service_BettransFish_JILI_Unsettle_Get" : "Service_BettransRng_JILI_Unsettle_Get";
+            string sp = (category == (int)TpCategory.Fishing) ? "Service_BettransFish_JILI_Unsettle_Get" : "Service_BettransRng_JILI_Unsettle_Get";
             return _mainDbClient.Query<SettleData_JILI>(sp);
         }
 
         public int SetSettleFlag_JILI(int category, long TransId, int TicketStatus)
         {
-            string sp = (category == (int)TpCategory.Fish) ? "Service_BettransFish_JILI_Settle_Set" : "Service_BettransRng_JILI_Settle_Set_V2";
+            string sp = (category == (int)TpCategory.Fishing) ? "Service_BettransFish_JILI_Settle_Set" : "Service_BettransRng_JILI_Settle_Set_V2";
             return _mainDbClient.Execute(sp, parameters: new DynamicParameters(new { TransId = TransId, TicketStatus = TicketStatus }));
         }
 
@@ -3872,7 +3873,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 Info = JsonConvert.SerializeObject(InfoData),
             };
         }
-        #endregion
+
+        #endregion JILI
 
         #region Netent
 
@@ -4022,7 +4024,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             conn,
                             trans
                         );
-
                     }
 
                     if (result > 0)
@@ -4125,7 +4126,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_BettransRng_Netent_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
-        #endregion
+        #endregion Netent
 
         #region RedTiger
 
@@ -4137,7 +4138,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-
 
             var p = new DynamicParameters(new
             {
@@ -4276,7 +4276,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             conn,
                             trans
                         );
-
                     }
 
                     if (result > 0)
@@ -4378,7 +4377,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_BettransRng_RedTiger_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
-        #endregion
+        #endregion RedTiger
 
         #region NLC
 
@@ -4658,9 +4657,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
+        #endregion NLC
 
         #region AP
+
         public int CancelBetRNG_AP(TpCustInfo tpCustInfo, CancelBetDataRNG_AP cancelBetDataRNG_AP, out decimal afterAmount)
         {
             var result = 0;
@@ -4669,7 +4669,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             CultureInfo culture = CultureInfo.InvariantCulture;
             DateTime partitionTime = DateTime.Parse(cancelBetDataRNG_AP.timestamp, culture, DateTimeStyles.None);
             afterAmount = 0;
-
 
             var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Check", cancelBetDataRNG_AP)?.FirstOrDefault();
             if (bettransAP == null)
@@ -4690,7 +4689,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             result = _partitionService.Execute(partitionTime, "Service_BettransRng_AP_CancelBet_Set", para, trans);
-
 
             if (result > 0)
             {
@@ -4770,7 +4768,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     ip = bettingDataRNG_AP.ip,
                     TicketType = bettingDataRNG_AP.TicketType,
                     TicketStatus = bettingDataRNG_AP.TicketStatus
-
                 });
                 p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_AP_Ins", p, trans);
@@ -4880,9 +4877,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        #endregion
 
-        #region AdvantPlay Mini 
+        #endregion AP
+
+        #region AdvantPlay Mini
 
         public int Payout_AdvantPlayMini(TpCustInfo tpCustInfo, PayoutData_AdvantPlayMini payoutData_AdvantPlayMini, out decimal afterAmount)
         {
@@ -5290,7 +5288,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return result;
         }
-        #endregion
+
+        #endregion AdvantPlay Mini
 
         #region HB
 
@@ -5365,7 +5364,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-
         public void UpdateTpBonusFlag_HB(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
         {
             GetTpBonus(tpId, tpTransId, gameType, tpCategory, out CustId, out BonusId);
@@ -5435,7 +5433,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             };
         }
 
-        #endregion
+        #endregion HB
 
         #region AMB Slot
 
@@ -5502,7 +5500,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             GetTpBonus(tpId, tpTransId, gameType, tpCategory, out CustId, out BonusId);
         }
 
-        #endregion
+        #endregion AMB Slot
 
         #region YGG
 
@@ -5511,7 +5509,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.QueryFirst<SettleData_YGG>("Service_TpWager_YGG_Settle_Get_V2", new { TransId = transId });
         }
 
-        #endregion
+        #endregion YGG
 
         #region Kiss918
 
@@ -5544,7 +5542,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public bool SetBalance_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, TransType transType, string memo,
                                        out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
-
             var result = PayoutV2(
                 tpCustInfo,
                 data.amount,
@@ -5589,7 +5586,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Get", commandType: CommandType.StoredProcedure, new { _playSessionID = playSessionID, _referenceID = referenceID });
         }
 
-        #endregion
+        #endregion Kiss918
 
         #region SimplePlay
 
@@ -5774,9 +5771,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
+        #endregion SimplePlay
 
         #region Skywind
+
         public int Settled_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
         {
             var bonusId = 0;
@@ -5791,8 +5789,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     case (int)GameType.Skywind_LiveCasino:
                         tpCategory = TpCategory.LiveCasino;
                         break;
+
                     case (int)GameType.Skywind_Fish:
-                        tpCategory = TpCategory.Fish;
+                        tpCategory = TpCategory.Fishing;
                         break;
                 }
                 var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_Skywind.timestamp).DateTime;
@@ -5816,9 +5815,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     case "freegame":
                         bettingData_Skywind.TicketType = (int)BettransType.Bonus;
                         break;
+
                     case "bonusgame":
                         bettingData_Skywind.TicketType = (int)BettransType.Bonus;
                         break;
+
                     default:
                         bettingData_Skywind.TicketType = (int)BettransType.EndRound;
                         break;
@@ -5902,7 +5903,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_CancelBet_Set", para, trans);
 
-
             if (result > 0)
             {
                 if (bettransSkywind.amount != 0)
@@ -5943,7 +5943,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.QueryFirst<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get_V2", new { TransId = transId });
         }
 
-        #endregion
+        #endregion Skywind
 
         #region PlayTech
 
@@ -6583,7 +6583,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _bettingService.GetTpBetFailureParam_PlayTech(tpCustInfo, custBalance, tpCurrency, bettingData_PlayTech, gameType, Code, AfterAmount);
         }
 
-        #endregion
+        #endregion PlayTech
 
         #region Nextspin
 
@@ -6630,7 +6630,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     );
                     if (result != 1)
                         throw new NextspinException(NextspinErrorCode.InsufficientBalance);
-
                 }
                 result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.ticketId, trans, partitionTime);
                 if (result < 1)
@@ -6659,6 +6658,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw new NextspinException(NextspinErrorCode.SystemError);
             }
         }
+
         public async Task<NextspinResult> CancelBetRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData)
         {
             await using var conn = _mainDbClient.GetMySqlConnection();
@@ -6718,7 +6718,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        #endregion
+        #endregion Nextspin
 
         #region Endorphina
 
@@ -6986,7 +6986,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
+        #endregion Endorphina
 
         #region PNG
 
@@ -7127,7 +7127,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        #endregion
+        #endregion PNG
 
         #region Amigo
 
@@ -7359,6 +7359,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
+        #endregion Amigo
     }
 }

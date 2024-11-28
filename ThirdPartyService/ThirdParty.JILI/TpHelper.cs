@@ -225,7 +225,7 @@ namespace ThirdParty.JILI
 
             return tpGameType.CategoryId switch
             {
-                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = GameId,
                     Game = GetGameName(GameId),

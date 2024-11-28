@@ -130,7 +130,7 @@ namespace ThirdPartySettleWorker.Workers
             var isError = false;
             var thisTp = (int)Tp.CQ9;
             var gameType = GameType.CQ9_Fish;
-            var category = TpCategory.Fish;
+            var category = TpCategory.Fishing;
             var logName = "Settle_CQ9_Fish";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
 

@@ -148,8 +148,8 @@ namespace ThirdParty.GPI
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
 
-            var spName = (getBetDetail.TpGameTypeOption.CategoryId == TpCategory.Casino) ? "Service_BettransRng_GPI_Detail_Get" : "Service_TpWagerLT_GPI_Detail_Get";
-            var db = (getBetDetail.TpGameTypeOption.CategoryId == TpCategory.Casino) ? DataBase.Report : DataBase.Wager;
+            var spName = (getBetDetail.TpGameTypeOption.CategoryId == TpCategory.Slots) ? "Service_BettransRng_GPI_Detail_Get" : "Service_TpWagerLT_GPI_Detail_Get";
+            var db = (getBetDetail.TpGameTypeOption.CategoryId == TpCategory.Slots) ? DataBase.Report : DataBase.Wager;
 
             var betList = TpBetRecordProvider.DbQuery(spName, new { getBetDetail.TransId }, db);
             if (betList == null)
@@ -161,13 +161,13 @@ namespace ThirdParty.GPI
                 };
             }
 
-            var detailList = (getBetDetail.TpGameTypeOption.CategoryId == TpCategory.Casino) ? betList.Where(i => (sbyte)i.GetValueOrDefault("type") != 2) : betList;
+            var detailList = (getBetDetail.TpGameTypeOption.CategoryId == TpCategory.Slots) ? betList.Where(i => (sbyte)i.GetValueOrDefault("type") != 2) : betList;
             var detail = ToJson(detailList);
             string gameCode = detailList.FirstOrDefault()?.GetValueOrDefault("game_id")?.ToString();
 
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
-                TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                TpCategory.Slots => new CasinoDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,
@@ -205,13 +205,13 @@ namespace ThirdParty.GPI
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var spName = (tpGameType.CategoryId == TpCategory.Casino) ? "Service_BettransRng_GPI_Detail_Get" : "Service_TpWagerLT_GPI_Detail_Get";
-            var db = (tpGameType.CategoryId == TpCategory.Casino) ? DataBase.Main : DataBase.Wager;
+            var spName = (tpGameType.CategoryId == TpCategory.Slots) ? "Service_BettransRng_GPI_Detail_Get" : "Service_TpWagerLT_GPI_Detail_Get";
+            var db = (tpGameType.CategoryId == TpCategory.Slots) ? DataBase.Main : DataBase.Wager;
             var detailList = TpBetRecordProvider.DbQuery(spName, new { betRecordInfo.TransId }, db);
             var gameCode = detailList.GetFirstStringValue("game_id");
             return tpGameType.CategoryId switch
             {
-                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = gameCode,
                     Game = GetGameName(gameCode),
@@ -269,7 +269,7 @@ namespace ThirdParty.GPI
                 "200016" => "Boxing",
                 "200014" => "God Of Fortune",
                 "200020" => "Roman Empire",
-                "200019" => "Casino Royale",
+                "200019" => "Slots Royale",
                 "200024" => "Queen Bee",
                 "200031" => "Tokyo Hunter",
                 "200032" => "Fortune Koi",

@@ -181,7 +181,7 @@ namespace ThirdParty.N2Live
                 "110001" => "RNG Traditional Blackjack PT*",
                 "110002" => "RNG Free Bet Blackjack PT*",
                 "110003" => "RNG Blackjack Switch PT*",
-                "210001" => "RNG Casino Hold’em",
+                "210001" => "RNG Slots Hold’em",
                 "300001" => "Bull Bull",
                 "310001" => "RNG Bull Bull",
                 "400002" => "Free Pick San Gong Non-Commission",

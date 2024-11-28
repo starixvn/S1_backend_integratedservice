@@ -181,7 +181,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettlementType = SettlementType.SettledForValid,
                             TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             GameID = settleData.gamecode,
-                        }, TpCategory.Fish);
+                        }, TpCategory.Fishing);
 
                         if (result == 1)
                         {

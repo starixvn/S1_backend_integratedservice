@@ -286,7 +286,7 @@ namespace ThirdParty.SBSW
                     HomeyScore = betDetail?.home_score,
                     RefTransId = betDetail?.parlay_ref_no,
                 },
-                TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                TpCategory.Slots => new CasinoDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,

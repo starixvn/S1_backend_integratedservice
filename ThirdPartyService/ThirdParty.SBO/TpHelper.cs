@@ -214,7 +214,7 @@ namespace ThirdParty.SBO
             #region 所有分類，未來可擴充
 
             // SportsBook
-            // Casino
+            // Slots
             // Games
             // VirtualSports
             // SeamlessGame

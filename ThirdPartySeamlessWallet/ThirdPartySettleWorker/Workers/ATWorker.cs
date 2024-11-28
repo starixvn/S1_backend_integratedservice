@@ -173,7 +173,7 @@ namespace ThirdPartySettleWorker.Workers
             bool isError = false;
             int thisTp = (int)Tp.Iconic;
             var gameType = GameType.Iconic_Fish;
-            var category = TpCategory.Fish;
+            var category = TpCategory.Fishing;
             string logName = "Settle_AT_Fish";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
             var wagerGet = "Service_TpWagerFish_AT_Settle_Get";

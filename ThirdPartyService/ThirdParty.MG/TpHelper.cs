@@ -213,7 +213,7 @@ namespace ThirdParty.MG
 
             return tpGameType.CategoryId switch
             {
-                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = detail.GetFirstStringValue("contentCode"),
                     Game = detail.GetFirstStringValue("contentCode"),

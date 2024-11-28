@@ -1556,7 +1556,7 @@ namespace ThirdPartyService.Service.BLL
                     return;
                 }
 
-                if (gameTypeOption.CategoryId == TpCategory.Casino)
+                if (gameTypeOption.CategoryId == TpCategory.Slots)
                 {
                     _mainDbClient.Execute("Member_RecentlyPlayed_Set", new
                     {
@@ -1598,7 +1598,7 @@ namespace ThirdPartyService.Service.BLL
                     var gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:0";
 
                     // Slot 顯示遊戲名稱
-                    if (gameTypeOption.CategoryId == TpCategory.Casino)
+                    if (gameTypeOption.CategoryId == TpCategory.Slots)
                     {
                         if (tpInfo.TpId != (int)TpEnum.SBSW)
                         {

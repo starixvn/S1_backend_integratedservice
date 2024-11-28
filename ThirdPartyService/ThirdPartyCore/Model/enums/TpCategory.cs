@@ -3,7 +3,7 @@
     public enum TpCategory
     {
         Sports = 1,
-        Casino = 2,
+        Slots = 2,
         LiveCasino = 3,
         Fishing = 4,
         Cockfighting = 5,
@@ -11,6 +11,6 @@
         VirtualSports = 7,
         P2P = 8,
         Games = 10,
-        Esports = 11,
+        Esports = 11
     }
 }

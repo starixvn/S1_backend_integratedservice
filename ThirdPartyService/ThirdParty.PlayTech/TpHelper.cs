@@ -130,7 +130,7 @@ namespace ThirdParty.PlayTech
                     DeviceType = GetDeviceType(platform),
                     IP = string.Empty,
                 },
-                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = gameCode,
                     Game = GetGameName(gameCode),

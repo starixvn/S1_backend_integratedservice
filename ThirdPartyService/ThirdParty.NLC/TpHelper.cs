@@ -161,7 +161,7 @@ namespace ThirdParty.NLC
                 var channel = detailList.GetFirstStringValue("channel");
                 return tpGameType.CategoryId switch
                 {
-                    TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                     {
                         GameID = gameCode,
                         Game = GetGameName(gameCode),
@@ -187,7 +187,7 @@ namespace ThirdParty.NLC
                 }
                 return tpGameType.CategoryId switch
                 {
-                    TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                     {
                         GameID = detail.GetStringValue("gameId"),
                         Game = detail.GetStringValue("gameType"),

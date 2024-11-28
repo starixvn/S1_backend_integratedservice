@@ -140,7 +140,7 @@ namespace ThirdParty.END
 
             return tpGameType.CategoryId switch
             {
-                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = gameCode,
                     Game = GetGameName(gameCode),

@@ -276,7 +276,7 @@ namespace ThirdPartySettleWorker.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
 
             var gameType = (GameType)state;
-            var tpCategory = TpCategory.Fish;
+            var tpCategory = TpCategory.Fishing;
             var logName = $"Settle_SG_Fish";
             var getSP = $"Service_TpWagerFish_SG_Settle_Get_V3";
             var setSP = $"Service_TpWagerFish_SG_Settle_Set_V3";

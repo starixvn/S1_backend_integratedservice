@@ -171,7 +171,7 @@ namespace ThirdParty.SG
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
-                TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                TpCategory.Slots => new CasinoDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,
@@ -227,7 +227,7 @@ namespace ThirdParty.SG
             var gameCode = detail.GetStringValue("gameCode");
             return tpGameType.CategoryId switch
             {
-                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                TpCategory.Slots => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = gameCode,
                     Game = GetGameName(gameCode),

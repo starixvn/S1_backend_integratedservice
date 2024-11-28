@@ -206,7 +206,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             else if (gameType == (int)GameType.SG_Fish)
             {
                 cash = true;
-                category = TpCategory.Fish;
+                category = TpCategory.Fishing;
                 result = _mainDbClient.Execute("Service_BettransFish_SG_Ins", p, conn, trans);
             }
 

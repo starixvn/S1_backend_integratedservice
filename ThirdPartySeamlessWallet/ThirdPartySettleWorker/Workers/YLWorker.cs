@@ -44,7 +44,7 @@ namespace ThirdPartySettleWorker.Workers
             var isError = false;
             var thisTp = (int)Tp.YL;
             var gameType = GameType.YL_Fish;
-            var category = TpCategory.Fish;
+            var category = TpCategory.Fishing;
             var logName = "Settle_YL_Fish";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
 

@@ -98,7 +98,7 @@ namespace ThirdParty.Pegasus
             
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
-                TpCategory.Casino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+                TpCategory.Slots => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,

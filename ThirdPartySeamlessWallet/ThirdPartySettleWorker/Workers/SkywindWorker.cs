@@ -359,7 +359,7 @@ namespace ThirdPartySettleWorker.Workers
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
                                 GameID = gameCode,
                             };
-                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Fish);
+                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Fishing);
 
                             if (result == 1)
                             {
