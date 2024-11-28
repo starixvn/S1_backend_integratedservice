@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -57,6 +58,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// 非必填
         /// </summary>
         public string Address { get; set; }
+        
+        public int AgentId
+        {
+            get
+            {
+                var result = _agentIdList.TryGetValue(CurrencyId , out var agent);
+                if (!result)
+                {
+                    throw new KeyNotFoundException();
+                }
+                return agent;
+            }
+        }
+        
+        public string AllAgentId => JsonConvert.SerializeObject(new List<int> {AgentId});
         
         #endregion
 
@@ -130,6 +146,50 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         #endregion
 
+        #region CustBank
+
+        public List<BankDetail> CustBankDetail { get; set; } = new();
+        public List<EWalletDetail> CustEWalletDetail { get; set; } = new();
+        public List<CryptoWalletDetail> CustCryptoWalletDetail { get; set; } = new();
+
+        public class BankDetail
+        {
+            public int SysId { get; set; }
+            public string AccountNo { get; set; }
+            public string IFSCCode { get; set; }
+        }
+        public class EWalletDetail
+        {
+            public int SysId { get; set; }
+            public string AccountNo { get; set; }
+        }
+        public class CryptoWalletDetail
+        {
+            public int CurrencyId { get; set; }
+            public string Network { get; set; }
+            public string Address { get; set; }
+            public string NickName { get; set; }
+        }
+        
+        #endregion
+        
+        #region private
+
+        private readonly Dictionary<int, int> _agentIdList = new()
+        {
+            { 2, 1 },
+            { 3, 2 },
+            { 4, 3 },
+            { 13, 4 },
+            { 15, 5 },
+            { 45, 6 },
+            { 51, 7 },
+            { 61, 8 },
+            { 72, 9 },
+            { 74, 10 }
+        };
+
+        #endregion
     }
 
     public class MigrationCustomerResponse

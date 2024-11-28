@@ -13,26 +13,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly MigrationBLL _migrationBll;
         private readonly Log2File _log2File;
         private readonly Dictionary<int, MigrationConfig> _siteConfigDic;
-        private readonly Dictionary<int, int> _agentIdList;
 
         public MigrationController(IServiceProvider provider)
         {
             _migrationBll = provider.GetRequiredService<MigrationBLL>();
             _log2File = provider.GetRequiredService<Log2File>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MigrationConfig>("Migration");
-            _agentIdList = new Dictionary<int, int>
-            {
-                { 2, 1 },
-                { 3, 2 },
-                { 4, 3 },
-                { 13, 4 },
-                { 15, 5 },
-                { 45, 6 },
-                { 51, 7 },
-                { 61, 8 },
-                { 72, 9 },
-                { 74, 10 }
-            };
         }
 
         [HttpPost]
@@ -61,17 +47,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
             
-            var agentResult = _agentIdList.TryGetValue(request.CurrencyId , out var agent);
-            if (!agentResult)
-            {
-                resp.Message = "Currency Agent Not Supported.";
-                return resp;
-            }
-
-            var allAgentId = JsonConvert.SerializeObject(new List<int> {agent});
             try 
             {
-                  var (custId, resultCode) = await _migrationBll.MigrationCustomerIns(request , agent ,allAgentId);
+                  var (custId, resultCode) = await _migrationBll.MigrationInsFlow(request);
                   
                   if (custId > 0 && resultCode == 0)
                   {
@@ -86,36 +64,39 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                       switch (resultCode)
                       {
-                          case -1 or -2:
+                          case -1:
                               resp.Message = "Error at table Customer; ";
                               break;
-                          case -3:
+                          case -2:
                               resp.Message = "Error at table CustBackupPassword; ";
                               break;
-                          case -4:
-                              resp.Message = "Error at table CustProfile; ";
-                              break;
-                          case -5:
+                          case -3:
                               resp.Message = "Error at table CustRegInfo; ";
                               break;
-                          case -6:
+                          case -4:
                               resp.Message = "Error at table CustBankInfo; ";
                               break;
-                          case -7:
-                              resp.Message = "Error at table CustWallet; ";
-                              break;
-                          case -8:
-                              resp.Message = "Error at table CustWithdrawalLimit; ";
-                              break;
-                          case -9:
-                              resp.Message = "Error at table CustVip; ";
-                              break;
-                          case -10:
-                              resp.Message = "Error at table CustTransSummary; ";
-                              break;
-                          case -11:
+                          case -5:
                               resp.Message = "Error at table TpCustInfo; ";
                               break;
+                          case -6:
+                              resp.Message = "Error at table CustVip; ";
+                              break;
+                          case -7:
+                              resp.Message = "Error at table CustProfile; ";
+                              break;
+                          case -8:
+                              resp.Message = "Error at table CustBankDetail; ";
+                              break;
+                          case -9:
+                              resp.Message = "Error at table CustEWalletDetail; ";
+                              break;
+                          case -10:
+                              resp.Message = "Error at table CustCryptoWalletDetail; ";
+                              break;
+                          case -11:
+                              resp.Message = "Error at table CustTransSummary; ";
+                              break; 
                     }
                   }
             }
