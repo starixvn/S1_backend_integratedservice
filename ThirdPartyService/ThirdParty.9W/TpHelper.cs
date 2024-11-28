@@ -19,12 +19,13 @@ namespace ThirdParty.NineW
     {
         private const string ContentType = "application/x-www-form-urlencoded";
         private readonly Dictionary<int, NineWConfig> _siteConfigDic;
-        private readonly ILogger<TpHelper> _logger;
+        // 643947 Nova EttaTestINR
+        // 1428020 12B EttaTestINR
+        private readonly IEnumerable<int> uATAllowCustId = new List<int>() { 643947, 1428020 };
 
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NineWConfig>(TpEnum.NineW.ToString());
-            _logger = provider.GetRequiredService<ILogger<TpHelper>>();
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -128,28 +129,25 @@ namespace ThirdParty.NineW
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            //if (IsDevelopment)
-            //{
-            //    return new ApiResult<UserBalance>()
-            //    {
-            //        ErrorCode = ErrorCode.Success,
-            //        Message = "ok",
-            //        Data = new UserBalance()
-            //        {
-            //            balance = 0m,
-            //        }
-            //    };
-            //}
+            if (IsDevelopment && !uATAllowCustId.Contains(tpCustInfo.CustId))
+            {
+                return new ApiResult<UserBalance>()
+                {
+                    ErrorCode = ErrorCode.Success,
+                    Message = "ok",
+                    Data = new UserBalance()
+                    {
+                        balance = 0m,
+                    }
+                };
+            }
 
             var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
             var domain = QueryDomain(siteConfig);
 
             var apiUrl = $"{domain.ApiUrl}/{siteConfig.WebSite}/getBalance";
             var sParam = $"cert={siteConfig.Cert}&alluser=0&userIds={tpCustInfo.TpUserName}";
-            _logger.LogInformation($"apiUrl={apiUrl}");
-            _logger.LogInformation($"sParam={sParam}");
             var json = HttpPost(apiUrl, sParam, ContentType);
-            _logger.LogInformation($"result json={json}");
             var result = FromJson<NineWResult>(json);
 
             if (result.status != "1")
