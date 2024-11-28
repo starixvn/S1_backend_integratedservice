@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Live22, AddLive22},
                 { Tp.FastSpin, AddFastSpin},
                 { Tp.Allbet, AddAllbet},
-                //{ Tp.FaChai, AddFaChai},
+                { Tp.FaChai, AddFaChai},
                 { Tp.RNGKeno, AddKeno},
                 { Tp.Lottery, AddLottery},
                 { Tp.PP, AddPragmaticPlay },
@@ -642,6 +642,9 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<TicketFaChaiBLL>();
 
             services.AddHostedService<TicketFaChai>();
+
+            services.AddSingleton<FinanceFaChaiBLL>();
+            services.AddHostedService<FinanceFaChai>();
             return services;
         }
 
