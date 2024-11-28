@@ -146,7 +146,8 @@ namespace ThirdParty.NineW
 
             var apiUrl = $"{domain.ApiUrl}/{siteConfig.WebSite}/getBalance";
             var sParam = $"cert={siteConfig.Cert}&alluser=0&userIds={tpCustInfo.TpUserName}";
-
+            _logger.LogInformation($"apiUrl={apiUrl}");
+            _logger.LogInformation($"sParam={sParam}");
             var json = HttpPost(apiUrl, sParam, ContentType);
             _logger.LogInformation($"result json={json}");
             var result = FromJson<NineWResult>(json);
