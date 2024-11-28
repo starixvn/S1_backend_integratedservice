@@ -1,7 +1,7 @@
 ﻿using System.Web;
 
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -19,10 +19,12 @@ namespace ThirdParty.NineW
     {
         private const string ContentType = "application/x-www-form-urlencoded";
         private readonly Dictionary<int, NineWConfig> _siteConfigDic;
+        private readonly ILogger<TpHelper> _logger;
 
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NineWConfig>(TpEnum.NineW.ToString());
+            _logger = provider.GetRequiredService<ILogger<TpHelper>>();
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -146,6 +148,7 @@ namespace ThirdParty.NineW
             var sParam = $"cert={siteConfig.Cert}&alluser=0&userIds={tpCustInfo.TpUserName}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
+            _logger.LogInformation($"result json={json}");
             var result = FromJson<NineWResult>(json);
 
             if (result.status != "1")
