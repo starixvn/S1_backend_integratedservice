@@ -2,8 +2,10 @@
 using Newtonsoft.Json;
 
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.KY;
 using ThirdPartyWager.Service.Model.enums;
+using System.Net;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,12 +16,17 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiKYBLL> _logger;
         private readonly string _tpName = Tp.KY.ToString();
+        private readonly IConfiguration _configuration;
+        private readonly ProxyConfig? _tokyoProxy;
 
         public ApiKYBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            _logger = provider.GetRequiredService<ILogger<ApiKYBLL>>();
+            _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
+            _logger = provider.GetRequiredService<ILogger<ApiKYBLL>>();
+            _configuration = provider.GetRequiredService<IConfiguration>();
+            _tokyoProxy = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
         }
 
         public async Task<WagerKYModel> GetBetListByTime(KYConfig setting, long startUnix, long endUnix, string tpCurrencyId)
@@ -61,26 +68,69 @@ namespace ThirdPartyWager.Service.BLL
 
         private async Task<string> DoHttpClientAsync(string url, string param)
         {
-            _log2File.InsertRequestLog(_tpName, url, param, "1");
-
-            url = $"{url}?{param}";
-            var request = new HttpRequestMessage(HttpMethod.Get, url);
-            var response = await _httpHelper.GetClient().SendAsync(request);
             string result = null;
-
-            if (!response.IsSuccessStatusCode)
+            
+            try
             {
-                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
-                _log2File.InsertResponseLog(_tpName, url, param, "");
+                _log2File.InsertRequestLog(_tpName, url, param, "1");
+
+                using var client = _httpHelper.GetClientWithHandler(CreateHandler());
+                var response = await client.GetAsync($"{url}?{param}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                    _log2File.InsertResponseLog(_tpName, url, JsonConvert.SerializeObject(param), "");
+                    return result;
+                }
+
+                using var sr = new StreamReader(await response.Content.ReadAsStreamAsync(), Encoding.UTF8);
+                result = await sr.ReadToEndAsync();
+                _log2File.InsertResponseLog(_tpName, url, JsonConvert.SerializeObject(param), result, false);
                 return result;
             }
-
-            using (var sr = new StreamReader(response.Content.ReadAsStreamAsync().Result, Encoding.GetEncoding("utf-8")))
+            catch (Exception ex)
             {
-                result = sr.ReadToEnd();
+                _logger.LogError(ex, $"POST {url} throw Exception");
+
+                throw;
             }
-            _log2File.InsertResponseLog(_tpName, url, param, result, false);
-            return result;
+            finally
+            {
+                _log2File.InsertRequestLog(_tpName, url, JsonConvert.SerializeObject(param), result);
+            }
+        }
+
+        private HttpClientHandler CreateHandler()
+        {
+            var handler = new HttpClientHandler();
+            string proxyHost;
+            int proxyPort;
+
+            if (_tokyoProxy != null)
+            {
+                handler.UseProxy = true;
+                proxyHost = _tokyoProxy.ProxyHost;
+                proxyPort = _tokyoProxy.ProxyPort;
+                handler.Proxy = new WebProxy(proxyHost, proxyPort);
+
+                _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
+
+                return handler;
+            }
+
+            proxyHost = _configuration.GetValue<string>("ProxyHost");
+            proxyPort = _configuration.GetValue<int>("ProxyPort");
+
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(proxyHost, proxyPort);
+
+                _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
+            }
+
+            return handler;
         }
     }
 }

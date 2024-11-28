@@ -23,7 +23,9 @@ namespace ThirdPartyWager.Service.BLL
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiKYBLL = provider.GetRequiredService<ApiKYBLL>();
-            _wagerKYService = provider.GetService<WagerKYService>();
+            _wagerKYService = provider.GetRequiredService<WagerKYService>();
+            _logger = provider.GetRequiredService<ILogger<WagerKYBLL>>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
 
         public async Task<bool> ExecWagerWorker(KYConfig config, int type, int timeRange, string tpCurrencyId, int siteId)
@@ -36,7 +38,7 @@ namespace ThirdPartyWager.Service.BLL
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await GetWagerAsync(config, time, tpCurrencyId);
+                var result = await GetWagersAsync(config, time, tpCurrencyId);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}");
@@ -46,10 +48,10 @@ namespace ThirdPartyWager.Service.BLL
             return quick;
         }
 
-        public async Task<bool> GetWagerAsync(KYConfig config, TimeCast wagerTime, string tpCurrencyId, bool compare = false)
+        public async Task<bool> GetWagersAsync(KYConfig config, TimeCast wagerTime, string tpCurrencyId, bool compare = false)
         {
             var msg = "FATAL_ERROR";
-            // TODO: what does compare mean?
+            // TODO: what does compare mean? to redo or 1st time?
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
             try
             {

@@ -23,6 +23,8 @@ namespace ThirdPartyWager.Workers
 
         public WagerKY(IServiceProvider provider)
         {
+            _logger = provider.GetRequiredService<ILogger<WagerKY>>();
+            _wagerKYBLL = provider.GetRequiredService<WagerKYBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KYConfig>(Tp.KY.ToString());
