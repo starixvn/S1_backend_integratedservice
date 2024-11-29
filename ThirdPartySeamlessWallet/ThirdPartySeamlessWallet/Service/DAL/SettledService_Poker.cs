@@ -1917,7 +1917,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         var bonus = _bonusWalletBLL.GetCustBonus(tpCustInfo.CustId, gameType);
 
-                        if (walletKind == WalletKind.BonusWallet && bonus.BonusId > 0)
+                        if (walletKind == WalletKind.BonusWallet && bonus?.BonusId > 0)
                         {
                             bonusId = bonus.BonusId;
 
