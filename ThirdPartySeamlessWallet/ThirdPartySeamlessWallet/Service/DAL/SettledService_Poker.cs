@@ -9,7 +9,6 @@ using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 using ThirdPartySeamlessWallet.Service.Model.MaxGame;
-using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -175,7 +174,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
+        #endregion OneGaming
 
         #region V8 Transfer
 
@@ -189,13 +188,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.Execute("Service_TpWagerPK_V8_Settle_Set", commandType: CommandType.StoredProcedure, new { GameID = gameId });
         }
 
-        #endregion
+        #endregion V8 Transfer
 
         #region AMB
 
         public int CancelBetPK_AMB(TpCustInfo tpCustInfo, CancelDataPK_AMB cancelDataPK_AMB, out decimal afterAmount)
         {
-
             afterAmount = 0;
             int result = 0;
 
@@ -261,7 +259,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
-
         }
 
         public int PayoutPK_AMB(TpCustInfo tpCustInfo, PayoutDataPK_AMB payoutDataPK_AMB, out decimal afterAmount)
@@ -443,9 +440,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_BettransPK_AMB_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId });
         }
 
-        #endregion
+        #endregion AMB
 
         #region KM
+
         public async Task<KmDbResult> CancelbetPK_KM(TpCustInfo tpCustInfo, KMCreditRequestTransaction creditTransaction)
         {
             await using var conn = _mainDbClient.GetMySqlConnection();
@@ -827,7 +825,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.Execute(spName, parameters: parameters);
         }
 
-        #endregion
+        #endregion KM
 
         #region MP
 
@@ -988,7 +986,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _wagerDbClient.Execute("Service_TpWagerPK_MP_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
-        #endregion
+
+        #endregion MP
 
         #region V8
 
@@ -1151,7 +1150,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _partitionService.Query<BettransDataPK_V8>(partitionTime, "Service_BettransPK_V8_orderId_Get", p);
         }
 
-        #endregion
+        #endregion V8
 
         #region MaxGame, SabaPlay, UuSlots, Live22, FastSpin
 
@@ -1267,7 +1266,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                     AllowNegative.Allow
                                 );
                             }
-
                         }
                         // 差額:退款
                         if (diffActualStake > 0)
@@ -1352,7 +1350,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 AllowNegative.Allow
                             );
                         }
-
                     }
 
                     if (result > 0)
@@ -1367,7 +1364,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 DateTime.TryParse(payoutData_MaxGame.Timestamp, out DateTime ts);
-
 
                 if (result > 0 && cnt != 0 && cnt == payoutData_MaxGame.Payload.BetDataSet.Count)
                 {
@@ -1391,14 +1387,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _mainDbClient.RollbackAndDisposeConnection(conn, trans);
             return result;
         }
-           
+
         public int PlaceBetAndSettle_MaxGame(TpCustInfo tpCustInfo, PayoutData_MaxGame payoutData_MaxGame, int tpId, int gameType, WalletKind walletKind, TpCategory tpCategory, SpNameListOfMaxGame spName, out decimal afterAmount, out List<BetDataSetList_MaxGame> refData)
         {
             afterAmount = 0;
             var result = 0;
             var cnt = 0;
             refData = new List<BetDataSetList_MaxGame>();
-
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -1411,7 +1406,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     int bonusId = 0;
                     var partitionTime = DateTimeOffset.FromUnixTimeSeconds(betDataSet.SettleDateUnix).DateTime;
                     var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, spName.GetTicketNo, new { TicketNo = betDataSet.TicketNo });
-                
+
                     if (bettrans.Any(i => i.TicketType == BettransType.Payout))
                     {
                         return -1;
@@ -1495,9 +1490,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     // 注單派彩
                     if (result > 0 && betDataSet.Payout != 0)
                     {
-                        if (walletKind == WalletKind.BonusWallet)
+                        if (walletKind == WalletKind.BonusWallet && bonusId > 0)
                         {
-                            result = PayoutV2(
+                            result = PayoutWithBonusId(
                                 tpCustInfo,
                                 betDataSet.Payout,
                                 tpId,
@@ -1506,14 +1501,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 tpCategory,
                                 betDataSet.TicketNo,
                                 TransType.Payout,
-                                null,
                                 out afterAmount,
                                 $"Payout",
-                                out bonusId,
+                                bonusId,
                                 conn,
                                 trans,
-                                AllowNegative.Allow,
-                                bonusId > 0
+                                AllowNegative.Allow
                             );
                         }
                         else
@@ -1533,7 +1526,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 AllowNegative.Allow
                             );
                         }
-
                     }
 
                     logger.LogInformation("[MaxGame] Insert unsettle start");
@@ -1580,7 +1572,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _mainDbClient.RollbackAndDisposeConnection(conn, trans);
             return result;
         }
-      
+
         public int CancelBetPK_MaxGame(TpCustInfo tpCustInfo, CancelBetData_MaxGame cancelBetData_MaxGame, int tpId, int gameType, WalletKind walletKind, TpCategory tpCategory, SpNameListOfMaxGame spName, out decimal afterAmount)
         {
             afterAmount = 0;
@@ -1833,7 +1825,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 DateTime.TryParse(bonusData_MaxGame.Timestamp, out DateTime ts);
 
-
                 if (result > 0 && cnt != 0 && cnt == bonusData_MaxGame.Payload.BetDataSet.Count)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
@@ -1924,9 +1915,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     result = _partitionService.Execute(partitionTime, spName.InsertBettrans, p, trans);
                     if (result > 0 && betDataSet.Payout != 0)
                     {
-                        if (walletKind == WalletKind.BonusWallet)
+                        var bonus = _bonusWalletBLL.GetCustBonus(tpCustInfo.CustId, gameType);
+
+                        if (walletKind == WalletKind.BonusWallet && bonus.BonusId > 0)
                         {
-                            result = PayoutV2(
+                            bonusId = bonus.BonusId;
+
+                            result = PayoutWithBonusId(
                                 tpCustInfo,
                                 betDataSet.Payout,
                                 tpId,
@@ -1935,14 +1930,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 tpCategory,
                                 betDataSet.TicketNo,
                                 TransType.Payout,
-                                null,
                                 out afterAmount,
                                 "FreeSpin",
-                                out bonusId,
+                                bonusId,
                                 conn,
                                 trans,
-                                AllowNegative.Allow
-                            );
+                                AllowNegative.Allow);
                         }
                         else
                         {
@@ -2005,6 +1998,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
+        #endregion MaxGame, SabaPlay, UuSlots, Live22, FastSpin
     }
 }

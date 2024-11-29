@@ -32,6 +32,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
+        private readonly BonusWalletBLL _bonusWalletBLL;
         private readonly IHostEnvironment _environment;
 
         public SettledService(IServiceProvider provider)
@@ -46,10 +47,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _tpBetRecordExtendBLL = provider.GetRequiredService<TpBetRecordExtendBLL>();
             _tpUnRewardService = provider.GetRequiredService<TpUnRewardService>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
-
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _partitionService = provider.GetRequiredService<PartitionService>();
+            _bonusWalletBLL = provider.GetService<BonusWalletBLL>();
             _environment = provider.GetRequiredService<IHostEnvironment>();
         }
 
@@ -100,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         };
 
-        public int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow, bool isUseBonus = false)
+        public int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
         {
             afterAmount = 0;
             bonusId = 0;
@@ -109,9 +110,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out var custId, out bonusId);
 
-                if (bonusId > 0 || transType == TransType.Prize || isUseBonus)
+                if (bonusId > 0 || transType == TransType.Prize)
                 {
-                    if (bonusId > 0 && custId != tpCustInfo.CustId && !isUseBonus)
+                    if (bonusId > 0 && custId != tpCustInfo.CustId)
                     {
                         return 0;
                     }
