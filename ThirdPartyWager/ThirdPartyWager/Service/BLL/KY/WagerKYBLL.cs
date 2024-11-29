@@ -63,7 +63,7 @@ namespace ThirdPartyWager.Service.BLL
                 var result = await GetWagersAsync(config, time, tpCurrencyId, true);
                 if (result)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}")
+                    _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}");
                 }
                 // TODO: 拉单过于频繁(两次拉单时间间隔必须大于 60 or 30 秒?)
                 Thread.Sleep(67000);

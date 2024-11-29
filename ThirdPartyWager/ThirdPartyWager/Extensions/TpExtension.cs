@@ -813,9 +813,11 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<WagerKYBLL>();
             services.AddSingleton<ApiKYBLL>();
+            services.AddSingleton<FinanceKYBLL>();
 
             services.AddHostedService<WagerKY>();
             services.AddHostedService<WagerRedoKY>();
+            services.AddHostedService<FinanceKY>();
 
             return services;
         }
