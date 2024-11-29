@@ -32,6 +32,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             // TODO: what is the meaning of -180?
             var workerTime = GetWorkerTime(type, -180, $"{siteId.ToString()}-{tpCurrencyId}");
+            // TODO: what is the meaning of 5?
             var quick = CheckQuick(workerTime, 5);
             TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, workerTime);
             
@@ -42,6 +43,33 @@ namespace ThirdPartyWager.Service.BLL
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}");
+                }
+            }
+
+            return quick;
+        }
+
+        public async Task<bool> ExecWagerRedoWorker(KYConfig config, int type, int timeRange, string tpCurrencyId, int siteId)
+        {
+            var workerTime = GetRedoWorkerTime(type, 1, $"{siteId.ToString()}-{tpCurrencyId}");
+            var quick = CheckQuick(workerTime, 100);
+            // TODO: why GetTimeByHour rather than GetTimeByMinute like "ExecWagerWorker" method?
+            var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, workerTime);
+
+            // TODO: why convert to Unix seconds rather than milliseconds?
+            var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+            if (time.endUnix < cvTime)
+            {
+                var result = await GetWagersAsync(config, time, tpCurrencyId, true);
+                if (result)
+                {
+                    _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}")
+                }
+                // TODO: 拉单过于频繁(两次拉单时间间隔必须大于 60 or 30 秒?)
+                Thread.Sleep(67000);
+                if (!result)
+                {
+                    quick = true;
                 }
             }
 
@@ -157,6 +185,12 @@ namespace ThirdPartyWager.Service.BLL
         {
             var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByReference(_tpId, type, _gameType, reference);
             return (lastTime == null) ? DateTime.Now.AddHours(-7) : lastTime.StartTime.AddSeconds(vary);
+        }
+
+        private DateTime GetRedoWorkerTime(int type, int vary, string reference)
+        {
+            var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByReference(_tpId, type, _gameType, reference);
+            return (lastTime == null) ? DateTime.Now.AddHours(-3) : lastTime.StartTime.AddSeconds(vary);
         }
 
         private bool CheckQuick(DateTime workTime, int excess)

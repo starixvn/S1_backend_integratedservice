@@ -815,6 +815,7 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<ApiKYBLL>();
 
             services.AddHostedService<WagerKY>();
+            services.AddHostedService<WagerRedoKY>();
 
             return services;
         }
