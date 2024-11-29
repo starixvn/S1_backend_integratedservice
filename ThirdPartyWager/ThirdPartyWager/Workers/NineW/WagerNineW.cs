@@ -48,10 +48,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettle(object state)
         {
-            //if (!_env.IsProduction())
-            //{
-            //    return;
-            //}
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.Wager;
@@ -91,10 +91,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettleByDate(object state)
         {
-            //if (!_env.IsProduction())
-            //{
-            //    return;
-            //}
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.RedoWager;
@@ -136,10 +136,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoReSettle(object state)
         {
-            //if (!_env.IsProduction())
-            //{
-            //    return;
-            //}
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.ReSettle;
@@ -181,10 +181,10 @@ namespace ThirdPartyWager.Workers
 
         private async void GetReportByDate(object state)
         {
-            //if (!_env.IsProduction())
-            //{
-            //    return;
-            //}
+            if (!_env.IsProduction())
+            {
+                return;
+            }
 
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
@@ -231,10 +231,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTpDailySummary(object state)
         {
-            //if (!_env.IsProduction())
-            //{
-            //    return;
-            //}
+            if (!_env.IsProduction())
+            {
+                return;
+            }
 
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
