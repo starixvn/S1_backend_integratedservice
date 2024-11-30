@@ -1,5 +1,6 @@
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.FaChai;
+using ThirdPartyWager.Service.BLL.JILI;
 using ThirdPartyWager.Service.BLL.PG;
 using ThirdPartyWager.Service.BLL.PP;
 using ThirdPartyWager.Service.BLL.TableGame;
@@ -7,6 +8,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
 using ThirdPartyWager.Workers.FaChai;
+using ThirdPartyWager.Workers.JILI;
 using ThirdPartyWager.Workers.PG;
 using ThirdPartyWager.Workers.PP;
 using ThirdPartyWager.Workers.TableGame;
@@ -31,7 +33,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.RNGKeno, AddKeno},
                 { Tp.Lottery, AddLottery},
                 { Tp.PP, AddPragmaticPlay },
-                { Tp.JILI, AddJILI},
+                { Tp.JILI, AddJiLi},
                 { Tp.AESexy, AddAESexy},
                 { Tp.WE, AddWE},
                 { Tp.TableGame, AddTableGame},
@@ -392,13 +394,14 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
-        private IServiceCollection AddJILI(IServiceCollection services)
+        private IServiceCollection AddJiLi(IServiceCollection services)
         {
             services.AddSingleton<WagerJiLiService>();
-
             services.AddSingleton<TicketJiLiBLL>();
-
             services.AddHostedService<TicketJiLi>();
+
+            services.AddSingleton<FinanceJiLiBLL>();
+            services.AddHostedService<FinanceJiLi>();
             return services;
         }
 

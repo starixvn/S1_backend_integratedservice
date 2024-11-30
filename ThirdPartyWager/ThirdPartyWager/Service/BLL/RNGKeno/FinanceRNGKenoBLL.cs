@@ -1,4 +1,3 @@
-using System;
 using Newtonsoft.Json;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.Library;
@@ -16,29 +15,28 @@ public class FinanceRNGKenoBLL : ITpReportBLL
     private readonly ApiMaxGameBLL _apiMaxGameBLL;
     private readonly DateTimeHelper _dateTimeHelper;
     private readonly int _timeZone = 0;
-    private readonly Dictionary<int, RNGKenoConfig> _siteConfigDic;
+    private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
     private readonly string _tpName = Tp.RNGKeno.ToString();
-    
-    public FinanceRNGKenoBLL(IServiceProvider provider) {
+
+    public FinanceRNGKenoBLL(IServiceProvider provider)
+    {
         _logger = provider.GetRequiredService<ILogger<FinanceRNGKenoBLL>>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         _commonBLL = provider.GetService<CommonBLL>();
         _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
         _dateTimeHelper = provider.GetService<DateTimeHelper>();
         _siteConfigDic = provider.GetRequiredService<ConfigBLL>()
-            .GetConfigValuesBySiteId<RNGKenoConfig>(_tpName)
-            .Where(x=>x.Value is not null)
+            .GetConfigValuesBySiteId<MaxGameConfig>(_tpName)
+            .Where(x => x.Value is not null)
             .ToDictionary(kv => kv.Key, kv => kv.Value); ;
     }
 
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
     {
-        
         var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
         var currencyIdDic = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
 
-
-        var getReportData = 
+        var getReportData =
             JsonConvert.DeserializeObject<List<PayloadDailySummaryData_MaxGame>>(
                 JsonConvert.SerializeObject(reportData));
 
@@ -48,7 +46,8 @@ public class FinanceRNGKenoBLL : ITpReportBLL
             .Select(i => i.BettingDate)
             .SelectMany(x => x)
             .GroupBy(i => i.CurrencyIso)
-            .Select(g => new {
+            .Select(g => new
+            {
                 CurrencyId = currencyIdDic.GetValue(g.Key),
                 Stake = g.Sum(s => s.Stake),
                 ActualStake = g.Sum(s => s.ActualStake),
@@ -71,7 +70,6 @@ public class FinanceRNGKenoBLL : ITpReportBLL
                 WinlostAmount = item.WinLose - item.NetStake,
                 Payout = item.WinLose
             });
-
     }
 
     public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
@@ -79,24 +77,27 @@ public class FinanceRNGKenoBLL : ITpReportBLL
         var reportData = new List<dynamic>();
         var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
 
-        foreach (var site in siteList) {
+        foreach (var site in siteList)
+        {
             var config = _siteConfigDic[site.SiteId];
             if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
             {
                 _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType, config.DailySumApiUrl);
                 continue;
             }
-            var dailyBetSummary = 
+            var dailyBetSummary =
                 await _apiMaxGameBLL.GetDailySummaryDataAsync(
                     config,
                     _tpName,
-                    new PayloadRequestDailySummaryData_MaxGame() {
+                    new PayloadRequestDailySummaryData_MaxGame()
+                    {
                         TargetDate = GetCheckDateFromUnixTimestamp(reportTime.startUnix),
                         GameType = config.GameType
                     }
                 );
 
-            if (dailyBetSummary.ErrorCode != 0)  {
+            if (dailyBetSummary.ErrorCode != 0)
+            {
                 _logger.LogError("{DaiLySummaryKenoError}",
                     JsonConvert.SerializeObject(dailyBetSummary)
                 );
@@ -121,11 +122,12 @@ public class FinanceRNGKenoBLL : ITpReportBLL
         return reportTime;
     }
 
-    private string GetCheckDateFromUnixTimestamp(long unixTimestamp) {
+    private string GetCheckDateFromUnixTimestamp(long unixTimestamp)
+    {
         var dateTime = DateTimeOffset
             .FromUnixTimeSeconds(unixTimestamp)
             .DateTime;
-        
+
         var fortmattedDate = dateTime.ToString("yyyy-MM-dd");
         return fortmattedDate;
     }

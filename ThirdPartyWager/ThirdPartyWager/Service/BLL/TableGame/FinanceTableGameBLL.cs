@@ -1,4 +1,3 @@
-using System;
 using Newtonsoft.Json;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.Library;
@@ -16,16 +15,17 @@ public class FinanceTableGameBLL : ITpReportBLL
     private readonly ApiMaxGameBLL _apiMaxGameBLL;
     private readonly DateTimeHelper _dateTimeHelper;
     private readonly int _timeZone = 0;
-    private readonly Dictionary<int, TableGameConfig> _siteConfigDic;
+    private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
     private readonly string _tpName = Tp.TableGame.ToString();
-    
-    public FinanceTableGameBLL(IServiceProvider provider) {
+
+    public FinanceTableGameBLL(IServiceProvider provider)
+    {
         _logger = provider.GetRequiredService<ILogger<FinanceTableGameBLL>>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         _commonBLL = provider.GetService<CommonBLL>();
         _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
         _dateTimeHelper = provider.GetService<DateTimeHelper>();
-        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TableGameConfig>(_tpName);
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
     }
 
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -33,8 +33,7 @@ public class FinanceTableGameBLL : ITpReportBLL
         var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
         var currencyIdDic = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
 
-
-        var getReportData = 
+        var getReportData =
             JsonConvert.DeserializeObject<List<PayloadDailySummaryData_MaxGame>>(
                 JsonConvert.SerializeObject(reportData));
 
@@ -44,7 +43,8 @@ public class FinanceTableGameBLL : ITpReportBLL
             .Select(i => i.BettingDate)
             .SelectMany(x => x)
             .GroupBy(i => i.CurrencyIso)
-            .Select(g => new {
+            .Select(g => new
+            {
                 CurrencyId = currencyIdDic.GetValue(g.Key),
                 Stake = g.Sum(s => s.Stake),
                 ActualStake = g.Sum(s => s.ActualStake),
@@ -74,28 +74,31 @@ public class FinanceTableGameBLL : ITpReportBLL
         var reportData = new List<dynamic>();
         var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
 
-        foreach (var site in siteList) {
+        foreach (var site in siteList)
+        {
             var config = _siteConfigDic[site.SiteId];
             if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
             {
                 _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType, config.DailySumApiUrl);
                 continue;
             }
-            var dailyBetSummary = 
+            var dailyBetSummary =
                 await _apiMaxGameBLL.GetDailySummaryDataAsync(
                     config,
                     _tpName,
-                    new PayloadRequestDailySummaryData_MaxGame() {
+                    new PayloadRequestDailySummaryData_MaxGame()
+                    {
                         TargetDate = GetCheckDateFromUnixTimestamp(reportTime.startUnix),
                         GameType = config.GameType
                     }
                 );
 
-            if (dailyBetSummary.ErrorCode != 0)  {
+            if (dailyBetSummary.ErrorCode != 0)
+            {
                 _logger.LogError("{DaiLySummaryTableGameError}",
                     JsonConvert.SerializeObject(dailyBetSummary)
                     );
-             
+
                 continue;
             }
 
@@ -117,11 +120,12 @@ public class FinanceTableGameBLL : ITpReportBLL
         return reportTime;
     }
 
-    private static string GetCheckDateFromUnixTimestamp(long unixTimestamp) {
+    private static string GetCheckDateFromUnixTimestamp(long unixTimestamp)
+    {
         var dateTime = DateTimeOffset
             .FromUnixTimeSeconds(unixTimestamp)
             .DateTime;
-        
+
         var formattedDate = dateTime.ToString("yyyy-MM-dd");
         return formattedDate;
     }
