@@ -7,6 +7,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
 using ThirdPartyWager.Workers.FaChai;
+using ThirdPartyWager.Workers.FaChai.x;
 using ThirdPartyWager.Workers.PG;
 using ThirdPartyWager.Workers.PP;
 
@@ -719,6 +720,9 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WageRNGKenoService>();
             services.AddSingleton<TicketRNGKenoBLL>();
             services.AddHostedService<TicketRNGKeno>();
+
+            services.AddSingleton<FinancRNGKenoBLL>();
+            services.AddHostedService<FinanceRNGKeno>();
             return services;
         }
 
