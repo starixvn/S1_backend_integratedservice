@@ -7,9 +7,9 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
 using ThirdPartyWager.Workers.FaChai;
-using ThirdPartyWager.Workers.FaChai.x;
 using ThirdPartyWager.Workers.PG;
 using ThirdPartyWager.Workers.PP;
+using ThirdPartyWager.Workers.TableGame;
 
 namespace ThirdPartyWager.Extensions
 {
@@ -721,7 +721,7 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<TicketRNGKenoBLL>();
             services.AddHostedService<TicketRNGKeno>();
 
-            services.AddSingleton<FinancRNGKenoBLL>();
+            services.AddSingleton<FinanceRNGKenoBLL>();
             services.AddHostedService<FinanceRNGKeno>();
             return services;
         }
@@ -731,6 +731,8 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WageRNGTableGameService>();
             services.AddSingleton<TicketTableGameBLL>();
             services.AddHostedService<TicketRNGTableGame>();
+            services.AddSingleton<FinanceTableGameBLL>();
+            services.AddHostedService<FinanceTableGame>();
             return services;
         }
 

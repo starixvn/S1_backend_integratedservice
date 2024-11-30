@@ -38,15 +38,12 @@ public class FinanceFaChaiBLL : ITpReportBLL
             JsonConvert.DeserializeObject<List<PayloadDailySummaryData_MaxGame>>(
                 JsonConvert.SerializeObject(reportData));
 
-        var flattenedData = getReportData
+        return getReportData?
             .Select(i => i.GameTypes)
             .SelectMany(x => x)
             .Select(i => i.BettingDate)
             .SelectMany(x => x)
-            .ToArray();
-
-        var dailyData = flattenedData
-            .GroupBy(i => i.CurrencyIso)
+          .GroupBy(i => i.CurrencyIso)
             .Select(g => new {
                 CurrencyId = currencyIdDic.GetValue(g.Key),
                 Stake = g.Sum(s => s.Stake),
@@ -71,8 +68,6 @@ public class FinanceFaChaiBLL : ITpReportBLL
                 WinlostAmount = item.WinLose - item.NetStake,
                 Payout = item.WinLose
             });
-
-        return dailyData;
     }
 
     public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
@@ -82,7 +77,11 @@ public class FinanceFaChaiBLL : ITpReportBLL
 
         foreach (var site in siteList) {
             var config = _siteConfigDic[site.SiteId];
-            
+            if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
+            {
+                _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType, config.DailySumApiUrl);
+                continue;
+            }
             var dailyBetSummary = 
                 await _apiMaxGameBLL.GetDailySummaryDataAsync(
                     config,
@@ -93,12 +92,11 @@ public class FinanceFaChaiBLL : ITpReportBLL
                     }
                 );
 
-            if (dailyBetSummary.ErrorCode != 0)  { 
-                var msg = $"Bet result check API Error with errorCode:{dailyBetSummary.ErrorCode}, errorMsg: {dailyBetSummary.ErrorMessage}";
-                _logger.LogError("{Msg}{NewLine}{DailyBetSummary}",msg,
-                    Environment.NewLine,
-                    JsonConvert.SerializeObject(dailyBetSummary));
-             
+            if (dailyBetSummary.ErrorCode != 0)  {
+                _logger.LogError("{DaiLySummaryFaChaiError}",
+                    JsonConvert.SerializeObject(dailyBetSummary)
+                );
+
                 continue;
             }
 

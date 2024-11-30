@@ -7,12 +7,12 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.FaChai.x
+namespace ThirdPartyWager.Workers
 {
     public class FinanceRNGKeno : BackgroundService
     {
         private readonly ILogger<FinanceRNGKeno> _logger;
-        private readonly FinancRNGKenoBLL _financeRNGKenoBBLL;
+        private readonly FinanceRNGKenoBLL _financeRNGKenoBBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
         private readonly int _tpId = (int)Tp.RNGKeno;
@@ -24,7 +24,7 @@ namespace ThirdPartyWager.Workers.FaChai.x
         public FinanceRNGKeno(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceRNGKeno>>();
-            _financeRNGKenoBBLL = provider.GetRequiredService<FinancRNGKenoBLL>();
+            _financeRNGKenoBBLL = provider.GetRequiredService<FinanceRNGKenoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
         }

@@ -70,8 +70,7 @@ namespace ThirdPartyWager.Service.BLL
         }
 
         public async Task<DailySummaryData_MaxGame> GetDailySummaryDataAsync(dynamic setting, string tpName, PayloadRequestDailySummaryData_MaxGame parameters) {
-            var uri = "/api/OperatorApi/GetDailyTicketSummary";
-            var url = $"{setting.DailySumApiUrl}{uri}";
+            var url = $"{setting.DailySumApiUrl}/api/OperatorApi/GetDailyTicketSummary";
 
             var param = new
             {
@@ -102,7 +101,7 @@ namespace ThirdPartyWager.Service.BLL
             };
             using (_logger.BeginScope(additionalLogInfo))
             {
-                _logger.LogInformation($"SABA PLUS API CALL, uri: {uri}");
+                _logger.LogInformation($"SABA PLUS API CALL, uri: {url}");
             }
             return result;
         }
