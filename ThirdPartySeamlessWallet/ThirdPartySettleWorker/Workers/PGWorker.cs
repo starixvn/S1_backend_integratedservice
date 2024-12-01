@@ -60,28 +60,24 @@ namespace ThirdPartySettleWorker.Workers
             var setSP = $"Service_BettransRng_PG_Settle_Set_V2";
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 3000);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 2000);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
                 }
 
                 forContinue = tpUnsettleList.Count() >= 200;
-                Parallel.ForEach(tpUnsettleList, tpUnsettle =>
+                foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
                 {
                     try
                     {
-                        var settleData = _tpUnSettledBLL
-                            .GetTpUnsettleData<SettleData>(getSP, new { TransId = tpUnsettle.TransId }, DataBase.Main).First();
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Main).First();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
                         var fix = false;
-                        if ((settleData.TransTime >= 1712320200 && settleData.TransTime <= 1712348100) &&
-                            (tpCustInfo.CurrencyId == 51 || tpCustInfo.CurrencyId == 15))
+                        if ((settleData.TransTime >= 1712320200 && settleData.TransTime <= 1712348100) && (tpCustInfo.CurrencyId == 51 || tpCustInfo.CurrencyId == 15))
                         {
                             fix = true;
-                            settleData = _tpUnSettledBLL
-                                .GetTpUnsettleData<SettleData>(getSP_Fix, new { TransId = tpUnsettle.TransId  }, DataBase.Main)
-                                .First();
+                            settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP_Fix, new { TransId = transId }, DataBase.Main).First();
                         }
 
                         var betRecordInfo = new BetRecordInfo
@@ -110,16 +106,22 @@ namespace ThirdPartySettleWorker.Workers
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
                         {
-                            Task.Run(() => { _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, tpUnsettle.TransId ); });
+                            Task.Run(() =>
+                            {
+                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, transId);
+                            });
                         }
                     }
                     catch (Exception ex1)
                     {
-                        Task.Run(() => { _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, tpUnsettle.TransId , false); });
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, transId, false);
+                        });
                         isError = true;
-                        _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {tpUnsettle.TransId }");
+                        _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {transId}");
                     }
-                });
+                }
             }
             catch (UnsettleNotFoundException ex)
             {
@@ -135,7 +137,7 @@ namespace ThirdPartySettleWorker.Workers
                 TimeSpan dueTimeSpan = TimeSpan.FromSeconds(10);
                 if (forContinue)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                    dueTimeSpan = TimeSpan.FromSeconds(2);
                 }
                 else if (isError)
                 {
