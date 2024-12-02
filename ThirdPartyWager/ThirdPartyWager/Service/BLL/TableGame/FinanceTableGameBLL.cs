@@ -49,13 +49,7 @@ public class FinanceTableGameBLL : ITpReportBLL
                 Stake = g.Sum(s => s.Stake),
                 ActualStake = g.Sum(s => s.ActualStake),
                 NetStake = g.Sum(s => s.NetStake),
-                WinLose = g.Sum(s => s.WinLose),
-                JackpotContributionBetCount = g.Sum(s => s.JackpotContributionBetCount),
-                JackpotContribution = g.Sum(s => s.JackpotContribution),
-                JackpotPrizeBetCount = g.Sum(s => s.JackpotPrizeBetCount),
-                JackpotPrize = g.Sum(s => s.JackpotPrize),
-                PromotionPrizeBetCount = g.Sum(s => s.PromotionPrizeBetCount),
-                PromotionPrize = g.Sum(s => s.PromotionPrize)
+                WinLose = g.Sum(s => s.WinLose)
             }).Select(item => new FincanceDailySummary
             {
                 SummaryType = SummaryType.TpBetRecord,

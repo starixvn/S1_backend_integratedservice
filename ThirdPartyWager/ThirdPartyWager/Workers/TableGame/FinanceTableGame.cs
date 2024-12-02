@@ -88,7 +88,7 @@ namespace ThirdPartyWager.Workers.TableGame
                 TimeCast reportTime = _financeTableGameBll.GetReportTime(execTime.StartTime, day);
 
                 // report
-                DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
+                DateTime reportDate = DateTime.UnixEpoch.AddSeconds(reportTime.endUnix);
                 var reportData = await _financeTableGameBll.GetReport(_tpId, null, reportTime);
                 int result;
                 if (reportData.Any())

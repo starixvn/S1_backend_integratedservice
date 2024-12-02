@@ -89,7 +89,7 @@ namespace ThirdPartyWager.Workers.FaChai
                 TimeCast reportTime = _financeFaChaiBBLL.GetReportTime(execTime.StartTime, day);
 
                 // report
-                DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
+                DateTime reportDate = DateTime.UnixEpoch.AddSeconds(reportTime.endUnix);
                 var reportData = await _financeFaChaiBBLL.GetReport(_tpId, null, reportTime);
                 int result;
                 if (reportData.Any())

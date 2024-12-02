@@ -1,6 +1,7 @@
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.FaChai;
 using ThirdPartyWager.Service.BLL.JILI;
+using ThirdPartyWager.Service.BLL.MaxGame;
 using ThirdPartyWager.Service.BLL.PG;
 using ThirdPartyWager.Service.BLL.PP;
 using ThirdPartyWager.Service.BLL.TableGame;
@@ -9,6 +10,7 @@ using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
 using ThirdPartyWager.Workers.FaChai;
 using ThirdPartyWager.Workers.JILI;
+using ThirdPartyWager.Workers.MaxGame;
 using ThirdPartyWager.Workers.PG;
 using ThirdPartyWager.Workers.PP;
 using ThirdPartyWager.Workers.TableGame;
@@ -709,11 +711,13 @@ namespace ThirdPartyWager.Extensions
         private IServiceCollection AddMaxGame(IServiceCollection services)
         {
             services.AddSingleton<WagerMaxGameService>();
+            services.AddSingleton<FinanceMaxGameBll>();
 
             services.AddSingleton<ApiMaxGameBLL>();
             services.AddSingleton<TicketMaxGameBLL>();
 
             services.AddHostedService<TicketMaxGame>();
+            services.AddHostedService<FinanceMaxGame>();
 
             return services;
         }
