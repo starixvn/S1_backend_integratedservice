@@ -57,7 +57,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return (custId, result);
         }
         
-        public async Task<bool> Service_MigrationAffiliate_Ins(MigrationAffiliateRequest request)
+        public int MigrationCustomerBalanceIns(MigrationBalanceRequest request)
+        {
+            var result = _migrationService.MigrationCustomerBalanceIns(request);
+            
+            return result;
+        }
+        
+        public async Task<bool> MigrationAffiliateIns(MigrationAffiliateRequest request)
         {
             return await _migrationService.MigrationAffiliateIns(request);
         }

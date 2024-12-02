@@ -92,16 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         #endregion
 
         #region CustWallet
-
-        /// <summary>
-        /// 錢包餘額
-        /// </summary>
-        public decimal Balance { get; set; }
         
-        /// <summary>
-        /// 提款限額
-        /// </summary>
-        public decimal WithdrawalLimit { get; set; }
         /// <summary>
         /// UTC +0
         /// </summary>
@@ -199,6 +190,26 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int ErrorCode { get; set; }
     }
 
+    public class MigrationBalanceRequest
+    {
+        public int SiteId { get; set; }
+        public int CustId { get; set; }
+        /// <summary>
+        /// 錢包餘額
+        /// </summary>
+        public decimal Balance { get; set; }
+        /// <summary>
+        /// 提款限額
+        /// </summary>
+        public decimal WithdrawalLimit { get; set; }
+    }
+    
+    public class MigrationCustomerBalanceResponse
+    {
+        public string Message { get; set; }
+        public int ErrorCode { get; set; }
+    }
+    
     public class MigrationAffiliateRequest
     {
         public int SiteId { get; set; }

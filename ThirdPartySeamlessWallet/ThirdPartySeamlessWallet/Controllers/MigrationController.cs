@@ -110,6 +110,68 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         
         [HttpPost]
+        public MigrationCustomerBalanceResponse MigrationCustomerBalanceAsync(MigrationBalanceRequest request)
+        {
+            var resp = new MigrationCustomerBalanceResponse
+            {
+                Message = "Unknown Error",
+                ErrorCode = 9000
+            };
+
+            _siteConfigDic.TryGetValue(request.SiteId , out var config);
+            if (config is null)
+            {
+                resp.Message = "SiteId Not Supported. ";
+                return resp;
+            }
+            
+            Request.Headers.TryGetValue("Authorization", out var authorization);
+            var sAuthorization = authorization.ToString();
+            
+            if (config.Key != sAuthorization)
+            {
+                resp.Message = "Authorization Error";
+                return resp;
+            }
+            
+            try 
+            {
+                  var resultCode = _migrationBll.MigrationCustomerBalanceIns(request);
+                  
+                  if (resultCode == 0)
+                  {
+                      resp.Message = "Successful ";
+                      resp.ErrorCode = 0;
+                  }
+                  else
+                  {
+                      resp.ErrorCode = resultCode;
+                      resp.Message = string.Empty;
+
+                      switch (resultCode)
+                      {
+                          case -1:
+                              resp.Message = "Error at table CustWallet ";
+                              break;
+                          case -2:
+                              resp.Message = "Error at table CustWithdrawalLimit ";
+                              break;
+                          case -99:
+                              resp.Message = "CustId not exist ";
+                              break; 
+                    }
+                  }
+            }
+            catch (Exception ex) 
+            { 
+                 _log2File.Error($"{JsonConvert.SerializeObject(request)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "MigrationCustomerBalance", ex);
+            }
+            
+            _log2File.Info($"{JsonConvert.SerializeObject(request)}\r\n{JsonConvert.SerializeObject(resp)}", "MigrationCustomerBalance");
+            return resp;
+        }
+        
+        [HttpPost]
         public async Task<MigrationAffiliateResponse> MigrationAffiliateAsync(MigrationAffiliateRequest request)
         {
             var resp = new MigrationAffiliateResponse
@@ -136,7 +198,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             
             try 
             {
-                  var result = await _migrationBll.Service_MigrationAffiliate_Ins(request);
+                  var result = await _migrationBll.MigrationAffiliateIns(request);
                   
                   if (result)
                   {
