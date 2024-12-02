@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Service.DAL;
+﻿using Newtonsoft.Json.Linq;
+using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -32,7 +33,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var checkPhoneNo = _migrationService.ExistsPhoneNo(custId ,request.SiteId , request.AreaCode , request.PhoneNo);
             if (checkPhoneNo)
             {
-                request.PhoneNo = $"{custId.ToString().PadLeft(10, '0')}_{request.PhoneNo}";
+                var alterPhoneNo = $"{custId.ToString().PadLeft(10, '0')}_{request.PhoneNo}";
+                
+                var profile = JObject.Parse(request.Profile);
+                if (profile["PhoneNo"]?.ToString() != null)
+                {
+                    profile["PhoneNo"] = alterPhoneNo;
+                }
+                
+                request.PhoneNo = alterPhoneNo;
             }
         
             result = _migrationService.MigrationCustomerProfileIns(custId, request, conn, trans);
