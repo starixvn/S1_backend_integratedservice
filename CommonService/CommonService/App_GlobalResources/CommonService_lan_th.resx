@@ -128,19 +128,18 @@
 &lt;html&gt;
   &lt;body&gt;
     &lt;div style="text-align: center;"&gt;
-      &lt;h1 style="color: #008CBA;"&gt;PASSWORD RESET REQUEST&lt;/h1&gt;
-      &lt;p&gt;Dear valued member,&lt;/p&gt;
-      &lt;p&gt;We received your password reset request. Please click on the button below to reset your password.&lt;/p&gt;
-      &lt;a href="{0}" style="background-color: #008CBA; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;"&gt;Reset Password&lt;/a&gt;
+      &lt;h1 style="color: #008CBA;"&gt;คำขอรีเซ็ตรหัสผ่าน&lt;/h1&gt;
+      &lt;p&gt;เรียน สมาชิกที่เคารพ&lt;/p&gt;
+      &lt;p&gt;เราได้รับคำขอรีเซ็ตรหัสผ่านของคุณแล้ว โปรดคลิกปุ่มด้านล่างเพื่อรีเซ็ตรหัสผ่านของคุณ&lt;/p&gt;
+      &lt;a href="{0}" style="background-color: #008CBA; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;"&gt;รีเซ็ตรหัสผ่าน&lt;/a&gt;
       &lt;br&gt;&lt;br&gt;
-      &lt;p&gt;The link will expire in an hour. If you didn't make this request, please ignore this email or let us know. We take your account security seriously.&lt;/p&gt;
+      &lt;p&gt;ลิงก์จะหมดอายุภายในหนึ่งชั่วโมง หากคุณไม่ได้ส่งคำขอนี้ โปรดเพิกเฉยต่ออีเมลฉบับนี้หรือแจ้งให้เราทราบ เราให้ความสำคัญกับความปลอดภัยของบัญชีของคุณเป็นอย่างยิ่ง&lt;/p&gt;
       &lt;br&gt;
-      &lt;p&gt;Your sincerely,&lt;/p&gt;
-      &lt;p&gt;{1} Support&lt;/p&gt;
+      &lt;p&gt;ขอแสดงความนับถือ&lt;/p&gt;
+      &lt;p&gt;ฝ่ายสนับสนุน {1}&lt;/p&gt;
     &lt;/div&gt;
     &lt;footer&gt;
-      &lt;p style="font-size: 10px;"&gt;THIS EMAIL WAS SENT FROM A NOTIFICATION-ONLY ADDRESS, PLEASE DO NOT REPLY.&lt;/p&gt;
-      &lt;p style="font-size: 10px;"&gt;&lt;a href=""&gt;Unsubscribe&lt;/a&gt; - &lt;a href=""&gt;Unsubscribe Preferences&lt;/a&gt;&lt;/p&gt;
+      &lt;p style="font-size: 10px;"&gt;อีเมลนี้ส่งจากระบบข้อความสำหรับแจ้งเตือนเท่านั้น โปรดอย่าตอบกลับข้อความ&lt;/p&gt;
     &lt;/footer&gt;
   &lt;/body&gt;
 &lt;/html&gt;</value>
@@ -150,31 +149,28 @@
 &lt;html&gt;
   &lt;body&gt;
     &lt;div style="text-align: center;"&gt;
-      &lt;h1 style="color: #008CBA;"&gt;VERIFICATION REWARD&lt;/h1&gt;
-      &lt;p&gt;Hello,&lt;/p&gt;
-      &lt;p&gt;You have selected this email address as your preferred email address. 
-      To verify this email address belongs to you, please click the link to verify your email address:&lt;/p&gt;
-      &lt;a href="{0}" style="background-color: #008CBA; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;"&gt;Verify&lt;/a&gt;
+      &lt;h1 style="color: #008CBA;"&gt;ยืนยันรางวัล&lt;/h1&gt;
+      &lt;p&gt;สวัสดี,&lt;/p&gt;
+      &lt;p&gt;คุณได้เลือกที่อยู่อีเมลนี้เป็นที่อยู่อีเมลที่คุณต้องการ เพื่อยืนยันว่าคุณคือเจ้าของที่อยู่อีเมลนี้ โปรดคลิกลิงก์เพื่อยืนยันที่อยู่อีเมลของคุณ:&lt;/p&gt;
+      &lt;a href="{0}" style="background-color: #008CBA; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; border-radius: 5px;"&gt;ยืนยัน&lt;/a&gt;
       &lt;br&gt;&lt;br&gt;
-      &lt;h3&gt;Why you received this email&lt;/h3&gt;
-      &lt;p&gt;We require verification whenever an email address is selected as your preferred email address. 
-      You will not get your reward until you verify it.&lt;/p&gt;
-      &lt;p&gt;If you did not make this request, please disregard this email. No reward will be paid out without verification.&lt;/p&gt;
+      &lt;h3&gt;เหตุใดคุณจึงได้รับอีเมลนี้&lt;/h3&gt;
+      &lt;p&gt;เราต้องการการยืนยันทุกครั้งที่มีการเลือกที่อยู่อีเมลเป็นที่อยู่อีเมลที่คุณต้องการ คุณจะไม่ได้รับรางวัลจนกว่าจะยืนยัน&lt;/p&gt;
+      &lt;p&gt;หากคุณไม่ได้ส่งคำขอนี้ โปรดเพิกเฉยอีเมลนี้ จะไม่มีการจ่ายรางวัลใดๆ หากไม่มีการยืนยัน&lt;/p&gt;
       &lt;br&gt;
-      &lt;p&gt;Kind regards,&lt;/p&gt;
-      &lt;p&gt;{1} Support&lt;/p&gt;
+      &lt;p&gt;ขอแสดงความนับถือ&lt;/p&gt;
+      &lt;p&gt;ฝ่ายสนับสนุน {1}&lt;/p&gt;
     &lt;/div&gt;
     &lt;footer&gt;
-      &lt;p style="font-size: 10px;"&gt;THIS EMAIL WAS SENT FROM A NOTIFICATION-ONLY ADDRESS, PLEASE DO NOT REPLY.&lt;/p&gt;
-      &lt;p style="font-size: 10px;"&gt;&lt;a href=""&gt;Unsubscribe&lt;/a&gt; - &lt;a href=""&gt;Unsubscribe Preferences&lt;/a&gt;&lt;/p&gt;
+      &lt;p style="font-size: 10px;"&gt;อีเมลนี้ส่งจากระบบข้อความสำหรับแจ้งเตือนเท่านั้น โปรดอย่าตอบกลับข้อความ.&lt;/p&gt;
     &lt;/footer&gt;
   &lt;/body&gt;
 &lt;/html&gt;</value>
   </data>
   <data name="lbl_ForgottenPasswordEmailSubject" xml:space="preserve">
-    <value>[{0}] Password Reset Request</value>
+    <value>[{0}] คำขอรีเซ็ตรหัสผ่าน</value>
   </data>
   <data name="lbl_VerifyEmailSubject" xml:space="preserve">
-    <value>[{0}] Verification Reward</value>
+    <value>[{0}] ยืนยันรางวัล</value>
   </data>
 </root>
