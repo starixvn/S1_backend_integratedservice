@@ -88,20 +88,12 @@ private readonly ILogger<FinancePP> _logger;
 
             var reportData = await _financePPBLL.GetReport(_tpId, null, reportTime);
 
-            int result;
+            // compare
+            var dailyData = _financePPBLL.DealReport(_tpId, reportDate, reportData);
 
-            if (reportData.Count > 0)
-            {
-                // compare
-                var dailyData = _financePPBLL.DealReport(_tpId, reportDate, reportData);
+            // write to current report
+            _financeService.SetFinanceTpDailySummary(dailyData);
 
-                // write to current report
-                result = _financeService.SetFinanceTpDailySummary(dailyData);
-            }
-            else
-            {
-                result = 1;
-            }
 
             // update timer
 
