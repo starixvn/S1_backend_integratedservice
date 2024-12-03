@@ -103,11 +103,8 @@ public class FinancePG : BackgroundService
             }
 
             // update timer
-            if (result > 0)
-            {
-                // set timer to end time, which is the next day ???
-                _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
-            }
+
+            _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
 
             var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
 
