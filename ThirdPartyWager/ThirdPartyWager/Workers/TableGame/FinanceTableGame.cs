@@ -53,16 +53,10 @@ namespace ThirdPartyWager.Workers.TableGame
             }
             finally
             {
-                if (quick == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromHours(1);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromHours(4);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                //TODO
+                // Los: Decrease interval time to test
+                var dueTimeSpan = TimeSpan.FromMinutes(4);
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
