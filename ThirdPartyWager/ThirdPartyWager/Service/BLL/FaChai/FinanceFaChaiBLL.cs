@@ -71,6 +71,10 @@ public class FinanceFaChaiBLL : ITpReportBLL
 
         foreach (var site in siteList)
         {
+            if (!_siteConfigDic.ContainsKey(site.SiteId))
+            {
+                continue;
+            }
             var config = _siteConfigDic[site.SiteId];
             if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
             {

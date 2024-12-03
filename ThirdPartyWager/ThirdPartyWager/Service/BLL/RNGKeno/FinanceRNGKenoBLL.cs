@@ -26,9 +26,7 @@ public class FinanceRNGKenoBLL : ITpReportBLL
         _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
         _dateTimeHelper = provider.GetService<DateTimeHelper>();
         _siteConfigDic = provider.GetRequiredService<ConfigBLL>()
-            .GetConfigValuesBySiteId<MaxGameConfig>(_tpName)
-            .Where(x => x.Value is not null)
-            .ToDictionary(kv => kv.Key, kv => kv.Value); ;
+            .GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
     }
 
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -73,6 +71,10 @@ public class FinanceRNGKenoBLL : ITpReportBLL
 
         foreach (var site in siteList)
         {
+            if (!_siteConfigDic.ContainsKey(site.SiteId))
+            {
+                continue;
+            }
             var config = _siteConfigDic[site.SiteId];
             if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
             {

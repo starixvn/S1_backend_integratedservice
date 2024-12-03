@@ -88,8 +88,16 @@ public class FinanceJiLiBLL
 
         foreach (var site in siteList)
         {
+            if (!_siteConfigDic.ContainsKey(site.SiteId))
+            {
+                continue;
+            }
             var config = _siteConfigDic[site.SiteId];
-
+            if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
+            {
+                _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType, config.DailySumApiUrl);
+                continue;
+            }
             var dailyBetSummary =
                 await _apiMaxGameBLL.GetDailySummaryDataAsync(
                     config,
