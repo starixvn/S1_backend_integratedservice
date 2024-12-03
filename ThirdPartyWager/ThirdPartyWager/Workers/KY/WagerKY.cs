@@ -12,7 +12,6 @@ namespace ThirdPartyWager.Workers
         private readonly CommonBLL _commonBLL;
         private Timer timer;
         private readonly int tpType = (int)WagerTimerType.Wager;
-        // TODO: how to determine the time for timeRange, quickTime, runTime??
         private readonly int timeRange = 20; // in minutes
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 120;  // in seconds
@@ -40,8 +39,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            // TODO: what do the isFast and quick mean?
-            var isFast = false;
+            
             var quick = false;
             try
             {
@@ -54,7 +52,6 @@ namespace ThirdPartyWager.Workers
                         foreach (var item in TpCurrencyList.Where(item => config.CurrencyData.ContainsKey(item.TpCurrencyId)))
                         {
                             quick = await _wagerKYBLL.ExecWagerWorker(config, tpType, timeRange, item.TpCurrencyId, siteId.SiteId);
-                            if (!isFast && quick) isFast = true;
                         }
                     }
                 }
@@ -65,7 +62,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = isFast ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromSeconds(runTime);
+                var dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromSeconds(runTime);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
 

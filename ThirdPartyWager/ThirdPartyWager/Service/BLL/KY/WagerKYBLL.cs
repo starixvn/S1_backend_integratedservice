@@ -30,9 +30,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> ExecWagerWorker(KYConfig config, int type, int timeRange, string tpCurrencyId, int siteId)
         {
-            // TODO: what is the meaning of -180?
             var workerTime = GetWorkerTime(type, -180, $"{siteId.ToString()}-{tpCurrencyId}");
-            // TODO: what is the meaning of 5?
             var quick = CheckQuick(workerTime, 5);
             TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, workerTime);
             
@@ -53,10 +51,8 @@ namespace ThirdPartyWager.Service.BLL
         {
             var workerTime = GetRedoWorkerTime(type, 1, $"{siteId.ToString()}-{tpCurrencyId}");
             var quick = CheckQuick(workerTime, 100);
-            // TODO: why GetTimeByHour rather than GetTimeByMinute like "ExecWagerWorker" method?
             var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, workerTime);
 
-            // TODO: why convert to Unix seconds rather than milliseconds?
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
@@ -65,7 +61,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}");
                 }
-                // TODO: 拉单过于频繁(两次拉单时间间隔必须大于 60 or 30 秒?)
+                // 拉单过于频繁(两次拉单时间间隔必须大于 60 秒)
                 Thread.Sleep(67000);
                 if (!result)
                 {
@@ -79,7 +75,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> GetWagersAsync(KYConfig config, TimeCast wagerTime, string tpCurrencyId, bool compare = false)
         {
             var msg = "FATAL_ERROR";
-            // TODO: what does compare mean? to redo or 1st time?
+
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
             try
             {
