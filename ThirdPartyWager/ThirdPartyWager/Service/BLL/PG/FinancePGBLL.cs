@@ -30,8 +30,6 @@ public class FinancePGBLL : ITpReportBLL
 
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
     {
-        var dailyData = new List<FincanceDailySummary>();
-
         var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
         var currencyIdDic = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
 
@@ -39,14 +37,11 @@ public class FinancePGBLL : ITpReportBLL
             JsonConvert.DeserializeObject<List<PayloadDailySummaryData_MaxGame>>(
                 JsonConvert.SerializeObject(reportData));
 
-        var flattenedData = getReportData
+        return getReportData
             .Select(i => i.GameTypes)
             .SelectMany(x => x)
             .Select(i => i.BettingDate)
             .SelectMany(x => x)
-            .ToArray();
-
-        var data = flattenedData
             .GroupBy(i => i.CurrencyIso)
             .Select(g => new
             {
@@ -61,11 +56,7 @@ public class FinancePGBLL : ITpReportBLL
                 JackpotPrize = g.Sum(s => s.JackpotPrize),
                 PromotionPrizeBetCount = g.Sum(s => s.PromotionPrizeBetCount),
                 PromotionPrize = g.Sum(s => s.PromotionPrize)
-            });
-
-        foreach (var item in data)
-        {
-            dailyData.Add(new FincanceDailySummary()
+            }).Select(item => new FincanceDailySummary
             {
                 SummaryType = SummaryType.TpBetRecord,
                 SummaryDate = reportDate,
@@ -76,9 +67,6 @@ public class FinancePGBLL : ITpReportBLL
                 WinlostAmount = item.WinLose - item.NetStake,
                 Payout = item.WinLose
             });
-        }
-
-        return dailyData;
     }
 
     public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
@@ -89,7 +77,11 @@ public class FinancePGBLL : ITpReportBLL
         foreach (var site in siteList)
         {
             var config = _siteConfigDic[site.SiteId];
-
+            if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
+            {
+                _logger.LogWarning($"GetDailySummary of {config.GameType} is ignore because {config.DailySumApiUrl} is empty");
+                continue;
+            }
             var dailyBetSummary =
                 await _apiMaxGameBLL.GetDailySummaryDataAsync(
                     config,

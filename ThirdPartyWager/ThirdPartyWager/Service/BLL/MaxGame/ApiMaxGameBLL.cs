@@ -79,7 +79,7 @@ namespace ThirdPartyWager.Service.BLL
                 Payload = new {
                     parameters.TargetDate,
                     TimeZone = 0,
-                    setting.GameType,
+                    parameters.GameType,
                     TicketStatus = new List<int>() { 
                         // Need to be reviewed, currently we get all them
                         (int)MaxGame_TicketStatus.Win,
