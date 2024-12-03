@@ -1,19 +1,29 @@
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.FaChai;
+using ThirdPartyWager.Service.BLL.FastSpin;
 using ThirdPartyWager.Service.BLL.JILI;
+using ThirdPartyWager.Service.BLL.Live22;
+using ThirdPartyWager.Service.BLL.Lottery;
 using ThirdPartyWager.Service.BLL.MaxGame;
 using ThirdPartyWager.Service.BLL.PG;
 using ThirdPartyWager.Service.BLL.PP;
 using ThirdPartyWager.Service.BLL.TableGame;
+using ThirdPartyWager.Service.BLL.UuSlots;
+using ThirdPartyWager.Service.BLL.WE;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
 using ThirdPartyWager.Workers.FaChai;
+using ThirdPartyWager.Workers.FastSpin;
 using ThirdPartyWager.Workers.JILI;
+using ThirdPartyWager.Workers.Live22;
+using ThirdPartyWager.Workers.Lottery;
 using ThirdPartyWager.Workers.MaxGame;
 using ThirdPartyWager.Workers.PG;
 using ThirdPartyWager.Workers.PP;
 using ThirdPartyWager.Workers.TableGame;
+using ThirdPartyWager.Workers.UuSlots;
+using ThirdPartyWager.Workers.WE;
 
 namespace ThirdPartyWager.Extensions
 {
@@ -234,8 +244,10 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerAESexyService>();
 
             services.AddSingleton<TicketAESexyBLL>();
+            services.AddSingleton<FinanceSexyBLL>();
 
             services.AddHostedService<TicketAESexy>();
+            services.AddHostedService<FinanceSexy>();
 
             return services;
         }
@@ -265,7 +277,9 @@ namespace ThirdPartyWager.Extensions
         {
             services.AddSingleton<WagerWEService>();
             services.AddSingleton<TicketWEBLL>();
+            services.AddSingleton<FinanceWEBLL>();
             services.AddHostedService<BetResultCheckWE>();
+            services.AddHostedService<FinanceWE>();
             return services;
         }
 
@@ -759,8 +773,10 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerUuSlotsService>();
 
             services.AddSingleton<TicketUuSlotsBLL>();
+            services.AddSingleton<FinanceUuSlotsBLL>();
 
             services.AddHostedService<TicketUuSlots>();
+            services.AddHostedService<FinanceUuSlots>();
 
             return services;
         }
@@ -770,8 +786,10 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerLive22Service>();
 
             services.AddSingleton<TicketLive22BLL>();
+            services.AddSingleton<FinanceLive22BLL>();
 
             services.AddHostedService<TicketLive22>();
+            services.AddHostedService<FinanceLive22>();
 
             return services;
         }
@@ -781,8 +799,11 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerFastSpinService>();
 
             services.AddSingleton<TicketFastSpinBLL>();
+            services.AddSingleton<FinanceFastSpinBLL>();
 
             services.AddHostedService<TicketFastSpin>();
+            services.AddHostedService<FinanceFastSpin>();
+
 
             return services;
         }
@@ -836,8 +857,10 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerLotteryService>();
 
             services.AddSingleton<TicketLotteryBLL>();
+            services.AddSingleton<FinanceLotteryBLL>();
 
             services.AddHostedService<BetResultCheckLottery>();
+            services.AddHostedService<FinanceLottery>();
 
             return services;
         }

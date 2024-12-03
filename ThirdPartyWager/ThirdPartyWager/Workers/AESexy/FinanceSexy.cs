@@ -10,7 +10,7 @@ namespace ThirdPartyWager.Workers
     public class FinanceSexy : BackgroundService
     {
         private readonly ILogger<FinanceSexy> _logger;
-        private readonly FinanceSexyBLL _financeSexyBLL;
+        private readonly FinanceSexyBLL _financeSexyBBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
         private readonly int _tpId = (int)Tp.AESexy;
@@ -22,7 +22,7 @@ namespace ThirdPartyWager.Workers
         public FinanceSexy(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceSexy>>();
-            _financeSexyBLL = provider.GetRequiredService<FinanceSexyBLL>();
+            _financeSexyBBLL = provider.GetRequiredService<FinanceSexyBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
         }
@@ -52,17 +52,20 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                if (quick == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromHours(1);
-                    //var dueTimeSpan = TimeSpan.FromMinutes(1);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromHours(4);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                //TODO
+                // Los: Decrease interval time to test
+                var dueTimeSpan = TimeSpan.FromMinutes(4);
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
+                //if (quick == 1)
+                //{
+                //    var dueTimeSpan = TimeSpan.FromHours(1);
+                //    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                //}
+                //else
+                //{
+                //    var dueTimeSpan = TimeSpan.FromHours(4);
+                //    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                //}
             }
         }
 
@@ -80,21 +83,21 @@ namespace ThirdPartyWager.Workers
                 {
                     TpId = _tpId,
                     Type = _tpType,
-                    StartTime = (dataTpTimer == null) ? DateTime.UtcNow.AddDays(-3) : dataTpTimer.StartTime.AddSeconds(1),
+                    StartTime = (dataTpTimer == null) ? DateTime.Now.AddDays(-2) : dataTpTimer.StartTime.AddSeconds(1),
                 };
 
                 // get time 
                 var day = 0;
-                TimeCast reportTime = _financeSexyBLL.GetReportTime(execTime.StartTime, day);
+                TimeCast reportTime = _financeSexyBBLL.GetReportTime(execTime.StartTime, day);
 
                 // report
-                DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financeSexyBLL.GetReport(_tpId, null, reportTime);
+                DateTime reportDate = DateTime.UnixEpoch.AddSeconds(reportTime.endUnix);
+                var reportData = await _financeSexyBBLL.GetReport(_tpId, null, reportTime);
                 int result;
-                if (reportData.Count > 0)
+                if (reportData.Any())
                 {
                     // process
-                    var dailyData = _financeSexyBLL.DealReport(_tpId, reportDate, reportData);
+                    var dailyData = _financeSexyBBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
                     result = _fincanceService.SetFinanceTpDailySummary(dailyData);
@@ -125,7 +128,7 @@ namespace ThirdPartyWager.Workers
                 quick = true;
             }
 
-            _logger.LogInformation($"Report Worker Execute End {_tpId}");
+            _logger.LogInformation("Report worker execute end {TpName}", _tpName);
             return quick;
         }
 

@@ -1,8 +1,9 @@
 ﻿using Newtonsoft.Json;
-
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -11,97 +12,98 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<FinanceSexyBLL> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
-        private readonly ApiSexyBLL _apiSexyBLL;
+        private readonly ApiMaxGameBLL _apiMaxGameBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
-        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
-
+        private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
+        private readonly string _tpName = Tp.AESexy.ToString();
 
         public FinanceSexyBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceSexyBLL>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _apiSexyBLL = provider.GetRequiredService<ApiSexyBLL>();
-            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(Tp.AESexy.ToString());
+            _commonBLL = provider.GetService<CommonBLL>();
+            _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
+            _dateTimeHelper = provider.GetService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
         {
-            var dailyData = new List<FincanceDailySummary>();
-            if (!reportData.Any())
-            {
-                return dailyData;
-            }
-
             var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-            var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
+            var currencyIdDic = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
 
-            var getReportData = JsonConvert.DeserializeObject<List<CurrencyStatsData_Sexy>>(JsonConvert.SerializeObject(reportData));
-            var data = getReportData.GroupBy(i => i.currency).Select(g => new
-            {
-                currency = g.Key,
-                betAmount = g.Sum(s => s.betAmount),
-                realBetAmount = g.Sum(s => s.realBetAmount),
-                turnover = g.Sum(s => s.turnover),
-                winAmount = g.Sum(s => s.winAmount),
-                realWinAmount = g.Sum(s => s.realWinAmount),
-                jackpotBetAmount = g.Sum(s => s.jackpotBetAmount),
-                jackpotWinAmount = g.Sum(s => s.jackpotWinAmount),
-            });
+            var getReportData =
+                JsonConvert.DeserializeObject<List<PayloadDailySummaryData_MaxGame>>(
+                    JsonConvert.SerializeObject(reportData));
 
-            foreach (var item in data)
-            {
-                dailyData.Add(new FincanceDailySummary()
+            return getReportData?
+                .Select(i => i.GameTypes)
+                .SelectMany(x => x)
+                .Select(i => i.BettingDate)
+                .SelectMany(x => x)
+              .GroupBy(i => i.CurrencyIso)
+                .Select(g => new
+                {
+                    CurrencyId = currencyIdDic.GetValue(g.Key),
+                    Stake = g.Sum(s => s.Stake),
+                    ActualStake = g.Sum(s => s.ActualStake),
+                    NetStake = g.Sum(s => s.NetStake),
+                    WinLose = g.Sum(s => s.WinLose)
+                })
+                .Select(item => new FincanceDailySummary
                 {
                     SummaryType = SummaryType.TpBetRecord,
                     SummaryDate = reportDate,
                     TpId = tpId,
-                    CurrencyId = _currencyId[item.currency],
-                    Stake = item.betAmount,
-                    ValidBet = item.turnover,
-                    Payout = item.winAmount,
-                    WinlostAmount = item.winAmount - item.betAmount
+                    CurrencyId = item.CurrencyId,
+                    Stake = item.Stake,
+                    ValidBet = item.Stake,
+                    WinlostAmount = item.WinLose - item.NetStake,
+                    Payout = item.WinLose
                 });
-            }
-
-            return dailyData;
         }
 
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+
             foreach (var site in siteList)
             {
-                if (site.TicketKey == 0)
+                if (!_siteConfigDic.ContainsKey(site.SiteId))
                 {
                     continue;
                 }
-
-                setting = _siteConfigDic[site.SiteId];
-                CurrencyStats_Sexy getWagerSummary = await _apiSexyBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
-
-                if (getWagerSummary.status != "0000")
+                var config = _siteConfigDic[site.SiteId];
+                if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
                 {
-                    var msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType, config.DailySumApiUrl);
+                    continue;
+                }
+                var dailyBetSummary =
+                    await _apiMaxGameBLL.GetDailySummaryDataAsync(
+                        config,
+                        _tpName,
+                        new PayloadRequestDailySummaryData_MaxGame()
+                        {
+                            TargetDate = GetCheckDateFromUnixTimestamp(reportTime.startUnix),
+                            GameType = config.GameType
+                        }
+                    );
+
+                if (dailyBetSummary.ErrorCode != 0)
+                {
+                    _logger.LogError("{DaiLySummaryFaChaiError}",
+                        JsonConvert.SerializeObject(dailyBetSummary)
+                    );
+
                     continue;
                 }
 
-                if (getWagerSummary.status == "0000" && !getWagerSummary.transactions.Any())
-                {
-                    var msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    continue;
-                }
-
-                foreach (var item in getWagerSummary.transactions)
-                {
-                    reportData.Add(item);
-                }
+                reportData.Add(dailyBetSummary.Payload);
             }
+
             return reportData;
         }
 
@@ -114,6 +116,15 @@ namespace ThirdPartyWager.Service.BLL
                 reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd'T'HH:mm:ss.fffZ", startTime.AddDays(-1));
             }
             return reportTime;
+        }
+
+        private string GetCheckDateFromUnixTimestamp(long unixTimestamp)
+        {
+            var dateTime = DateTimeOffset
+                .FromUnixTimeSeconds(unixTimestamp)
+                .DateTime;
+
+            return dateTime.ToString("yyyy-MM-dd");
         }
     }
 }

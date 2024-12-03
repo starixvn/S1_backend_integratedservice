@@ -5,7 +5,7 @@ using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
 
-namespace ThirdPartyWager.Service.BLL.PG;
+namespace ThirdPartyWager.Service.BLL;
 
 public class FinanceFaChaiBLL : ITpReportBLL
 {
