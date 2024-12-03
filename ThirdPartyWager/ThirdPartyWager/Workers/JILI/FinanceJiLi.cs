@@ -87,27 +87,22 @@ public class FinanceJiLi : BackgroundService
 
             var reportData = await _financeJiLiBll.GetReport(_tpId, null, reportTime);
 
-            int result;
-
+           
             if (reportData.Count > 0)
             {
                 // compare
                 var dailyData = _financeJiLiBll.DealReport(_tpId, reportDate, reportData);
 
                 // write to current report
-                result = _financeService.SetFinanceTpDailySummary(dailyData);
+                _financeService.SetFinanceTpDailySummary(dailyData);
             }
-            else
-            {
-                result = 1;
-            }
+           
 
             // update timer
-            if (result > 0)
-            {
+           
                 // set timer to end time, which is the next day ???
                 _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
-            }
+            
 
             var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
 

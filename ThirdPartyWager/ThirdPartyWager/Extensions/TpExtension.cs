@@ -1,4 +1,5 @@
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.BLL.AllBet;
 using ThirdPartyWager.Service.BLL.FaChai;
 using ThirdPartyWager.Service.BLL.FastSpin;
 using ThirdPartyWager.Service.BLL.JILI;
@@ -7,12 +8,14 @@ using ThirdPartyWager.Service.BLL.Lottery;
 using ThirdPartyWager.Service.BLL.MaxGame;
 using ThirdPartyWager.Service.BLL.PG;
 using ThirdPartyWager.Service.BLL.PP;
+using ThirdPartyWager.Service.BLL.SabaPlay;
 using ThirdPartyWager.Service.BLL.TableGame;
 using ThirdPartyWager.Service.BLL.UuSlots;
 using ThirdPartyWager.Service.BLL.WE;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.AllBet;
 using ThirdPartyWager.Workers.FaChai;
 using ThirdPartyWager.Workers.FastSpin;
 using ThirdPartyWager.Workers.JILI;
@@ -21,6 +24,7 @@ using ThirdPartyWager.Workers.Lottery;
 using ThirdPartyWager.Workers.MaxGame;
 using ThirdPartyWager.Workers.PG;
 using ThirdPartyWager.Workers.PP;
+using ThirdPartyWager.Workers.SabaPlay;
 using ThirdPartyWager.Workers.TableGame;
 using ThirdPartyWager.Workers.UuSlots;
 using ThirdPartyWager.Workers.WE;
@@ -218,8 +222,10 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerAllBetService>();
 
             services.AddSingleton<TicketAllBetBLL>();
+            services.AddSingleton<FinanceAllBetBLL>();
 
             services.AddHostedService<BetResultCheckAllBet>();
+            services.AddHostedService<FinanceAllBet>();
             return services;
         }
 
@@ -762,8 +768,10 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerSabaPlayService>();
 
             services.AddSingleton<TicketSabaPlayBLL>();
+            services.AddSingleton<FinanceSabaPlayBLL>();
 
             services.AddHostedService<TicketSabaPlay>();
+            services.AddHostedService<FinanceSabaPlay>();
 
             return services;
         }

@@ -82,12 +82,12 @@ namespace ThirdPartyWager.Workers.Lottery
                 TimeCast reportTime = _financeLotteryBll.GetReportTime(execTime.StartTime, day);
 
                 DateTime reportDate =
-                    new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    DateTime.UnixEpoch
                     .AddSeconds(reportTime.endUnix);
 
                 var reportData = await _financeLotteryBll.GetReport(_tpId, null, reportTime);
 
-                int result;
+              
 
                 if (reportData.Count > 0)
                 {
@@ -95,19 +95,15 @@ namespace ThirdPartyWager.Workers.Lottery
                     var dailyData = _financeLotteryBll.DealReport(_tpId, reportDate, reportData);
 
                     // write to current report
-                    result = _financeService.SetFinanceTpDailySummary(dailyData);
+                    _financeService.SetFinanceTpDailySummary(dailyData);
                 }
-                else
-                {
-                    result = 1;
-                }
+                
 
                 // update timer
-                if (result > 0)
-                {
+                
                     // set timer to end time, which is the next day ???
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
-                }
+                
 
                 var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
 

@@ -118,7 +118,10 @@ namespace ThirdPartyWager.Service.BLL.Lottery
                     continue;
                 }
 
-                reportData.Add(dailyBetSummary.Payload);
+                if (dailyBetSummary.Payload.GameTypes.Any())
+                {
+                    reportData.Add(dailyBetSummary.Payload);
+                }
             }
 
             return reportData;

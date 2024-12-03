@@ -100,8 +100,10 @@ namespace ThirdPartyWager.Service.BLL.WE
 
                     continue;
                 }
-
-                reportData.Add(dailyBetSummary.Payload);
+                if (dailyBetSummary.Payload.GameTypes.Any())
+                {
+                    reportData.Add(dailyBetSummary.Payload);
+                }
             }
 
             return reportData;

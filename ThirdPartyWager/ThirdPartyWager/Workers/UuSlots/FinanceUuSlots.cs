@@ -85,25 +85,20 @@ namespace ThirdPartyWager.Workers.UuSlots
                 // report
                 DateTime reportDate = DateTime.UnixEpoch.AddSeconds(reportTime.endUnix);
                 var reportData = await _financeFinanceUuSlotsBll.GetReport(_tpId, null, reportTime);
-                int result;
+              
                 if (reportData.Any())
                 {
                     // process
                     var dailyData = _financeFinanceUuSlotsBll.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    result = _fincanceService.SetFinanceTpDailySummary(dailyData);
-                }
-                else
-                {
-                    result = 1;
+                    _fincanceService.SetFinanceTpDailySummary(dailyData);
                 }
 
                 // update timer
-                if (result > 0)
-                {
+               
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
-                }
+                
 
                 var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
                 if (diffDay > _beyond)

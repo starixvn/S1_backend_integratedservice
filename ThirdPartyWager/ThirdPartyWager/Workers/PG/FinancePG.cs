@@ -87,7 +87,7 @@ public class FinancePG : BackgroundService
 
             var reportData = await _financePGBLL.GetReport(_tpId, null, reportTime);
 
-            int result;
+            
 
             if (reportData.Count > 0)
             {
@@ -95,11 +95,7 @@ public class FinancePG : BackgroundService
                 var dailyData = _financePGBLL.DealReport(_tpId, reportDate, reportData);
 
                 // write to current report
-                result = _financeService.SetFinanceTpDailySummary(dailyData);
-            }
-            else
-            {
-                result = 1;
+                _financeService.SetFinanceTpDailySummary(dailyData);
             }
 
             // update timer
