@@ -1,4 +1,5 @@
-﻿using CommonService.Service.DAL;
+﻿using System.Net;
+using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
@@ -54,22 +55,49 @@ namespace CommonService.Service.BLL
                         return apiResult;
                     }
                     
+                    #region Deal Parameter
+                    
                     var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                     var email = custFaceBookData.Email is null ? "" : _tools.SHA256(custFaceBookData.Email);
                     var custSha = _tools.SHA256(request.CustId.ToString());
+
+                    // 將 IPv4 地址轉換為 IPv6 映射地址
+                    var ipv4 = IPAddress.Parse(custFaceBookData.Ip);
+                    var ipv6 = ipv4.MapToIPv6().ToString();
+                    
+                    #endregion
                     
                     foreach (var pixelEvent in request.PixelEvent)
                     {
+                        var eventId = string.Empty;
+                        switch (pixelEvent)
+                        {
+                            case FaceBookPixel.registerSubmit:
+                            case FaceBookPixel.CompleteRegistration:
+                                eventId = custFaceBookData.UserName;
+                                break;
+                            case FaceBookPixel.depositSubmit:
+                            case FaceBookPixel.firstDeposit:
+                            case FaceBookPixel.withdraw:
+                            case FaceBookPixel.firstDepositArrival:
+                            case FaceBookPixel.Purchase:
+                            case FaceBookPixel.redeposit:
+                            case FaceBookPixel.StartTrial:
+                                eventId = request.TransId;
+                                break;
+                        }
+                        
                         var data = new PixelEvent
                         {
                             event_name =  pixelEvent.ToString(),
+                            event_id = eventId,
                             event_time = now,
                             user_data = new UserData
                             {
                                 fbp = custFaceBookData.Fbp,
                                 fbc = custFaceBookData.Fbc,
                                 em = email,
-                                client_ip_address = custFaceBookData.Ip,
+                                client_ip_address = ipv6,
                                 client_user_agent = custFaceBookData.UserAgent,
                                 external_id = new List<string> {custSha}
                             },
