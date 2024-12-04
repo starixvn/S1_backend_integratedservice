@@ -125,7 +125,7 @@ namespace ThirdPartyWager.Workers.AllBet
                 quick = true;
             }
 
-            _logger.LogInformation("Report worker execute end {TpName}", _tpName);
+            _logger.LogInformation($"Report worker execute end {_tpName}");
             return quick;
         }
 
