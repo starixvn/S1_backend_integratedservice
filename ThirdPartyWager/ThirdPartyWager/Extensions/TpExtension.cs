@@ -680,7 +680,7 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<TicketPPBLL>();
             services.AddHostedService<TicketPP>();
             services.AddSingleton<FinancePPBLL>();
-            services.AddHostedService<FinancePG>();
+            services.AddHostedService<FinancePP>();
             return services;
         }
 
