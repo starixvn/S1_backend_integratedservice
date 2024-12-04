@@ -19,7 +19,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _tpId = (int)Tp.GPI;
         private readonly int _timeZone = 8;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
-        private readonly GPIConfig _siteConfig;
+        private readonly Dictionary<int, GPIConfig> _siteConfig;
 
         public class CompareParam
         {
@@ -35,7 +35,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _logger = provider.GetRequiredService<ILogger<WagerGPIBLL>>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<GPIConfig>(Tp.GPI.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<GPIConfig>(Tp.GPI.ToString());
         }
 
         public async Task<bool> ExecWagerWorker(int type, int gameType, int timeRange)
@@ -79,79 +79,86 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> GetWagersAsync(TimeCast wagerTime, int gameType, bool compare = false)
         {
             var msg = "FATAL_ERROR";
+            var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+            var wagerData = new List<Items_GPI>();
+            var cp = new CompareParam();
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
+
             try
             {
-                // get api info
-                var setting = _siteConfig;
-
-                // pagination
-                var page = 1;
-                var totalPage = 1;
-                var cp = new CompareParam();
-                var wagerData = new List<Items_GPI>();
-
-                while (page <= totalPage)
+                foreach (var site in siteList)
                 {
-                    // get wager
-                    var dataWager = await _apiGPIBLL.GetBetListByTime(setting, gameType, page, wagerTime.startTime, wagerTime.endTime);
+                    if (site.TicketKey == 0) continue;
 
-                    // error condition
-                    var errorCode = dataWager.resp.error_code;
-                    if (errorCode != 0)
+                    // get api info
+                    var setting = _siteConfig[site.SiteId];
+
+                    // pagination
+                    var page = 1;
+                    var totalPage = 1;
+
+                    while (page <= totalPage)
                     {
-                        msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                        return false;
-                    }
+                        // get wager
+                        var dataWager = await _apiGPIBLL.GetBetListByTime(setting, gameType, page, wagerTime.startTime, wagerTime.endTime);
 
-                    if (errorCode == 0 && dataWager.resp.items.total_row == 0)
-                    {
-                        msg = "NO_DATA";
-                        _logger.LogInformation($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                        return true;
-                    }
-
-                    totalPage = dataWager.resp.items.total_page;
-
-                    cp.Bet += dataWager.resp.items.item.Sum(x => x.bet);
-                    cp.Winlose += dataWager.resp.items.item.Sum(x => x.winlose);
-
-                    wagerData.Add(dataWager.resp.items);
-
-                    page++;
-
-                    // 15 seconds interval between each call
-                    Thread.Sleep(17000);
-                }
-
-                if (compare)
-                {
-                    bool check = await CompareSummaryAsync(wagerTime, gameType, cp);
-                    if (check)
-                    {
-                        msg = "MATCH";
-                        _logger.LogInformation($"{workerName} {msg}");
-                        return true;
-                    }
-                }
-
-                foreach (var wagerItem in wagerData)
-                {
-                    var groups = wagerItem.item.GroupBy(i => (i.round_id));
-
-                    // insert wager to db
-                    foreach (var group in groups)
-                    {
-                        try
+                        // error condition
+                        var errorCode = dataWager.resp.error_code;
+                        if (errorCode != 0)
                         {
-                            var result = _wagerGPIService.InsertWager(group, gameType);
-                        }
-                        catch (Exception ex)
-                        {
-                            msg = $"INSERT_WAGER(WAGERID: {group.Key} )";
-                            _logger.LogError(ex, $"{workerName} {msg}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
+                            msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             return false;
+                        }
+
+                        if (errorCode == 0 && dataWager.resp.items.total_row == 0)
+                        {
+                            msg = "NO_DATA";
+                            _logger.LogInformation($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            break;
+                        }
+
+                        totalPage = dataWager.resp.items.total_page;
+
+                        cp.Bet += dataWager.resp.items.item.Sum(x => x.bet);
+                        cp.Winlose += dataWager.resp.items.item.Sum(x => x.winlose);
+
+                        wagerData.Add(dataWager.resp.items);
+
+                        page++;
+
+                        // 15 seconds interval between each call
+                        Thread.Sleep(17000);
+                    }
+
+                    if (compare)
+                    {
+                        bool check = await CompareSummaryAsync(site.SiteId,wagerTime, gameType, cp);
+                        if (check)
+                        {
+                            msg = "MATCH";
+                            _logger.LogInformation($"{workerName} {msg}");
+                            break;
+                        }
+                    }
+
+                    foreach (var wagerItem in wagerData)
+                    {
+                        var groups = wagerItem.item.GroupBy(i => (i.round_id));
+
+                        // insert wager to db
+                        foreach (var group in groups)
+                        {
+                            try
+                            {
+                                var result = _wagerGPIService.InsertWager(group, gameType);
+                            }
+                            catch (Exception ex)
+                            {
+                                msg = $"INSERT_WAGER(WAGERID: {group.Key} )";
+                                _logger.LogError(ex, $"{workerName} {msg}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
+                                return false;
+                            }
                         }
                     }
                 }
@@ -175,11 +182,11 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task<bool> CompareSummaryAsync(TimeCast wagerTime, int gameType, CompareParam cp)
+        private async Task<bool> CompareSummaryAsync(int siteId,TimeCast wagerTime, int gameType, CompareParam cp)
         {
             // table summary
-            var spName = (gameType == (int)GameType.GPI_RNG) ? "Finance_TpWagerRng_GPI_Summary_Get" : "Finance_TpWagerLT_GPI_Summary_Get";
-            var summary = await _commonBLL.GetWagerSummary(spName, wagerTime.startUnix, wagerTime.endUnix - 1);
+            var spName = (gameType == (int)GameType.GPI_RNG) ? "Service_TpWagerRng_GPI_Total_Get" : "Service_TpWagerLT_GPI_Total_Get";
+            var summary = await _commonBLL.GetWagerSummaryBySiteId(spName, wagerTime.startUnix, wagerTime.endUnix - 1,siteId);
             var summaryStake = summary.Sum(x => x.Stake);
             var summaryWinlose = summary.Sum(x => x.WinlostAmount);
 
