@@ -60,7 +60,7 @@ namespace ThirdPartySettleWorker.Workers
             var setSP = $"Service_BettransRng_PG_Settle_Set_V2";
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 2000);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 5000);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
@@ -137,7 +137,7 @@ namespace ThirdPartySettleWorker.Workers
                 TimeSpan dueTimeSpan = TimeSpan.FromSeconds(10);
                 if (forContinue)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(2);
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
                 }
                 else if (isError)
                 {

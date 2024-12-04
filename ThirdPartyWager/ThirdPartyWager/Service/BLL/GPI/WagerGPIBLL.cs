@@ -108,15 +108,14 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             msg = "THIRD_PARTY_ERROR";
                             _logger.LogError($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                            SystemException systemException = new SystemException($"{msg} - GetWager{_tpId}");
-                            throw systemException;
+                            return false;
                         }
 
                         if (errorCode == 0 && dataWager.resp.items.total_row == 0)
                         {
                             msg = "NO_DATA";
                             _logger.LogInformation($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                            continue;
+                            break;
                         }
 
                         totalPage = dataWager.resp.items.total_page;
@@ -139,6 +138,7 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             msg = "MATCH";
                             _logger.LogInformation($"{workerName} {msg}");
+                            break;
                         }
                     }
 
