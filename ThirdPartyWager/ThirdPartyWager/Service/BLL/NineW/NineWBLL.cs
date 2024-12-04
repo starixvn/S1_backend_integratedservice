@@ -26,6 +26,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly Dictionary<int, NineWConfig> _siteConfigDic;
         private readonly IEnumerable<ServerInfo> _serverInfoList;
+        private readonly IWebHostEnvironment _env;
 
         public NineWBLL(IServiceProvider provider)
         {
@@ -34,11 +35,12 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);  
+            _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
             _log2File = provider.GetRequiredService<Log2File>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NineWConfig>(_tpName);
             _serverInfoList = provider.GetRequiredService<CommonBLL>().GetSiteList();
+            _env = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
@@ -60,7 +62,7 @@ namespace ThirdPartyWager.Service.BLL
                     var siteResult = await QuerySettleBetHistoryAsync(site.SiteId, siteConfig, startTime, endTime);
                     result.AddRange(siteResult);
                 }
-                    
+
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
 
@@ -87,7 +89,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         continue;
                     }
-                   
+
                     var siteConfig = _siteConfigDic[site.SiteId];
                     var siteResult = await QueryUnSettleSummaryTransactionAsync(site.SiteId, siteConfig, startTime);
                     result.AddRange(siteResult);
@@ -226,7 +228,15 @@ namespace ThirdPartyWager.Service.BLL
                 var totalPage = 1;
                 while (page <= totalPage)
                 {
-                    await Task.Delay(1500);
+                    if (!_env.IsProduction())
+                    {
+                        //UAT
+                        await Task.Delay(65 * 1000);
+                    }
+                    else
+                    {   //PROD
+                        await Task.Delay(1500);
+                    }
                     var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
                         { "cert", config.Cert },
@@ -327,7 +337,15 @@ namespace ThirdPartyWager.Service.BLL
                 var totalPage = 1;
                 while (page <= totalPage)
                 {
-                    await Task.Delay(1500);
+                    if (!_env.IsProduction())
+                    {
+                        //UAT
+                        await Task.Delay(65 * 1000);
+                    }
+                    else
+                    {   //PROD
+                        await Task.Delay(1500);
+                    }
                     var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
                         { "cert", config.Cert },
@@ -379,7 +397,7 @@ namespace ThirdPartyWager.Service.BLL
                 throw new Exception($"_domain is {domain}");
             }
 
-            var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(_serverInfoList.First(x => x.SiteId == siteId).CurrencyList);                    
+            var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(_serverInfoList.First(x => x.SiteId == siteId).CurrencyList);
             foreach (var currency in _currencyList.Where(x => currencyList.Contains(x.CurrencyId)))
             {
                 var checkDataList = new List<Checkdata>();
@@ -387,7 +405,15 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     foreach (var range in date.DateToTimeRange(_timeZone, 12))
                     {
-                        await Task.Delay(1500);
+                        if (!_env.IsProduction())
+                        {
+                            //UAT
+                            await Task.Delay(65 * 1000);
+                        }
+                        else
+                        {   //PROD
+                            await Task.Delay(1500);
+                        }
 
                         var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
                         {
@@ -459,14 +485,22 @@ namespace ThirdPartyWager.Service.BLL
             {
                 throw new Exception($"_domain is {domain}");
             }
-      
+
             foreach (var type in _reportType)
             {
                 var page = 1;
                 var totalPage = 1;
                 while (page <= totalPage)
                 {
-                    await Task.Delay(1500);
+                    if (!_env.IsProduction())
+                    {
+                        //UAT
+                        await Task.Delay(65 * 1000);
+                    }
+                    else
+                    {   //PROD
+                        await Task.Delay(1500);
+                    }
                     var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
                         { "cert", config.Cert },
@@ -550,7 +584,7 @@ namespace ThirdPartyWager.Service.BLL
             string url = string.Empty;
             if (result.status == "1")
             {
-                url = $"{siteConfig.ApiUrl}.{result.Domains?.FirstOrDefault(x => x.priority == 1)?.domain}/api/apiWallet";          
+                url = $"{siteConfig.ApiUrl}.{result.Domains?.FirstOrDefault(x => x.priority == 1)?.domain}/api/apiWallet";
             }
             else
             {
