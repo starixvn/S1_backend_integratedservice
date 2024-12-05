@@ -70,6 +70,7 @@ namespace ThirdPartyWager
 
             services.AddTpList();
             services.AddSabaOdds();
+            services.AddSabaGameDetail();
             services.AddLiveStreaming();
             services.AddLatestHighlightVideo();
         }
