@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using ThirdPartyWager.Extensions;
+using ThirdPartyWager.Helper;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -30,48 +31,16 @@ public class FinancePGBLL : ITpReportBLL
 
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
     {
-        var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-        var currencyIdDic = tpCurrencyList.ToDictionary(i => i.TpCurrencyId,
-            i => new {
-                        i.CurrencyId,
-                        i.ExchangeRate
-                    });
+        var currencyIdDic = _commonBLL
+            .GetTpCurrencyList(tpId)
+            .ToDictionary(i => i.TpCurrencyId,
+                i => new CurrencyModel
+                {
+                    CurrencyId = i.CurrencyId,
+                    ExchangeRate = i.ExchangeRate
+                });
 
-        var getReportData =
-            JsonConvert.DeserializeObject<List<PayloadDailySummaryData_MaxGame>>(
-                JsonConvert.SerializeObject(reportData));
-
-        return getReportData
-            .Select(i => i.GameTypes)
-            .SelectMany(x => x)
-            .Select(i => i.BettingDate)
-            .SelectMany(x => x)
-            .GroupBy(i => i.CurrencyIso)
-            .Select(g => new
-            {
-                currencyIdDic.GetValue(g.Key).CurrencyId,
-                currencyIdDic.GetValue(g.Key).ExchangeRate,
-                Stake = g.Sum(s => s.Stake),
-                ActualStake = g.Sum(s => s.ActualStake),
-                NetStake = g.Sum(s => s.NetStake),
-                WinLose = g.Sum(s => s.WinLose),
-                JackpotContributionBetCount = g.Sum(s => s.JackpotContributionBetCount),
-                JackpotContribution = g.Sum(s => s.JackpotContribution),
-                JackpotPrizeBetCount = g.Sum(s => s.JackpotPrizeBetCount),
-                JackpotPrize = g.Sum(s => s.JackpotPrize),
-                PromotionPrizeBetCount = g.Sum(s => s.PromotionPrizeBetCount),
-                PromotionPrize = g.Sum(s => s.PromotionPrize)
-            }).Select(item => new FincanceDailySummary
-            {
-                SummaryType = SummaryType.TpBetRecord,
-                SummaryDate = reportDate,
-                TpId = tpId,
-                CurrencyId = item.CurrencyId,
-                Stake = item.Stake * item.ExchangeRate,
-                ValidBet = item.Stake * item.ExchangeRate,
-                WinlostAmount = (item.WinLose - item.NetStake) * item.ExchangeRate,
-                Payout = item.WinLose * item.ExchangeRate
-            });
+        return TpHelper.DealReport(currencyIdDic, tpId, reportDate, reportData);
     }
 
     public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)

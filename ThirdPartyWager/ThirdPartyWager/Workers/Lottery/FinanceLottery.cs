@@ -116,7 +116,7 @@ namespace ThirdPartyWager.Workers.Lottery
                     quick = true;
                 }
 
-                _logger.LogInformation($"{_tpName} Get {reportDate:yyyy-MM-dd} report");
+                _logger.LogInformation("{TpName} Get {ReportDate} report", _tpName, reportDate.ToString("yyyy-MM-dd"));
                 return quick;
             }
             catch (Exception ex)
@@ -125,7 +125,7 @@ namespace ThirdPartyWager.Workers.Lottery
                 quick = true;
             }
 
-            _logger.LogInformation($"Report Worker Execute End {_tpName}");
+            _logger.LogInformation("Report Worker Execute End {TpName}",_tpName);
             return quick;
         }
 

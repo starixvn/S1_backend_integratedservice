@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using ThirdPartyWager.Extensions;
+using ThirdPartyWager.Helper;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
@@ -30,37 +31,16 @@ namespace ThirdPartyWager.Service.BLL.SabaPlay
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
         {
-            var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-            var currencyIdDic = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
+            var currencyIdDic = _commonBLL
+                .GetTpCurrencyList(tpId)
+                .ToDictionary(i => i.TpCurrencyId,
+                    i => new CurrencyModel
+                    {
+                        CurrencyId = i.CurrencyId,
+                        ExchangeRate = i.ExchangeRate
+                    });
 
-            var getReportData =
-                JsonConvert.DeserializeObject<List<PayloadDailySummaryData_MaxGame>>(
-                    JsonConvert.SerializeObject(reportData));
-
-            return getReportData
-                .Select(i => i.GameTypes)
-                .SelectMany(x => x)
-                .Select(i => i.BettingDate)
-                .SelectMany(x => x)
-                .GroupBy(i => i.CurrencyIso)
-                .Select(g => new
-                {
-                    CurrencyId = currencyIdDic.GetValue(g.Key),
-                    Stake = g.Sum(s => s.Stake),
-                    ActualStake = g.Sum(s => s.ActualStake),
-                    NetStake = g.Sum(s => s.NetStake),
-                    WinLose = g.Sum(s => s.WinLose)
-                }).Select(item => new FincanceDailySummary
-                {
-                    SummaryType = SummaryType.TpBetRecord,
-                    SummaryDate = reportDate,
-                    TpId = tpId,
-                    CurrencyId = item.CurrencyId,
-                    Stake = item.Stake,
-                    ValidBet = item.Stake,
-                    WinlostAmount = item.WinLose - item.NetStake,
-                    Payout = item.WinLose
-                });
+            return TpHelper.DealReport(currencyIdDic, tpId, reportDate, reportData);
         }
 
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
