@@ -2370,8 +2370,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = PayoutV2(
                         tpCustInfo,
-                        //此function為把bet金額收回
-                        voidRoundData_Eday.bet * -1,
+                        //此function為把bet退回
+                        Math.Abs(voidRoundData_Eday.bet),
                         (int)tpId,
                         //tpTransId拿來綁BonusId不讓Bonus跑掉
                         $"{firstUnCancelBillId}_{voidRoundData_Eday.roundCode}",
