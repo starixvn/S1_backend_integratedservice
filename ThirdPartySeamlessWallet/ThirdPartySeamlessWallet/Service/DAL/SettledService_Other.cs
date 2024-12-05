@@ -2320,7 +2320,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var tpId = Tp.Eday;
             var tpGameType = GameType.Eday_Lottery;
             var tpCategory = TpCategory.Lottery;
-            var CancelSpName = "Service_BettransLT_Eday_CancelBet_Set";
+            var CancelSpName = "Service_BettransLT_Eday_Round_CancelBet_Set";
             var GetSpName = "Service_BettransLT_Eday_Round_Get";
 
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -2350,11 +2350,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 var cancelData = new BettransLTEdayRoundCancelBet()
                 {
-                    roundCode = voidRoundData_Eday.roundCode,
-                    player = tpCustInfo.TpUserName,
                     TicketType = voidRoundData_Eday.TicketType,
                     TicketStatus = voidRoundData_Eday.TicketStatus,
-                    SettleFlag = (int)SettleFlag.EndGame
+                    SettleFlag = (int)SettleFlag.EndGame,
+                    roundCode = voidRoundData_Eday.roundCode,
+                    player = tpCustInfo.TpUserName
                 };
                 
                 //拿第一筆的且不是取消的billId當派彩單號，要不然有Bonus吃不到
