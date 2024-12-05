@@ -69,28 +69,9 @@ namespace CommonService.Service.BLL
                     
                     foreach (var pixelEvent in request.PixelEvent)
                     {
-                        var eventId = string.Empty;
-                        switch (pixelEvent)
-                        {
-                            case FaceBookPixel.registerSubmit:
-                            case FaceBookPixel.CompleteRegistration:
-                                eventId = custFaceBookData.UserName;
-                                break;
-                            case FaceBookPixel.depositSubmit:
-                            case FaceBookPixel.firstDeposit:
-                            case FaceBookPixel.withdraw:
-                            case FaceBookPixel.firstDepositArrival:
-                            case FaceBookPixel.Purchase:
-                            case FaceBookPixel.redeposit:
-                            case FaceBookPixel.StartTrial:
-                                eventId = request.TransId;
-                                break;
-                        }
-                        
                         var data = new PixelEvent
                         {
                             event_name =  pixelEvent.ToString(),
-                            event_id = eventId,
                             event_time = now,
                             user_data = new UserData
                             {
@@ -101,20 +82,44 @@ namespace CommonService.Service.BLL
                                 client_user_agent = custFaceBookData.UserAgent,
                                 external_id = new List<string> {custSha}
                             },
-                            custom_data = new CustomData
-                            {
-                                currency = custFaceBookData.IsoCode,
-                                value = request.Value
-                            },
                             event_source_url = request.Url,
                             action_source =  "website"
                         };
+                        
+                        switch (pixelEvent)
+                        {
+                            case FaceBookPixel.registerSubmit:
+                            case FaceBookPixel.CompleteRegistration:
+                                data.event_id = custFaceBookData.UserName;
+                                break;
+                            case FaceBookPixel.depositSubmit:
+                            case FaceBookPixel.firstDeposit:
+                            case FaceBookPixel.withdraw:
+                            case FaceBookPixel.firstDepositArrival:
+                            case FaceBookPixel.Purchase:
+                            case FaceBookPixel.redeposit:
+                            case FaceBookPixel.StartTrial:
+                                data.custom_data = new CustomData
+                                {
+                                    currency = custFaceBookData.IsoCode,
+                                    value = request.Value
+                                };
+                                data.event_id = request.TransId;
+                                break;
+                        }
+                        
                         eventData.data.Add(data);
                     }
                     
-                    var responseMessage = await _httpHelper.HttpPost1Async(url, null, JsonConvert.SerializeObject(eventData), "application/json");
+                    var settings = new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore // 忽略空值的屬性
+                    };
 
-                    if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+                    var jsonPayload = JsonConvert.SerializeObject(eventData, settings);
+                    var responseMessage = await _httpHelper.HttpPost1Async(url, null, jsonPayload, "application/json");
+                    
+                    if (responseMessage.StatusCode == HttpStatusCode.OK)
                     {
                         _faceBookPixelService.DelCustFaceBookData(request.CustId , request.TransId);
                     }
