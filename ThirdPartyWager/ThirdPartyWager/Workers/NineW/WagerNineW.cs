@@ -36,10 +36,21 @@ namespace ThirdPartyWager.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
-            _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
-            _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromMinutes(2), TimeSpan.Zero);
-            _reportTimer = new Timer(GetReportByDate, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
+            if (!_env.IsProduction())
+            {
+                //UAT
+                _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
+                _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(15), TimeSpan.Zero);
+                _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromMinutes(30), TimeSpan.Zero);
+                _reportTimer = new Timer(GetReportByDate, null, TimeSpan.FromSeconds(45), TimeSpan.Zero);
+            }
+            else
+            {
+                _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
+                _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
+                _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromMinutes(2), TimeSpan.Zero);
+                _reportTimer = new Timer(GetReportByDate, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
+            }
             _financeTimer = new Timer(DoTpDailySummary, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
 
             return Task.CompletedTask;
