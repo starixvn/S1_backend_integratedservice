@@ -88,7 +88,7 @@ namespace ThirdPartyWager.Service.BLL
             {
                 response.EnsureSuccessStatusCode();
                 var result = response.Content.ReadAsStringAsync().Result;
-                _log2File.InsertResponseLog(_tpName, url, para, result);
+                _log2File.InsertResponseLog(_tpName, url, para, result , false);
                 
                 return result;
             }
