@@ -162,11 +162,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     public class BettransLTEdayRoundCancelBet
     {
-        public string roundCode { get; set; }
-        public string player { get; set; }
         public int TicketType { get; set; } 
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
+        public string roundCode { get; set; }
+        public string player { get; set; }
     }
 
     public class BettransLTEdayPayoutRequest : EdayBetRequest
