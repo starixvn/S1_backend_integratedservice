@@ -2,7 +2,6 @@
 using System.Web;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -22,7 +21,7 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiOne789BLL>>();
-            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetServiceHostConfig().SeamlessService;
         }
 
         public async Task<dynamic> GetBetListByTime(One789Config setting, string startTime, string endTime, int page, int perPage, int gameType)
@@ -34,12 +33,15 @@ namespace ThirdPartyWager.Service.BLL
                 case (int)GameType.One789_Lottery:
                     uri = "/report/lottery/date-time-report";
                     break;
+
                 case (int)GameType.One789_Lottery_789:
                     uri = "/report/lottery789/date-time-report";
                     break;
+
                 case (int)GameType.One789_LiveCasino:
                     uri = "/report/789-casino/sedie/date-time-report";
                     break;
+
                 default:
                     break;
             }
@@ -113,6 +115,7 @@ namespace ThirdPartyWager.Service.BLL
                     };
                     param = JsonConvert.SerializeObject(data);
                     break;
+
                 default:
                     tag = false;
                     _logger.LogWarning($"{type} not found");

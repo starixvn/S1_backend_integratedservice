@@ -7,7 +7,6 @@ using ThirdPartyWager.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseSentry();
-builder.Environment.EnvironmentName = builder.Configuration.GetSection("env").Get<string>();
 
 var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
@@ -44,7 +43,7 @@ var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
 
 var app = builder.Build();
-startup.Configure(app, builder.Environment);
-SentrySdk.CaptureMessage($"Started {nameof(ThirdPartyWager)} {builder.Environment.EnvironmentName} at {DateTime.Now}");
+startup.Configure(app, builder.Environment, builder.Configuration);
+SentrySdk.CaptureMessage($"Started {nameof(ThirdPartyWager)} at {DateTime.Now}");
 
 app.Run();

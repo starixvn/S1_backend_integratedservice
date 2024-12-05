@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Service.BLL
         public ApiSWBLL(IServiceProvider provider)
         {
             _configuration = provider.GetRequiredService<IConfiguration>();
-            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetServiceHostConfig().SeamlessService;
             _logger = provider.GetRequiredService<ILogger<ApiSWBLL>>();
             var httpHelper = provider.GetRequiredService<HttpHelper>();
             _client = httpHelper.GetClientWithHandler(CreateHandler());
@@ -47,6 +47,7 @@ namespace ThirdPartyWager.Service.BLL
                 return false;
             }
         }
+
         private HttpClientHandler CreateHandler()
         {
             var handler = new HttpClientHandler();

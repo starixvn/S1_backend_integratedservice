@@ -8,16 +8,16 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly Dictionary<string, string> _defaultSiteConfig;
         private readonly Dictionary<int, SiteConfig> _siteIdConfigs;
-        private readonly IWebHostEnvironment _environment;
+        private readonly IConfiguration _configuration;
 
-        public ConfigBLL(IServiceProvider provider)
+        public ConfigBLL(IServiceProvider provider, IConfiguration configuration)
         {
             var siteConfigList = provider.GetServices<SiteConfig>();
             _defaultSiteConfig = siteConfigList.First(i => i.SiteId == 0).Config;
 
-            //TpWager不排除0，需要從site=0拿config            
+            //TpWager不排除0，需要從site=0拿config
             _siteIdConfigs = siteConfigList.ToDictionary(i => i.SiteId, i => i);
-            _environment = provider.GetRequiredService<IWebHostEnvironment>();
+            _configuration = configuration;
         }
 
         public string GetConfigValue(string configKey, int siteId = 0)
@@ -43,10 +43,29 @@ namespace ThirdPartyWager.Service.BLL
             return !string.IsNullOrEmpty(json) ? JsonConvert.DeserializeObject<TItem>(json) : default;
         }
 
-        public TItem GetConfigValueByEnvironment<TItem>(string configKey, int siteId = 0)
+        public string GetEnvironmentName()
         {
-            var json = GetConfigValue($"{configKey}.{_environment.EnvironmentName}.json", siteId);
-            return !string.IsNullOrEmpty(json) ? JsonConvert.DeserializeObject<TItem>(json) : default;
+            return _configuration.GetValue<string>("EnvironmentName");
+        }
+
+        public ServiceHostConfig GetServiceHostConfig()
+        {
+            var serviceHostConfig = _configuration.GetSection("serviceHosts").Get<ServiceHostConfig>();
+            return serviceHostConfig;
+        }
+
+        public ProxyConfig GetProxyConfig()
+        {
+            if (!string.IsNullOrWhiteSpace(_configuration.GetValue<string>("ProxyHost")))
+            {
+                return new ProxyConfig
+                {
+                    ProxyHost = _configuration.GetValue<string>("ProxyHost"),
+                    ProxyPort = _configuration.GetValue<int>("ProxyPort")
+                };
+            }
+
+            return null;
         }
 
         public Dictionary<int, TItem> GetConfigValuesBySiteId<TItem>(string configKey)
@@ -66,4 +85,3 @@ namespace ThirdPartyWager.Service.BLL
         }
     }
 }
-

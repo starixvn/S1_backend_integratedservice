@@ -16,20 +16,18 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly string _tpName = Tp.GPI.ToString();
         private readonly ProxyConfig _tokyoProxy;
-        private readonly IWebHostEnvironment _env;
 
         private readonly Dictionary<int, string> _productList = new Dictionary<int, string>() {
             {(int)GameType.GPI_RNG, "slots"},
             {(int)GameType.GPI_Keno, "lottery"},//使用一款代表取lottery資料
         };
 
-        public ApiGPIBLL(IServiceProvider provider)
+        public ApiGPIBLL(IServiceProvider provider, IConfiguration configuration)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _tokyoProxy = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
-            _env = provider.GetRequiredService<IWebHostEnvironment>();
+            _tokyoProxy = provider.GetRequiredService<ConfigBLL>().GetProxyConfig();
         }
 
         public async Task<WagerGPIModel> GetBetListByTime(GPIConfig setting, int gameType, int page, string startTime, string endTime)
@@ -73,10 +71,10 @@ namespace ThirdPartyWager.Service.BLL
 
             //if (!_env.IsProduction())
             //{
-                using var client = _httpHelper.GetClientWithHandler(_httpHelper.CreateProxyConfigHandler(_tokyoProxy));
-                response = await client.GetAsync(url);
-                using var sr = new StreamReader(await response.Content.ReadAsStreamAsync(), Encoding.UTF8);
-                result = await sr.ReadToEndAsync();
+            using var client = _httpHelper.GetClientWithHandler(_httpHelper.CreateProxyConfigHandler(_tokyoProxy));
+            response = await client.GetAsync(url);
+            using var sr = new StreamReader(await response.Content.ReadAsStreamAsync(), Encoding.UTF8);
+            result = await sr.ReadToEndAsync();
             //}
             //else
             //{
@@ -112,7 +110,6 @@ namespace ThirdPartyWager.Service.BLL
             }
             return JsonConvert.SerializeXmlNode(xmlDoc);
         }
-
 
         protected GameType GetGameType(string gameId)
         {

@@ -27,7 +27,7 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiMaxGameBLL>>();
-            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetServiceHostConfig().SeamlessService;
         }
 
         public async Task<TicketDataMaxGame> CheckTicketStatus(MaxGameConfig setting, string tpName, CheckTicketStatusPayloadMaxGame parameters)
@@ -69,18 +69,20 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<DailySummaryData_MaxGame> GetDailySummaryDataAsync(dynamic setting, string tpName, PayloadRequestDailySummaryData_MaxGame parameters) {
+        public async Task<DailySummaryData_MaxGame> GetDailySummaryDataAsync(dynamic setting, string tpName, PayloadRequestDailySummaryData_MaxGame parameters)
+        {
             var url = $"{setting.DailySumApiUrl}/api/OperatorApi/GetDailyTicketSummary";
 
             var param = new
             {
                 Timestamp = GetCurrentTimeFormat(),
                 Seq = Guid.NewGuid().ToString(),
-                Payload = new {
+                Payload = new
+                {
                     parameters.TargetDate,
                     TimeZone = 0,
                     parameters.GameType,
-                    TicketStatus = new List<int>() { 
+                    TicketStatus = new List<int>() {
                         // Need to be reviewed, currently we get all them
                         (int)MaxGame_TicketStatus.Win,
                         (int)MaxGame_TicketStatus.Lose,

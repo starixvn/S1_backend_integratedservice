@@ -14,17 +14,16 @@ public class ApiIMBLL
     private readonly HttpHelper _httpHelper;
     private readonly ILogger<ApiIMBLL> _logger;
     private readonly Log2File _log2File;
-    private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _configuration;
     private readonly ProxyConfig? _tokyoProxy;
+
     public ApiIMBLL(IServiceProvider provider)
     {
         _httpHelper = provider.GetRequiredService<HttpHelper>();
         _logger = provider.GetRequiredService<ILogger<ApiIMBLL>>();
         _log2File = provider.GetRequiredService<Log2File>();
-        _env = provider.GetRequiredService<IWebHostEnvironment>();
         _configuration = provider.GetRequiredService<IConfiguration>();
-        _tokyoProxy = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
+        _tokyoProxy = provider.GetRequiredService<ConfigBLL>().GetProxyConfig();
     }
 
     public async Task<IMWagerModel<T>> GetBetListByTime<T>(GetBetListByTimeParam param, Tp tp)
@@ -143,5 +142,5 @@ public class ApiIMBLL
         return handler;
     }
 
-    #endregion
+    #endregion Private
 }

@@ -23,7 +23,7 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAGBLL>>();
-            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetServiceHostConfig().SeamlessService;
         }
 
         public async Task<WagerAGModel> GetBetListByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime, int page, string guid)
@@ -143,6 +143,7 @@ namespace ThirdPartyWager.Service.BLL
                     doc.Declaration = new XDeclaration("1.0", "utf-8", null);
                     doc.Save(wr);
                     break;
+
                 default:
                     tag = false;
                     _logger.LogWarning($"{type} not found");
