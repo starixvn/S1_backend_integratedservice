@@ -150,7 +150,7 @@ namespace ThirdPartySeamlessWallet
             services.AddPayloadLog(Configuration);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration)
         {
             if (env.IsDevelopment())
             {
@@ -165,7 +165,7 @@ namespace ThirdPartySeamlessWallet
             {
                 endpoints.MapGet("/health", async context =>
                 {
-                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}");
+                    await context.Response.WriteAsync($"{configuration.GetValue<string>("EnvironmentName")}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}");
                 });
 
                 endpoints.MapControllers();

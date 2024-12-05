@@ -11,8 +11,6 @@ builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
 
-builder.Environment.EnvironmentName = builder.Configuration.GetSection("env").Get<string>();
-
 var remoteUrls = GetRemoteUrls();
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
@@ -53,13 +51,13 @@ var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
 
 var app = builder.Build();
-startup.Configure(app, builder.Environment);
+startup.Configure(app, builder.Environment, builder.Configuration);
 
 const int minWorkers = 96;
 const int minIOCPs = 4;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 
-SentrySdk.CaptureMessage($"Started {nameof(ThirdPartySeamlessWallet)} {builder.Environment.EnvironmentName} api at {DateTime.Now}");
+SentrySdk.CaptureMessage($"Started {nameof(ThirdPartySeamlessWallet)} api at {DateTime.Now}");
 
 app.Run();
 return;

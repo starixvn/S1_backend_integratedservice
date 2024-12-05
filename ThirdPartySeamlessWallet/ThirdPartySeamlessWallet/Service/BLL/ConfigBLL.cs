@@ -9,16 +9,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private readonly Dictionary<string, string> _defaultSiteConfig;
         private readonly Dictionary<int, SiteConfig> _siteIdConfigs;
         private readonly Dictionary<string, SiteConfig> _siteNameConfigs;
-        private readonly IWebHostEnvironment _environment;
+        private readonly IConfiguration _configuration;
 
-        public ConfigBLL(IServiceProvider provider)
+        public ConfigBLL(IServiceProvider provider, IConfiguration configuration)
         {
             var siteConfigList = provider.GetServices<SiteConfig>();
             _defaultSiteConfig = siteConfigList.First(i => i.SiteId == 0).Config;
 
-            //TPSW的不排除0，第三方送過來無法辨識site的時候，需要從site=0拿config            
+            //TPSW的不排除0，第三方送過來無法辨識site的時候，需要從site=0拿config
             _siteIdConfigs = siteConfigList.ToDictionary(i => i.SiteId, i => i);
-            _environment = provider.GetRequiredService<IWebHostEnvironment>();
+            _configuration = configuration;
 
             // siteName的Config字典排除0
             _siteNameConfigs = new Dictionary<string, SiteConfig>(siteConfigList.Where(i => i.SiteId != 0).ToDictionary(i => i.SiteName, i => i), StringComparer.OrdinalIgnoreCase);
@@ -41,10 +41,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return defaultResult;
         }
 
-        public TItem GetConfigValueByEnvironment<TItem>(string configKey, int siteId = 0)
+        public string GetEnvironmentName()
         {
-            var json = GetConfigValue($"{configKey}.{_environment.EnvironmentName}.json", siteId);
-            return !string.IsNullOrEmpty(json) ? JsonConvert.DeserializeObject<TItem>(json) : default;
+            return _configuration.GetValue<string>("EnvironmentName");
+        }
+
+        public ServiceHostConfig GetServiceHostConfig()
+        {
+            var serviceHostConfig = _configuration.GetSection("serviceHosts").Get<ServiceHostConfig>();
+            return serviceHostConfig;
         }
 
         public TItem GetConfigValue<TItem>(string configKey, int siteId = 0)
@@ -98,4 +103,3 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
     }
 }
-

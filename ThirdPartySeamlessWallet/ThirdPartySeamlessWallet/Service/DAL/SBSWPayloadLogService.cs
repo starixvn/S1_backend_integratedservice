@@ -1,10 +1,8 @@
 using System.Diagnostics;
 using Dapper;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
-using ThirdPartySeamlessWallet.Service.Model.SBSW;
+using ThirdPartySeamlessWallet.Service.BLL;
 
 namespace ThirdPartySeamlessWallet.Service.DAL;
 
@@ -23,30 +21,33 @@ public class SBSWPayloadLogService
 
     public SBSWPayloadLogService(IServiceProvider provider)
     {
-        _environmentName = provider.GetRequiredService<IWebHostEnvironment>()?.EnvironmentName ?? "Unspecified";
+        _environmentName = provider.GetRequiredService<ConfigBLL>()?.GetEnvironmentName() ?? "Unspecified";
         _partitionService = provider.GetRequiredService<PartitionService>();
         _config = provider.GetService<IOptions<PayloadLogConfig>>().Value;
         _logger = provider.GetRequiredService<ILogger<SBSWPayloadLogService>>();
     }
 
-    public virtual void LogDetailedPayload(string seq, string content, PayloadLogMeta meta = null) {
+    public virtual void LogDetailedPayload(string seq, string content, PayloadLogMeta meta = null)
+    {
         if (!_config.Enabled) return;
-        
-        var action = meta?.Action 
+
+        var action = meta?.Action
             ?? (new StackTrace().GetFrame(1).GetMethod().Name)
             ?? "Unknown";
         if (_config.ExcludedActions.Contains(action)) return;
 
-        try {
+        try
+        {
             var environment = _environmentName;
 
-            var logParams = new DynamicParameters(new {
-                Seq=seq,
-                Payload= content,
-                TimeStamp=DateTime.UtcNow,
+            var logParams = new DynamicParameters(new
+            {
+                Seq = seq,
+                Payload = content,
+                TimeStamp = DateTime.UtcNow,
                 Action = action,
-                Environment= environment,
-                GameType= "Unknown"
+                Environment = environment,
+                GameType = "Unknown"
             });
 
             _partitionService.Execute(
@@ -54,19 +55,21 @@ public class SBSWPayloadLogService
                 InsertDetailedPayloadSpName,
                 logParams
             );
-
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             _logger.LogError(ex.Message);
         }
     }
 
-    public virtual void UpdateDetailedPayLoadWithResponse(string seq, object responseContent, PayloadLogMeta meta = null) {
+    public virtual void UpdateDetailedPayLoadWithResponse(string seq, object responseContent, PayloadLogMeta meta = null)
+    {
         if (!_config.Enabled)
         {
             return;
         }
 
-        var action = meta?.Action 
+        var action = meta?.Action
             ?? (new StackTrace().GetFrame(1).GetMethod().Name)
             ?? "Unknown";
         if (_config.ExcludedActions.Contains(action))
@@ -74,20 +77,22 @@ public class SBSWPayloadLogService
             return;
         }
 
-        var response = JsonConvert.SerializeObject(responseContent,Formatting.Indented);
-        var logParams = new DynamicParameters(new {
+        var response = JsonConvert.SerializeObject(responseContent, Formatting.Indented);
+        var logParams = new DynamicParameters(new
+        {
             Seq = seq,
             Response = response
         });
 
-        try {
+        try
+        {
             _partitionService.Execute(
-                DateTime.UtcNow, 
+                DateTime.UtcNow,
                 UpdateDetailedResponseSpName,
                 logParams
             );
-
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             _logger.LogError(ex.Message);
         }

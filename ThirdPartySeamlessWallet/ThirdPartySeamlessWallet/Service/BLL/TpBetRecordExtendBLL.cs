@@ -22,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             _logger = provider.GetRequiredService<ILogger<TpBetRecordExtendBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            var serviceHost = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost");
+            var serviceHost = provider.GetRequiredService<ConfigBLL>().GetServiceHostConfig();
             _apiUrl = $"{serviceHost.TpService}GetTpBetRecordExtend";
         }
 

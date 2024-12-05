@@ -13,8 +13,6 @@ builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
 
-builder.Environment.EnvironmentName = builder.Configuration.GetSection("env").Get<string>();
-
 var remoteUrls = GetRemoteUrls();
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
@@ -123,13 +121,13 @@ builder.Services
 .AddHostedService<TableGameWorker>();
 
 var app = builder.Build();
-startup.Configure(app, builder.Environment);
+startup.Configure(app, builder.Environment, builder.Configuration);
 
 const int minWorkers = 32;
 const int minIOCPs = 4;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 
-SentrySdk.CaptureMessage($"Started {nameof(ThirdPartySettleWorker)} {builder.Environment.EnvironmentName} at {DateTime.Now}");
+SentrySdk.CaptureMessage($"Started {nameof(ThirdPartySettleWorker)} at {DateTime.Now}");
 
 app.Run();
 return;
