@@ -83,7 +83,7 @@ private readonly ILogger<FinancePP> _logger;
             TimeCast reportTime = _financePPBLL.GetReportTime(execTime.StartTime, day);
 
             DateTime reportDate =
-                new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                DateTime.UnixEpoch
                 .AddSeconds(reportTime.endUnix);
 
             var reportData = await _financePPBLL.GetReport(_tpId, null, reportTime);

@@ -82,7 +82,7 @@ public class FinancePG : BackgroundService
             TimeCast reportTime = _financePGBLL.GetReportTime(execTime.StartTime, day);
 
             DateTime reportDate =
-                new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                DateTime.UnixEpoch
                 .AddSeconds(reportTime.endUnix);
 
             var reportData = await _financePGBLL.GetReport(_tpId, null, reportTime);

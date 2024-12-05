@@ -111,13 +111,16 @@ public class FinanceJiLiBLL
 
             if (dailyBetSummary.ErrorCode != 0)
             {
-                var msg = $"Bet result check API Error {dailyBetSummary.ErrorCode}";
-                _logger.LogError($"{msg}{Environment.NewLine}{JsonConvert.SerializeObject(dailyBetSummary)}");
-
+                _logger.LogError("{DaiLySummaryTableGameError}",
+                    JsonConvert.SerializeObject(dailyBetSummary)
+                );
                 continue;
             }
 
-            reportData.Add(dailyBetSummary.Payload);
+            if (dailyBetSummary.Payload.GameTypes.Any())
+            {
+                reportData.Add(dailyBetSummary.Payload);
+            }
         }
 
         return reportData;

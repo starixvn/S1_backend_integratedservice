@@ -64,18 +64,16 @@ public class FinancePPBLL: ITpReportBLL
 
             if (dailyBetSummary.ErrorCode != 0)
             {
-                var msg = $"Bet result check API Error {dailyBetSummary.ErrorCode}";
-                _logger.LogError($"{msg}{Environment.NewLine}{JsonConvert.SerializeObject(dailyBetSummary)}");
-
+                _logger.LogError("{DaiLySummaryTableGameError}",
+                    JsonConvert.SerializeObject(dailyBetSummary)
+                );
                 continue;
             }
 
-            if (!dailyBetSummary.Payload.GameTypes.Any()) {
-                _logger.LogWarning($"GetDailySummary of {config.GameType} return no data");
-                continue;
+            if (dailyBetSummary.Payload.GameTypes.Any())
+            {
+                reportData.Add(dailyBetSummary.Payload);
             }
-
-            reportData.Add(dailyBetSummary.Payload);
         }
 
         return reportData;

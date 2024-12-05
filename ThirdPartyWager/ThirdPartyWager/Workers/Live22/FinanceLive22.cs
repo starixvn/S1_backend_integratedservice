@@ -82,7 +82,7 @@ namespace ThirdPartyWager.Workers.Live22
                 TimeCast reportTime = _financeLive22Bll.GetReportTime(execTime.StartTime, day);
 
                 DateTime reportDate =
-                    new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    DateTime.UnixEpoch
                     .AddSeconds(reportTime.endUnix);
 
                 var reportData = await _financeLive22Bll.GetReport(_tpId, null, reportTime);

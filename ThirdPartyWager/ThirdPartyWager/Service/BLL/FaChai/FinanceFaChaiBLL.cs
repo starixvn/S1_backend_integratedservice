@@ -101,7 +101,10 @@ public class FinanceFaChaiBLL : ITpReportBLL
                 continue;
             }
 
-            reportData.Add(dailyBetSummary.Payload);
+            if (dailyBetSummary.Payload.GameTypes.Any())
+            {
+                reportData.Add(dailyBetSummary.Payload);
+            }
         }
 
         return reportData;

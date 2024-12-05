@@ -100,12 +100,11 @@ public class FinanceTableGameBLL : ITpReportBLL
                 continue;
             }
 
-            if (!dailyBetSummary.Payload.GameTypes.Any()) {
-                _logger.LogWarning("GetDailySummary of {GameType} return no data", config.GameType);
-                continue;
+            if (dailyBetSummary.Payload.GameTypes.Any())
+            {           
+               
+                reportData.Add(dailyBetSummary.Payload);
             }
-
-            reportData.Add(dailyBetSummary.Payload);
         }
 
         return reportData;

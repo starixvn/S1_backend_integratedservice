@@ -82,7 +82,7 @@ public class FinanceJiLi : BackgroundService
             TimeCast reportTime = _financeJiLiBll.GetReportTime(execTime.StartTime, day);
 
             DateTime reportDate =
-                new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                DateTime.UnixEpoch
                 .AddSeconds(reportTime.endUnix);
 
             var reportData = await _financeJiLiBll.GetReport(_tpId, null, reportTime);
