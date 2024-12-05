@@ -31,7 +31,11 @@ public class FinancePGBLL : ITpReportBLL
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
     {
         var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-        var currencyIdDic = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
+        var currencyIdDic = tpCurrencyList.ToDictionary(i => i.TpCurrencyId,
+            i => new {
+                        i.CurrencyId,
+                        i.ExchangeRate
+                    });
 
         var getReportData =
             JsonConvert.DeserializeObject<List<PayloadDailySummaryData_MaxGame>>(
@@ -45,7 +49,8 @@ public class FinancePGBLL : ITpReportBLL
             .GroupBy(i => i.CurrencyIso)
             .Select(g => new
             {
-                CurrencyId = currencyIdDic.GetValue(g.Key),
+                currencyIdDic.GetValue(g.Key).CurrencyId,
+                currencyIdDic.GetValue(g.Key).ExchangeRate,
                 Stake = g.Sum(s => s.Stake),
                 ActualStake = g.Sum(s => s.ActualStake),
                 NetStake = g.Sum(s => s.NetStake),
@@ -62,10 +67,10 @@ public class FinancePGBLL : ITpReportBLL
                 SummaryDate = reportDate,
                 TpId = tpId,
                 CurrencyId = item.CurrencyId,
-                Stake = item.Stake,
-                ValidBet = item.Stake,
-                WinlostAmount = item.WinLose - item.NetStake,
-                Payout = item.WinLose
+                Stake = item.Stake * item.ExchangeRate,
+                ValidBet = item.Stake * item.ExchangeRate,
+                WinlostAmount = (item.WinLose - item.NetStake) * item.ExchangeRate,
+                Payout = item.WinLose * item.ExchangeRate
             });
     }
 
