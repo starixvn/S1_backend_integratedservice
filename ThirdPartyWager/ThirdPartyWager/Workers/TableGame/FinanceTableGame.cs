@@ -14,6 +14,7 @@ namespace ThirdPartyWager.Workers.TableGame
         private readonly FinanceTableGameBLL _financeTableGameBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
+        private readonly IConfiguration _configuration;
         private readonly int _tpId = (int)Tp.TableGame;
         private readonly string _tpName = Tp.TableGame.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -26,6 +27,7 @@ namespace ThirdPartyWager.Workers.TableGame
             _financeTableGameBll = provider.GetRequiredService<FinanceTableGameBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
+            _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -53,9 +55,11 @@ namespace ThirdPartyWager.Workers.TableGame
             }
             finally
             {
-                //TODO
-                // Los: Decrease interval time to test
-                var dueTimeSpan = TimeSpan.FromMinutes(4);
+                var interval = quick == 1
+                    ? _configuration.GetValue<int>("FinanceJobInterval:WhenError")!
+                    : _configuration.GetValue<int>("FinanceJobInterval:WhenSuccess")!;
+                var dueTimeSpan = TimeSpan.FromMinutes(interval);
+                _logger.LogInformation("{TpName}: update interval to {Interval} ", _tpName, interval);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

@@ -13,6 +13,7 @@ namespace ThirdPartyWager.Workers
         private readonly FinanceSexyBLL _financeSexyBBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
+        private readonly IConfiguration _configuration;
         private readonly int _tpId = (int)Tp.AESexy;
         private readonly string _tpName = Tp.AESexy.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -21,6 +22,7 @@ namespace ThirdPartyWager.Workers
 
         public FinanceSexy(IServiceProvider provider)
         {
+            _configuration = provider.GetRequiredService<IConfiguration>();
             _logger = provider.GetRequiredService<ILogger<FinanceSexy>>();
             _financeSexyBBLL = provider.GetRequiredService<FinanceSexyBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
@@ -52,20 +54,12 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                //TODO
-                // Los: Decrease interval time to test
-                var dueTimeSpan = TimeSpan.FromMinutes(4);
+                var interval = quick == 1
+                    ? _configuration.GetValue<int>("FinanceJobInterval:WhenError")!
+                    : _configuration.GetValue<int>("FinanceJobInterval:WhenSuccess")!;
+                var dueTimeSpan = TimeSpan.FromMinutes(interval);
+                _logger.LogInformation("{TpName}: update interval to {Interval} ", _tpName, interval);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
-                //if (quick == 1)
-                //{
-                //    var dueTimeSpan = TimeSpan.FromHours(1);
-                //    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                //}
-                //else
-                //{
-                //    var dueTimeSpan = TimeSpan.FromHours(4);
-                //    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                //}
             }
         }
 

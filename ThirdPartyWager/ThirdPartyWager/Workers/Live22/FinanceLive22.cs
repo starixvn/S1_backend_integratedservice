@@ -19,6 +19,7 @@ namespace ThirdPartyWager.Workers.Live22
         private readonly int _tpId = (int)Tp.Live22;
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
+        private readonly IConfiguration _configuration;
 
         public FinanceLive22(IServiceProvider provider)
         {
@@ -26,6 +27,7 @@ namespace ThirdPartyWager.Workers.Live22
             _financeLive22Bll = provider.GetRequiredService<FinanceLive22BLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _financeService = provider.GetRequiredService<FincanceService>();
+            _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -56,9 +58,11 @@ namespace ThirdPartyWager.Workers.Live22
             }
             finally
             {
-                //TODO
-                // Los: Decrease interval time to test
-                var dueTimeSpan = TimeSpan.FromMinutes(4);
+                var interval = quick == 1
+                    ? _configuration.GetValue<int>("FinanceJobInterval:WhenError")!
+                    : _configuration.GetValue<int>("FinanceJobInterval:WhenSuccess")!;
+                var dueTimeSpan = TimeSpan.FromMinutes(interval);
+                _logger.LogInformation("{TpName}: update interval to {Interval} ", _tpName, interval);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

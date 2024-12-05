@@ -19,6 +19,7 @@ namespace ThirdPartyWager.Workers.Lottery
         private readonly int _tpId = (int)Tp.Lottery;
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
+        private readonly IConfiguration _configuration;
 
         public FinanceLottery(IServiceProvider provider)
         {
@@ -26,6 +27,7 @@ namespace ThirdPartyWager.Workers.Lottery
             _financeLotteryBll = provider.GetRequiredService<FinanceLotteryBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _financeService = provider.GetRequiredService<FincanceService>();
+            _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -56,9 +58,11 @@ namespace ThirdPartyWager.Workers.Lottery
             }
             finally
             {
-                //TODO
-                // Los: Decrease interval time to test
-                var dueTimeSpan = TimeSpan.FromMinutes(4);
+                var interval = quick == 1
+                    ? _configuration.GetValue<int>("FinanceJobInterval:WhenError")!
+                    : _configuration.GetValue<int>("FinanceJobInterval:WhenSuccess")!;
+                var dueTimeSpan = TimeSpan.FromMinutes(interval);
+                _logger.LogInformation("{TpName}: update interval to {Interval} ", _tpName, interval);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

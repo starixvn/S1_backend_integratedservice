@@ -15,6 +15,7 @@ namespace ThirdPartyWager.Workers.SabaPlay
         private readonly FinanceSabaPlayBLL _financeSabaPlayBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
+        private readonly IConfiguration _configuration;
         private readonly int _tpId = (int)Tp.SabaPlay;
         private readonly string _tpName = Tp.SabaPlay.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -27,6 +28,7 @@ namespace ThirdPartyWager.Workers.SabaPlay
             _financeSabaPlayBll = provider.GetRequiredService<FinanceSabaPlayBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
+            _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -54,9 +56,11 @@ namespace ThirdPartyWager.Workers.SabaPlay
             }
             finally
             {
-                //TODO
-                // Los: Decrease interval time to test
-                var dueTimeSpan = TimeSpan.FromMinutes(4);
+                var interval = quick == 1
+                    ? _configuration.GetValue<int>("FinanceJobInterval:WhenError")!
+                    : _configuration.GetValue<int>("FinanceJobInterval:WhenSuccess")!;
+                var dueTimeSpan = TimeSpan.FromMinutes(interval);
+                _logger.LogInformation("{TpName}: update interval to {Interval} ", _tpName, interval);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
