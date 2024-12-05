@@ -2342,12 +2342,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return -2;
                 }
                 
-                //全取消就不用動了
-                if (bettransLTEday.All(i => i.TicketType == (int)BettransType.CancelBet))
-                {
-                    return -3;
-                }
-                
                 var cancelData = new BettransLTEdayRoundCancelBet()
                 {
                     TicketType = voidRoundData_Eday.TicketType,
