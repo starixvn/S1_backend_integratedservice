@@ -231,7 +231,7 @@ namespace ThirdPartyWager.Service.BLL
                     if (!_env.IsProduction())
                     {
                         //UAT
-                        await Task.Delay(65 * 1000);
+                        await Task.Delay(90 * 1000);
                     }
                     else
                     {   //PROD
@@ -340,7 +340,7 @@ namespace ThirdPartyWager.Service.BLL
                     if (!_env.IsProduction())
                     {
                         //UAT
-                        await Task.Delay(65 * 1000);
+                        await Task.Delay(90 * 1000);
                     }
                     else
                     {   //PROD
@@ -408,7 +408,7 @@ namespace ThirdPartyWager.Service.BLL
                         if (!_env.IsProduction())
                         {
                             //UAT
-                            await Task.Delay(65 * 1000);
+                            await Task.Delay(90 * 1000);
                         }
                         else
                         {   //PROD
@@ -495,7 +495,7 @@ namespace ThirdPartyWager.Service.BLL
                     if (!_env.IsProduction())
                     {
                         //UAT
-                        await Task.Delay(65 * 1000);
+                        await Task.Delay(90 * 1000);
                     }
                     else
                     {   //PROD
