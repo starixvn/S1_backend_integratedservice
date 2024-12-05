@@ -76,7 +76,7 @@ namespace ThirdPartyService
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration)
         {
             if (env.IsDevelopment())
             {
@@ -92,7 +92,7 @@ namespace ThirdPartyService
             {
                 endpoints.MapGet("/health", async context =>
                 {
-                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}");
+                    await context.Response.WriteAsync($"{configuration.GetValue<string>("EnvironmentName")}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}");
                 });
 
                 endpoints.MapControllers();

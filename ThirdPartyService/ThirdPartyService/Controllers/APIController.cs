@@ -3,7 +3,6 @@
 using Newtonsoft.Json;
 
 using ThirdPartyCore;
-using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -13,7 +12,7 @@ using ThirdPartyCore.Model.TpMerchantBalance.Response;
 
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
-using ThirdPartyService.Service.Model;
+using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Controllers
 {
@@ -25,6 +24,7 @@ namespace ThirdPartyService.Controllers
         private readonly TpCustInfoService _tpCustInfoService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<APIController> _logger;
+        private readonly Common _commonService;
 
         public APIController(IServiceProvider provider)
         {
@@ -32,19 +32,19 @@ namespace ThirdPartyService.Controllers
             _tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<APIController>>();
+            _commonService = provider.GetRequiredService<Common>();
 
-            ThirdPartyHelperBase.EnvironmentName = _env.EnvironmentName;
-            ThirdPartyHelperBase.IsDevelopment = _env.IsDevelopment();
+            ThirdPartyHelperBase.EnvironmentName = _commonService.GetEnvironmentName();
+            ThirdPartyHelperBase.IsDevelopment = _commonService.IsDevelopmentEnvironment();
             ThirdPartyHelperBase.ContentRootPath = _env.ContentRootPath;
-            ThirdPartyHelperBase.SeamlessServiceHost = provider.GetRequiredService<ConfigBLL>()
-                .GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
+            ThirdPartyHelperBase.SeamlessServiceHost = _commonService.GetServiceHostConfig().SeamlessService;
             ThirdPartyHelperBase.logger = provider.GetRequiredService<ILogger<IThirdPartyHelper>>();
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<string>> ApiInfo()
         {
-            return new string[] { _env.EnvironmentName };
+            return new string[] { _commonService.GetEnvironmentName() };
         }
 
         [HttpGet]

@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
@@ -12,7 +13,6 @@ namespace ThirdParty.SPRIBE
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-
         #region SPRIBE Configs Setting
 
         private enum ProductWallet
@@ -20,10 +20,11 @@ namespace ThirdParty.SPRIBE
             SPRIBE = 101,
         }
 
-        Dictionary<TpGameType, int> _productWallet = new()
+        private Dictionary<TpGameType, int> _productWallet = new()
         {
             {TpGameType.SPRIBE_RNG, (int)ProductWallet.SPRIBE},
         };
+
         public class SPRIBEConfig : TpSiteConfig
         {
             public string Key { get; set; }
@@ -32,7 +33,8 @@ namespace ThirdParty.SPRIBE
         }
 
         private readonly Dictionary<int, SPRIBEConfig> _siteSPRIBEConfig;
-        #endregion
+
+        #endregion SPRIBE Configs Setting
 
         #region Response
 
@@ -52,14 +54,23 @@ namespace ThirdParty.SPRIBE
             public int TTL { get; set; }
         }
 
-        #endregion
+        #endregion Response
 
         private const string ContentType = "application/json";
         private readonly WebProxy? _proxy;
 
-        public TpHelper(IServiceProvider provider)
+        public TpHelper(IServiceProvider provider, IConfiguration configuration)
         {
-            var tokyoProxyConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
+            ProxyConfig? tokyoProxyConfig = null;
+            if (!string.IsNullOrWhiteSpace(configuration.GetValue<string>("ProxyHost")))
+            {
+                tokyoProxyConfig = new ProxyConfig
+                {
+                    ProxyHost = configuration.GetValue<string>("ProxyHost"),
+                    ProxyPort = configuration.GetValue<int>("ProxyPort")
+                };
+            }
+
             if (tokyoProxyConfig != null)
             {
                 _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);

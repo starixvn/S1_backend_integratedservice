@@ -8,7 +8,6 @@ builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
 
-builder.Environment.EnvironmentName = builder.Configuration.GetSection("Env").Get<string>();
 var remoteUrls = GetRemoteUrls();
 
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
@@ -27,7 +26,7 @@ if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringCom
 }
 
 var app = builder.Build();
-startup.Configure(app, builder.Environment);
+startup.Configure(app, builder.Environment, builder.Configuration);
 SentrySdk.CaptureMessage($"Started {nameof(ThirdPartyService)} api at {DateTime.Now}");
 app.Run();
 return;

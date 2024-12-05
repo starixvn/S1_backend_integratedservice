@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
@@ -16,21 +17,31 @@ namespace ThirdParty.IM
     {
         #region IM Configs Setting
 
-        Dictionary<TpGameType, int> _productWallet = new()
+        private Dictionary<TpGameType, int> _productWallet = new()
         {
             { TpGameType.IM_Sports, (int)ProductWallet.IMSB },
             { TpGameType.IM_ESports, (int)ProductWallet.ESportsbull },
         };
 
         private readonly Dictionary<int, IMConfig> _siteIMConfig;
-        #endregion
+
+        #endregion IM Configs Setting
 
         private const string ContentType = "application/json";
         private readonly WebProxy? _proxy;
 
-        public TpHelper(IServiceProvider provider)
+        public TpHelper(IServiceProvider provider, IConfiguration configuration)
         {
-            var tokyoProxyConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
+            ProxyConfig? tokyoProxyConfig = null;
+            if (!string.IsNullOrWhiteSpace(configuration.GetValue<string>("ProxyHost")))
+            {
+                tokyoProxyConfig = new ProxyConfig
+                {
+                    ProxyHost = configuration.GetValue<string>("ProxyHost"),
+                    ProxyPort = configuration.GetValue<int>("ProxyPort")
+                };
+            }
+
             if (tokyoProxyConfig != null)
             {
                 _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);
@@ -39,7 +50,7 @@ namespace ThirdParty.IM
             _siteIMConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<IMConfig>(TpEnum.IM.ToString());
         }
 
-        public class IMConfig : TpSiteConfig 
+        public class IMConfig : TpSiteConfig
         {
             public string Key { get; set; }
             public string Prefix { get; set; }
@@ -304,7 +315,6 @@ namespace ThirdParty.IM
                     Live = detailESportModel?.MarketType ?? String.Empty,
                 }
             };
-
         }
 
         private string GetTicketStatus(string resultStatus)
@@ -357,6 +367,5 @@ namespace ThirdParty.IM
                 ? Enum.GetName(typeof(SportType), sportType)
                 : gameName;
         }
-
     }
 }

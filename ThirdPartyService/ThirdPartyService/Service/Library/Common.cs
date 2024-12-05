@@ -1,17 +1,20 @@
-﻿namespace ThirdPartyService.Service.Library
+﻿using ThirdPartyService.Service.Model;
+
+namespace ThirdPartyService.Service.Library
 {
     public class Common
     {
-        private readonly IWebHostEnvironment environment;
+        private readonly IConfiguration _configuration;
 
-        public Common(IWebHostEnvironment environment)
+        public Common(IConfiguration configuration)
         {
-            this.environment = environment;
+            _configuration = configuration;
         }
 
         public string GetEnv()
         {
-            switch (environment.EnvironmentName)
+            var envName = GetEnvironmentName();
+            switch (envName)
             {
                 case "Development":
                 case "LOCAL":
@@ -29,6 +32,27 @@
                 default:
                     return "D";
             }
+        }
+
+        public string GetEnvironmentName()
+        {
+            return _configuration.GetValue<string>("EnvironmentName");
+        }
+
+        public bool IsDevelopmentEnvironment()
+        {
+            return GetEnvironmentName().Equals("Development");
+        }
+
+        public bool IsProdEnvironment()
+        {
+            return GetEnvironmentName().Equals("PROD");
+        }
+
+        public ServiceHostConfig GetServiceHostConfig()
+        {
+            var serviceHostConfig = _configuration.GetSection("serviceHosts").Get<ServiceHostConfig>();
+            return serviceHostConfig;
         }
     }
 }

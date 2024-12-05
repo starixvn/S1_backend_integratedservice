@@ -1,6 +1,4 @@
-using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using Dapper;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -11,7 +9,8 @@ using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL;
 
-internal class DetailedRequestBody {
+internal class DetailedRequestBody
+{
     public string Seq { get; set; }
 
     public DateTime TimeStamp { get; set; }
@@ -19,47 +18,50 @@ internal class DetailedRequestBody {
     public object Payload { get; set; }
 }
 
-internal class DetailedRequestBodyPayload {
+internal class DetailedRequestBodyPayload
+{
     public string GameType { get; set; }
 }
 
-
-public class PayloadLogService: IPayloadLogger
+public class PayloadLogService : IPayloadLogger
 {
-    const string InsertDetailedPayloadSpName = "Service_BettransPK_MaxGame_Payload_Ins_v2"; 
+    private const string InsertDetailedPayloadSpName = "Service_BettransPK_MaxGame_Payload_Ins_v2";
 
-    const string UpdateDetailedResponseSpName = "Service_BettransPK_MaxGame_Payload_Set_v2";
-    
+    private const string UpdateDetailedResponseSpName = "Service_BettransPK_MaxGame_Payload_Set_v2";
+
     private readonly MySqlClient _mainDbClient;
 
-    private readonly string _environmentName = "";
+    private readonly string _environmentName;
 
     private readonly PayloadLogConfig _config = default;
 
-    public PayloadLogService(IServiceProvider serviceProvider) {
-            _environmentName = serviceProvider.GetRequiredService<IWebHostEnvironment>()?.EnvironmentName ?? "Unspecified";
-            _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _config = serviceProvider.GetService<IOptions<PayloadLogConfig>>().Value;
-
+    public PayloadLogService(IServiceProvider serviceProvider)
+    {
+        var commonService = serviceProvider.GetRequiredService<Common>();
+        _environmentName = commonService.GetEnvironmentName() ?? "Unspecified";
+        _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+        _config = serviceProvider.GetService<IOptions<PayloadLogConfig>>().Value;
     }
 
-    public void LogDetailedPayload(string content, PayloadLogMeta meta) {
+    public void LogDetailedPayload(string content, PayloadLogMeta meta)
+    {
         if (!_config.Enabled) return;
-        
-        var action = meta?.Action 
+
+        var action = meta?.Action
             ?? (new StackTrace().GetFrame(1).GetMethod().Name)
             ?? "Unknown";
-         if (_config.ExcludedActions.Contains(action)) return;
+        if (_config.ExcludedActions.Contains(action)) return;
 
-        try {
-            
+        try
+        {
             var gameType = meta?.GameType
-                ?? "Unknown"; 
+                ?? "Unknown";
             var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
             var payload = getReq?.Payload?.ToString() ?? "";
             var environment = _environmentName;
 
-            var logParams = new DynamicParameters(new {
+            var logParams = new DynamicParameters(new
+            {
                 getReq.Seq,
                 getReq.TimeStamp,
                 Payload = payload,
@@ -73,52 +75,60 @@ public class PayloadLogService: IPayloadLogger
                 InsertDetailedPayloadSpName,
                 logParams
             );
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             SentrySdk.CaptureException(ex);
         }
     }
 
-    public void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent, PayloadLogMeta meta) {
+    public void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent, PayloadLogMeta meta)
+    {
         if (!_config.Enabled) return;
 
-        var action = meta?.Action 
+        var action = meta?.Action
             ?? (new StackTrace().GetFrame(1).GetMethod().Name)
             ?? "Unknown";
 
         if (_config.ExcludedActions.Contains(action)) return;
 
         var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent);
-        
-        if (responseContent is not null && responseContent is string) {
-            responseContent = JsonConvert.DeserializeObject((string) responseContent);
+
+        if (responseContent is not null && responseContent is string)
+        {
+            responseContent = JsonConvert.DeserializeObject((string)responseContent);
         }
 
-        var response = JsonConvert.SerializeObject(responseContent,Formatting.Indented);
-        var logParams = new DynamicParameters(new {
+        var response = JsonConvert.SerializeObject(responseContent, Formatting.Indented);
+        var logParams = new DynamicParameters(new
+        {
             getReq.Seq,
             Response = response
         });
 
-        try {
+        try
+        {
             ExecuteWithPartition(
                 getReq.TimeStamp,
                 UpdateDetailedResponseSpName,
                 logParams
             );
-
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             SentrySdk.CaptureException(ex);
         }
     }
-    
 
-    private int ExecuteWithPartition(DateTime parttitionTime, string spName, object parameters) {
+    private int ExecuteWithPartition(DateTime parttitionTime, string spName, object parameters)
+    {
         var p = new DynamicParameters(parameters);
         p.Add("YYYYMM", GetPartitionKey(parttitionTime));
         return _mainDbClient.QueryFirst<int>(spName, p);
     }
 
-    private static string GetPartitionKey(DateTime partitionTime) {
+    private static string GetPartitionKey(DateTime partitionTime)
+    {
         return partitionTime.ToString("yyyyMM");
     }
 }

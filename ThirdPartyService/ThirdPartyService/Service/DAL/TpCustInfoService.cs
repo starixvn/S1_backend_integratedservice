@@ -15,7 +15,6 @@ namespace ThirdPartyService.Service.DAL
 {
     public class TpCustInfoService
     {
-        private readonly IWebHostEnvironment _environment;
         private readonly Tools _tools;
         private readonly ThirdPartyHelper _thirdPartyHelper;
         private readonly Common _common;
@@ -24,10 +23,10 @@ namespace ThirdPartyService.Service.DAL
         private readonly IReadOnlyDictionary<int, CurrencyOption> _currencyList;
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
+        private readonly Common _commonService;
 
         public TpCustInfoService(IServiceProvider provider)
         {
-            _environment = provider.GetRequiredService<IWebHostEnvironment>();
             _tools = provider.GetRequiredService<Tools>();
             _thirdPartyHelper = provider.GetRequiredService<ThirdPartyHelper>();
             _common = provider.GetRequiredService<Common>();
@@ -36,6 +35,7 @@ namespace ThirdPartyService.Service.DAL
             _currencyList = provider.GetRequiredService<IEnumerable<CurrencyOption>>().ToDictionary(d => d.CurrencyId, d => d);
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
+            _commonService = provider.GetRequiredService<Common>();
         }
 
         public ApiResult<TpCustInfo> GetTpCustInfo(int custId, int tpId, string langId = "")
@@ -174,7 +174,7 @@ namespace ThirdPartyService.Service.DAL
         private bool CheckTpForbidden(int custId, int tpId)
         {
             // priority custid > tpid
-            if (_environment.EnvironmentName != "PROD")
+            if (!_commonService.IsProdEnvironment())
             {
                 if (tpId == (int)TpEnum.PT)
                 {
@@ -223,7 +223,7 @@ namespace ThirdPartyService.Service.DAL
                 CurrencyId = customer.CurrencyId
             };
 
-            if (_environment.EnvironmentName != "PROD")
+            if (!_commonService.IsProdEnvironment())
             {
                 regTpCustInfo.TpUserName = $"{_common.GetEnv()}{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}";
             }

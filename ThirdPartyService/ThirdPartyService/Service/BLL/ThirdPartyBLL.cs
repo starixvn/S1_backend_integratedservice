@@ -20,8 +20,6 @@ namespace ThirdPartyService.Service.BLL
     {
         #region Fields
 
-        private readonly IWebHostEnvironment env;
-        private readonly IConfiguration configuration;
         private readonly ILogger<ThirdPartyBLL> _logger;
 
         private readonly ThirdPartyHelper thirdPartyHelper;
@@ -36,6 +34,7 @@ namespace ThirdPartyService.Service.BLL
         private readonly Dictionary<int, TpGameTypeOption> _tpGameTypeConfig;
         private readonly IReadOnlyDictionary<int, CurrencyOption> _currencyList;
         private readonly MySqlClient _mainDbClient;
+        private readonly Common _commonService;
 
 #if DEBUG
 
@@ -59,8 +58,6 @@ namespace ThirdPartyService.Service.BLL
 
         public ThirdPartyBLL(IServiceProvider provider)
         {
-            env = provider.GetRequiredService<IWebHostEnvironment>();
-            configuration = provider.GetRequiredService<IConfiguration>();
             _logger = provider.GetRequiredService<ILogger<ThirdPartyBLL>>();
 
             thirdPartyHelper = provider.GetRequiredService<ThirdPartyHelper>();
@@ -71,10 +68,11 @@ namespace ThirdPartyService.Service.BLL
             _tpCustBalanceService = provider.GetRequiredService<TpCustBalanceService>();
             _tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
             _cacheHelper = provider.GetRequiredService<CacheHelper>();
+            _commonService = provider.GetRequiredService<Common>();
 
             ThirdPartyHelperBase.AuthProvider = provider.GetRequiredService<AuthBLL>();
             ThirdPartyHelperBase.ServerInfoProvider = provider.GetRequiredService<ServerInfoBLL>();
-            ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
+            ThirdPartyHelperBase.ContentRootPath = provider.GetRequiredService<IWebHostEnvironment>().ContentRootPath;
             ThirdPartyHelperBase.TpBetRecordProvider = provider.GetRequiredService<TpBetRecordService>();
             ThirdPartyHelperBase.TpCustInfoProvider = provider.GetRequiredService<TpCustInfoBLL>();
             ThirdPartyHelperBase.BetLimitProvider = provider.GetRequiredService<BetLimitService>();
@@ -140,12 +138,9 @@ namespace ThirdPartyService.Service.BLL
                     }
                 }
 
-                var configEnv = configuration.GetValue<string>("Environment");
-
                 // Test account only allow login for saba
                 // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
-                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "PROD" && configEnv == null &&
-                    tpInfo.TpId != 1 && tpInfo.TpId != 58)
+                if (tpCustInfoResult.Data.IsTest && _commonService.IsProdEnvironment() && tpInfo.TpId != 1 && tpInfo.TpId != 58)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = apiResult.Message = "This Account not allow for access";
@@ -204,7 +199,7 @@ namespace ThirdPartyService.Service.BLL
 
                 // Test account create 3rd party only for saba
                 // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
-                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "PROD" && tpTransfer.TpId != 1 && tpTransfer.TpId != 58)
+                if (tpCustInfoResult.Data.IsTest && _commonService.IsProdEnvironment() && tpTransfer.TpId != 1 && tpTransfer.TpId != 58)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = "This Account is for Testing.";
@@ -1334,7 +1329,7 @@ namespace ThirdPartyService.Service.BLL
                 var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 #if DEBUG
-                if (env.EnvironmentName != "PROD" && tpId == (int)TpEnum.NineW)
+                if (!_commonService.IsProdEnvironment() && tpId == (int)TpEnum.NineW)
                 {
                     custInfoList = custInfoList.Where(x => !NineWWrongCustList.Any(y => y == x.CustId));
                 }
@@ -1415,7 +1410,7 @@ namespace ThirdPartyService.Service.BLL
                 foreach (var cust in custInfoList)
                 {
 #if DEBUG
-                    if (env.EnvironmentName != "PROD" && cust.TpId == (int)TpEnum.PT)
+                    if (!_commonService.IsProdEnvironment() && cust.TpId == (int)TpEnum.PT)
                     {
                         if (PTWrongCustList.Contains(cust.CustId))
                         {
