@@ -34,7 +34,7 @@ namespace ThirdPartyBetHistory
             services.RegisterSabaSiteHelper();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration)
         {
             if (env.IsDevelopment())
             {
@@ -44,17 +44,18 @@ namespace ThirdPartyBetHistory
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
+                var envName = configuration.GetValue<string>("EnvironmentName");
                 endpoints.MapGet("/", async context =>
                 {
-                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
+                    await context.Response.WriteAsync($"{envName}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
                 });
                 endpoints.MapGet("/healthcheck", async context =>
                 {
-                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
+                    await context.Response.WriteAsync($"{envName}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
                 });
                 endpoints.MapGet("/health", async context =>
                 {
-                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
+                    await context.Response.WriteAsync($"{envName}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
                 });
             });
         }

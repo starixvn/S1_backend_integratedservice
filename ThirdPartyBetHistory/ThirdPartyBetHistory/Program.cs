@@ -12,8 +12,6 @@ builder.WebHost.UseSentry(option =>
     });
 });
 
-builder.Environment.EnvironmentName = builder.Configuration.GetSection("env").Get<string>();
-
 var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
@@ -29,7 +27,7 @@ builder.Services
     .AddHostedService<SabaVgamingUnSettleWorkerService>();
 
 var app = builder.Build();
-startup.Configure(app, builder.Environment);
+startup.Configure(app, builder.Environment, builder.Configuration);
 
 var minWorkers = Environment.ProcessorCount * 4;
 var minIOCPs = Environment.ProcessorCount * 4;
