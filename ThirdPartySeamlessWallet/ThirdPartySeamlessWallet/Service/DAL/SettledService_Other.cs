@@ -2321,7 +2321,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var tpGameType = GameType.Eday_Lottery;
             var tpCategory = TpCategory.Lottery;
             var CancelSpName = "Service_BettransLT_Eday_CancelBet_Set";
-            var GetSpName = "Service_BettransLT_Eday_Get";
+            var GetSpName = "Service_BettransLT_Eday_Round_Get";
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -2333,17 +2333,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var voidRoundId = $"{voidRoundData_Eday.roundCode}_{voidRoundData_Eday.player}";
                 
                 // 檢查是否有注單
-                var bettrans = _mainDbClient.Query<BettransLTEdayDAL>( 
-                    CancelSpName, commandType: CommandType.StoredProcedure,new { billId = voidRoundId, player = tpCustInfo.TpUserName });
+                var bettransLTEday = _mainDbClient.Query<BettransLTEdayDAL>( 
+                    GetSpName, commandType: CommandType.StoredProcedure,new { roundCode = voidRoundData_Eday.roundCode, player = tpCustInfo.TpUserName });
                 
                 //沒注單無法取消
-                if (!bettrans.Any())
+                if (!bettransLTEday.Any())
                 {
                     return -2;
                 }
                 
                 //全取消就不用動了
-                if (bettrans.All(i => i.TicketType == (int)BettransType.CancelBet))
+                if (bettransLTEday.All(i => i.TicketType == (int)BettransType.CancelBet))
                 {
                     return -3;
                 }
@@ -2357,6 +2357,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.EndGame
                 };
                 
+                //拿第一筆的且不是取消的billId當派彩單號，要不然有Bonus吃不到
+                var firstUnCancelBillId = bettransLTEday
+                    .Where(i => i.TicketType != (int)BettransType.CancelBet)
+                    .Select(i => i.billId)
+                    .FirstOrDefault();
+                
                 var p = new DynamicParameters(cancelData);
                 result = _mainDbClient.Execute(CancelSpName, p, conn,trans);
                 
@@ -2364,10 +2370,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = PayoutV2(
                         tpCustInfo,
-                        //此function為把payout金額收回
-                        voidRoundData_Eday.win * -1,
+                        //此function為把bet金額收回
+                        voidRoundData_Eday.bet * -1,
                         (int)tpId,
-                        $"{voidRoundId}",
+                        //tpTransId拿來綁BonusId不讓Bonus跑掉
+                        $"{firstUnCancelBillId}_{voidRoundData_Eday.roundCode}",
                         (int)tpGameType,
                         tpCategory,
                         voidRoundId,
@@ -2427,17 +2434,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var voidDrawRoundId = $"{voidDrawData_Eday.roundCode}_{voidDrawData_Eday.player}";
                 
                 // 檢查是否有注單
-                var bettrans = _mainDbClient.Query<BettransLTEdayDAL>(
+                var bettransLTEday = _mainDbClient.Query<BettransLTEdayDAL>(
                     GetRoundSpName, commandType: CommandType.StoredProcedure, new { roundCode = voidDrawData_Eday.roundCode, player = tpCustInfo.TpUserName });
                 
                 //沒注單無法取消
-                if (!bettrans.Any())
+                if (!bettransLTEday.Any())
                 {
                     return -2;
                 }
                 
                 //全取消就不用動了
-                if (bettrans.All(i => i.TicketType == (int)BettransType.CancelBet))
+                if (bettransLTEday.All(i => i.TicketType == (int)BettransType.CancelBet))
                 {
                     return -3;
                 }
@@ -2462,6 +2469,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     player = tpCustInfo.TpUserName
                 };
                 
+                //拿第一筆的且不是取消的billId當派彩單號，要不然有Bonus吃不到
+                var firstUnCancelBillId = bettransLTEday
+                    .Where(i => i.TicketType != (int)BettransType.CancelBet)
+                    .Select(i => i.billId)
+                    .FirstOrDefault();
+                
                 var p = new DynamicParameters(cancelData);
                 result = _mainDbClient.Execute(CancelRoundSpName, p, conn, trans);
                 
@@ -2472,7 +2485,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         //此function為把payout金額收回
                         voidDrawData_Eday.win * -1,
                         (int)tpId,
-                        voidDrawRoundId,
+                        $"{firstUnCancelBillId}_{voidDrawData_Eday.roundCode}",
                         (int)tpGameType,
                         tpCategory,
                         voidDrawRoundId,
