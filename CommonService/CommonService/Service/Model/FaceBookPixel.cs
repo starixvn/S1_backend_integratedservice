@@ -40,6 +40,7 @@ namespace CommonService.Service.Model
     public class PixelEvent
     {
         public string event_name { get; set; }
+        public string event_id { get; set; }
         public long event_time { get; set; }
         public UserData user_data { get; set; }
         public CustomData custom_data { get; set; } 
@@ -77,5 +78,6 @@ namespace CommonService.Service.Model
         public string UserAgent { get; set; }
         public string IsoCode { get; set; }
         public string Email { get; set; }
+        public string UserName { get; set; }
     }
 }
