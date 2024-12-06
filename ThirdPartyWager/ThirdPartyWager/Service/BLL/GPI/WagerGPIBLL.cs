@@ -83,7 +83,6 @@ namespace ThirdPartyWager.Service.BLL
             var wagerData = new List<Items_GPI>();
             var cp = new CompareParam();
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
-            var compareStatus = true;//紀錄每個site比對狀態
 
             try
             {
@@ -139,9 +138,7 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             msg = "MATCH";
                             _logger.LogInformation($"{workerName} {msg}");
-                            continue;
                         }
-                        compareStatus = false;
                     }
 
                     foreach (var wagerItem in wagerData)
@@ -167,7 +164,6 @@ namespace ThirdPartyWager.Service.BLL
 
                 msg = "FINISH";
                 _logger.LogInformation($"{workerName} {msg}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
-                if (compareStatus) return true;
 
                 if (compare)
                 {
