@@ -39,7 +39,8 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var isFast = false;
+
+            var quick = false;
             try
             {
                 var siteList = _thirdPartyBLL.GetTpListByTpId(tpId).Where(x => x.TicketKey == 1);
@@ -50,8 +51,7 @@ namespace ThirdPartyWager.Workers
                     {
                         foreach (var item in TpCurrencyList.Where(item => config.CurrencyData.ContainsKey(item.TpCurrencyId)))
                         {
-                            var quick = await _wagerKYBLL.ExecWagerRedoWorker(config, tpType, timeRange, item.TpCurrencyId, siteId.SiteId);
-                            if (!isFast && quick) isFast = true;
+                            quick = await _wagerKYBLL.ExecWagerRedoWorker(config, tpType, timeRange, item.TpCurrencyId, siteId.SiteId);
                         }
                     }
                 }
@@ -62,7 +62,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = isFast ? TimeSpan.FromMinutes(quickTime) : TimeSpan.FromHours(runTime);
+                var dueTimeSpan = quick ? TimeSpan.FromMinutes(quickTime) : TimeSpan.FromHours(runTime);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

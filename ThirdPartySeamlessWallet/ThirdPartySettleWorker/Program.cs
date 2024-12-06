@@ -99,7 +99,8 @@ builder.Services
     .AddHostedService<NTConnectWorker>()
     .AddHostedService<GAWorker>()
     .AddHostedService<WonCasinoWorker>()
-    .AddHostedService<DragonGamingWorker>();
+    .AddHostedService<DragonGamingWorker>()
+    .AddHostedService<KYWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

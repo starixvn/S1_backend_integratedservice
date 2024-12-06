@@ -39,7 +39,7 @@ namespace ThirdPartyWager.Workers
 
         private async void DoReport(object state)
         {
-            // TODO: what is the diffence about "quick" between "DoReport" and "ExecReportAsync"
+            // TODO: replace "res" with "quick" (because they mean the same thing) and remove "if"
             var quick = 0;
             try
             {
@@ -111,7 +111,7 @@ namespace ThirdPartyWager.Workers
                 }
 
                 var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
-                // TODO: what does _beyond mean?
+                // TODO: how to determin the number of _beyond?
                 if (diffDay > _beyond)
                 {
                     quick = true;

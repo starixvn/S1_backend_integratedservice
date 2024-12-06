@@ -31,9 +31,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly int[] _kindId =
         {
             220, 600, 610, 620, 630,
-            680, 830, 860, 890, 930,
-            3101, 3890, 8100, 8540, 8600,
-            8700, 1101, 1102
+            830, 860, 890, 930
         };
         private readonly int[] _skipKindId =
         {
@@ -55,7 +53,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // TODO: 統一使用一款執行，後續再依退水遊戲區分
+            // 統一使用一款執行，後續再依退水遊戲區分
             timer = new Timer(DoSettleKY, GameType.KY_Poker, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -75,16 +73,16 @@ namespace ThirdPartySettleWorker.Workers
             var isError = false;
             // 統一使用一款處理worker執行
             var gametype = (GameType)state;
-            // TODO: create SP
+
             var bettransGet = "Service_BettransPK_KY_Settle_Get";
             var bettransSet = "Service_BettransPK_KY_Settle_Set";
             var wagerGet = "Service_TpWagerPK_KY_Settle_Get";
-            var wagerSet = "Service_TpWagerPK_KY_Settle_Set_V2";
+            var wagerSet = "Service_TpWagerPK_KY_Settle_Set";
             string logName = $"Settle_KY";
 
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
+              var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} {gametype} no unsettle data.");
@@ -117,7 +115,6 @@ namespace ThirdPartySettleWorker.Workers
                             LogContext.PushProperty("TP", _tpName);
                             if (wager != null && wager.Stake == 0m && wager.ValidBet == 0m && wager.WinLostAmount == 0m)
                             {
-                                // TODO: why use _?
                                 _ = _tpUnSettledBLL.SetSettleFlag(wagerSet, Tp, gametype, TransId, true, DataBase.Wager);
                                 _logger.LogInformation($"{logName}:wager amount 0 no need settle\r\n{JsonConvert.SerializeObject(wager)}");
                             }
@@ -128,7 +125,6 @@ namespace ThirdPartySettleWorker.Workers
                             continue;
                         }
 
-                        // TODO: why booleen need to wrap with brackets?
                         var tpUserName = (skip) ? wager.Account.Split("_")[1] : bettrans.FirstOrDefault().Account;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
