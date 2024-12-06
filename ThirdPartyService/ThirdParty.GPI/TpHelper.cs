@@ -11,11 +11,11 @@ namespace ThirdParty.GPI
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly GPIConfig _siteConfig;
+        private readonly Dictionary<int, GPIConfig> _siteConfig;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<GPIConfig>(TpEnum.GPI.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<GPIConfig>(TpEnum.GPI.ToString());
         }
 
         private readonly Dictionary<int, string> ErrorMassage = new()
@@ -72,7 +72,7 @@ namespace ThirdParty.GPI
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfig[tpCustInfo.SiteId];
 
             string RslotUrl = config.RslotUrl;
             string LiveCasinoUrl = config.LiveCasinoUrl;
