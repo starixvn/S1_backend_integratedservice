@@ -57,7 +57,7 @@ namespace ThirdPartyWager.Service.BLL.AllBet
                 var config = _siteConfigDic[site.SiteId];
                 if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
                 {
-                    _logger.LogWarning($"GetDailySummary of {config.GameType} is ignore because {config.DailySumApiUrl} is empty");
+                    _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType, config.DailySumApiUrl);
                     continue;
                 }
                 var dailyBetSummary =
@@ -85,7 +85,7 @@ namespace ThirdPartyWager.Service.BLL.AllBet
                     reportData.Add(dailyBetSummary.Payload);
                 }
             }
-
+            _logger.LogInformation("reportData AllBet: {ReportData}", JsonConvert.SerializeObject(reportData));
             return reportData;
         }
 

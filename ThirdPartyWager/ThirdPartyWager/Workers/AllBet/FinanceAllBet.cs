@@ -5,6 +5,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model;
+using Newtonsoft.Json;
 
 namespace ThirdPartyWager.Workers.AllBet
 {
@@ -97,11 +98,11 @@ namespace ThirdPartyWager.Workers.AllBet
                     // write
                     _fincanceService.SetFinanceTpDailySummary(dailyData);
                 }
-                
 
+                _logger.LogInformation("{Tp} set {Timer}", _tpName, JsonConvert.SerializeObject(reportTime));
                 // update timer
-               
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
+
+                _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
                 
 
                 var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
@@ -119,7 +120,7 @@ namespace ThirdPartyWager.Workers.AllBet
                 quick = true;
             }
 
-            _logger.LogInformation($"Report worker execute end {_tpName}");
+            _logger.LogInformation("Report worker execute end {TpName}", _tpName);
             return quick;
         }
 
