@@ -1,7 +1,6 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.BLL.WE;
@@ -13,7 +12,7 @@ namespace ThirdPartyWager.Workers.WE
         private readonly ILogger<FinanceWE> _logger;
         private readonly FinanceWEBLL _financeWebll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.WE;
         private readonly string _tpName = Tp.WE.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -26,7 +25,7 @@ namespace ThirdPartyWager.Workers.WE
             _logger = provider.GetRequiredService<ILogger<FinanceWE>>();
             _financeWebll = provider.GetRequiredService<FinanceWEBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
@@ -82,11 +81,11 @@ namespace ThirdPartyWager.Workers.WE
                 };
 
                 // get time 
-                var day = 0;
-                TimeCast reportTime = _financeWebll.GetReportTime(execTime.StartTime, day);
+                const int day = 0;
+                var reportTime = _financeWebll.GetReportTime(execTime.StartTime, day);
 
                 // report
-                DateTime reportDate = DateTime.UnixEpoch.AddSeconds(reportTime.endUnix);
+                var reportDate = DateTime.UnixEpoch.AddSeconds(reportTime.endUnix);
                 var reportData = await _financeWebll.GetReport(_tpId, null, reportTime);
                
                 if (reportData.Any())
@@ -95,7 +94,11 @@ namespace ThirdPartyWager.Workers.WE
                     var dailyData = _financeWebll.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        _financeService.SetFinanceTpDailySummary(data);
+                    }
+                   
                 }
 
                 // update timer
@@ -107,7 +110,7 @@ namespace ThirdPartyWager.Workers.WE
                     quick = true;
                 }
 
-                _logger.LogInformation($"{_tpName} Get {reportDate:yyyy-MM-dd} report");
+                _logger.LogInformation("{TpName} Get {ReportDate} report", _tpName, reportDate.ToString("yyyy-MM-dd"));
                 return quick;
             }
             catch (Exception ex)

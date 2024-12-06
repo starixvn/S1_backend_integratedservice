@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Workers.MaxGame
         private readonly ILogger<FinanceMaxGame> _logger;
         private readonly FinanceMaxGameBll _financeMaxGameBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.MaxGame;
         private readonly string _tpName = Tp.MaxGame.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Workers.MaxGame
             _logger = provider.GetRequiredService<ILogger<FinanceMaxGame>>();
             _financeMaxGameBll = provider.GetRequiredService<FinanceMaxGameBll>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
@@ -95,7 +95,11 @@ namespace ThirdPartyWager.Workers.MaxGame
                     var dailyData = _financeMaxGameBll.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        // write
+                        _financeService.SetFinanceTpDailySummary(data);
+                    }
                 }
                 
 

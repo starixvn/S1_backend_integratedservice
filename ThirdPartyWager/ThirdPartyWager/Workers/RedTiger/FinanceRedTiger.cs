@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceRedTiger> _logger;
         private readonly FinanceRedTigerBLL _financeRedTigerBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly RedTigerConfig _siteConfig;
         private readonly int _tpId = (int)Tp.RedTiger;
         private readonly string _tpName = Tp.RedTiger.ToString();
@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceRedTiger>>();
             _financeRedTigerBLL = provider.GetRequiredService<FinanceRedTigerBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<RedTigerConfig>(_tpName);
         }
 
@@ -101,7 +101,7 @@ namespace ThirdPartyWager.Workers
                     var dailyData = _financeRedTigerBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    result = _financeService.SetFinanceTpDailySummary(dailyData);
                 }
                 else
                 {

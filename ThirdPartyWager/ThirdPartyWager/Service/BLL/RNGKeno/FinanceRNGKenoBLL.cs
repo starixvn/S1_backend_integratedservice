@@ -32,6 +32,7 @@ public class FinanceRNGKenoBLL : ITpReportBLL
 
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
     {
+
         var currencyIdDic = _commonBLL
             .GetTpCurrencyList(tpId)
             .ToDictionary(i => i.TpCurrencyId,

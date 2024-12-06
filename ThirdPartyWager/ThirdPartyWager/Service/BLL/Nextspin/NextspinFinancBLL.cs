@@ -16,7 +16,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly INextspinApi _apiNextspinBll;
         private readonly CommonBLL _commonBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _fincanceService;
         private readonly IEnumerable<TpCurrency> _tpCurrencyList;
         private readonly ILogger<NextspinFinancBLL> _logger;
         private readonly Dictionary<int, NextspinConfig> _siteConfigDic;
@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Service.BLL
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiNextspinBll = provider.GetRequiredService<INextspinApi>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _fincanceService = provider.GetRequiredService<FinanceService>();
             _tpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.Nextspin);
             _logger = provider.GetRequiredService<ILogger<NextspinFinancBLL>>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(Tp.Nextspin.ToString());

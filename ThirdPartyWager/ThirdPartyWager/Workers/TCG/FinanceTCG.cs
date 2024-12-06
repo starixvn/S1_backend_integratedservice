@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceTCG> _logger;
         private readonly FinanceTCGBLL _financTCGBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.TCG;
         private readonly string _tpName = Tp.TCG.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceTCG>>();
             _financTCGBLL = provider.GetRequiredService<FinanceTCGBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -100,7 +100,7 @@ namespace ThirdPartyWager.Workers
                     var dailyData = _financTCGBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    result = _financeService.SetFinanceTpDailySummary(dailyData);
                 }
                 else
                 {

@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceYGG> _logger;
         private readonly FinanceYGGBLL _financYGGBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly YGGConfig _siteConfig;
         private readonly int _tpId = (int)Tp.YGG;
         private readonly string _tpName = Tp.YGG.ToString();
@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceYGG>>();
             _financYGGBLL = provider.GetRequiredService<FinanceYGGBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(_tpName);
         }
 
@@ -102,7 +102,7 @@ namespace ThirdPartyWager.Workers
                     var dailyData = _financYGGBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    result = _financeService.SetFinanceTpDailySummary(dailyData);
                 }
                 else
                 {

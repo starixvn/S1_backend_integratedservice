@@ -49,7 +49,8 @@ public class FinancePPBLL: ITpReportBLL
             var config = _siteConfigDic[site.SiteId];
             if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
             {
-                _logger.LogWarning($"GetDailySummary of {config.GameType} is ignore because {config.DailySumApiUrl} is empty");
+                _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType,
+                config.DailySumApiUrl);
                 continue;
             }
             var dailyBetSummary =
@@ -82,6 +83,7 @@ public class FinancePPBLL: ITpReportBLL
 
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
     {
+
         var currencyIdDic = _commonBLL
             .GetTpCurrencyList(tpId)
             .ToDictionary(i => i.TpCurrencyId,

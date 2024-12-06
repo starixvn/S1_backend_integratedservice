@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceEVO> _logger;
         private readonly FinanceEVOBLL _financeEVOBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly EVOConfig _siteConfig;
         private readonly int _tpId = (int)Tp.EVO;
         private readonly string _tpName = Tp.EVO.ToString();
@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceEVO>>();
             _financeEVOBLL = provider.GetRequiredService<FinanceEVOBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EVOConfig>(_tpName);
         }
 
@@ -101,7 +101,7 @@ namespace ThirdPartyWager.Workers
                     var dailyData = _financeEVOBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    result = _financeService.SetFinanceTpDailySummary(dailyData);
                 }
                 else
                 {

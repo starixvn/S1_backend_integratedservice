@@ -16,7 +16,7 @@ private readonly ILogger<FinancePP> _logger;
     private Timer _timer;
     private readonly string _tpName = Tp.PP.ToString();
     private readonly ThirdPartyBLL _thirdPartyBLL;
-    private readonly FincanceService _financeService;
+    private readonly FinanceService _financeService;
     private readonly int _tpId = (int)Tp.PP;
     private readonly int _tpType = (int)WagerTimerType.Finance;
     private readonly int _beyond = 2;
@@ -27,7 +27,7 @@ private readonly ILogger<FinancePP> _logger;
         _logger = provider.GetRequiredService<ILogger<FinancePP>>();
         _financePPBLL = provider.GetRequiredService<FinancePPBLL>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-        _financeService = provider.GetRequiredService<FincanceService>();
+        _financeService = provider.GetRequiredService<FinanceService>();
         _configuration = provider.GetRequiredService<IConfiguration>();
     }
 
@@ -83,21 +83,25 @@ private readonly ILogger<FinancePP> _logger;
                 StartTime = (dataTpTimer == null) ? DateTime.UtcNow.AddDays(-3) : dataTpTimer.StartTime.AddSeconds(1),
             };
 
-            var day = 0;
-            TimeCast reportTime = _financePPBLL.GetReportTime(execTime.StartTime, day);
+            const int day = 0;
+            var reportTime = _financePPBLL.GetReportTime(execTime.StartTime, day);
 
-            DateTime reportDate =
+            var reportDate =
                 DateTime.UnixEpoch
                 .AddSeconds(reportTime.endUnix);
 
             var reportData = await _financePPBLL.GetReport(_tpId, null, reportTime);
 
-            // compare
-            var dailyData = _financePPBLL.DealReport(_tpId, reportDate, reportData);
-
-            // write to current report
-            _financeService.SetFinanceTpDailySummary(dailyData);
-
+            if (reportData.Any())
+            {
+                // compare
+                var dailyData = _financePPBLL.DealReport(_tpId, reportDate, reportData);
+                foreach (var data in dailyData)
+                {
+                    // write
+                    _financeService.SetFinanceTpDailySummary(data);
+                }
+            }
 
             // update timer
 

@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Workers.TableGame
         private readonly ILogger<FinanceTableGame> _logger;
         private readonly FinanceTableGameBLL _financeTableGameBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly IConfiguration _configuration;
         private readonly int _tpId = (int)Tp.TableGame;
         private readonly string _tpName = Tp.TableGame.ToString();
@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Workers.TableGame
             _logger = provider.GetRequiredService<ILogger<FinanceTableGame>>();
             _financeTableGameBll = provider.GetRequiredService<FinanceTableGameBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
@@ -95,7 +95,11 @@ namespace ThirdPartyWager.Workers.TableGame
                     var dailyData = _financeTableGameBll.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        // write
+                        _financeService.SetFinanceTpDailySummary(data);
+                    }
                 }
 
                 // update timer

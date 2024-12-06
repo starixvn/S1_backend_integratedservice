@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceMP> _logger;
         private readonly FinanceMPBLL _financeMPBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.MP;
         private readonly string _tpName = Tp.MP.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceMP>>();
             _financeMPBLL = provider.GetRequiredService<FinanceMPBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MPConfig>(Tp.MP.ToString());
         }
 
@@ -103,7 +103,7 @@ namespace ThirdPartyWager.Workers
                             var dailyData = _financeMPBLL.DealReport(_tpId, reportDate, reportData);
 
                             // write
-                            result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+                            result = _financeService.SetFinanceTpDailySummary(dailyData);
                         }
                         else
                         {

@@ -14,7 +14,7 @@ namespace ThirdPartyWager.Workers.SabaPlay
         private readonly ILogger<FinanceSabaPlay> _logger;
         private readonly FinanceSabaPlayBLL _financeSabaPlayBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly IConfiguration _configuration;
         private readonly int _tpId = (int)Tp.SabaPlay;
         private readonly string _tpName = Tp.SabaPlay.ToString();
@@ -27,7 +27,7 @@ namespace ThirdPartyWager.Workers.SabaPlay
             _logger = provider.GetRequiredService<ILogger<FinanceSabaPlay>>();
             _financeSabaPlayBll = provider.GetRequiredService<FinanceSabaPlayBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
@@ -84,10 +84,10 @@ namespace ThirdPartyWager.Workers.SabaPlay
 
                 // get time 
                 var day = 0;
-                TimeCast reportTime = _financeSabaPlayBll.GetReportTime(execTime.StartTime, day);
+                var reportTime = _financeSabaPlayBll.GetReportTime(execTime.StartTime, day);
 
                 // report
-                DateTime reportDate = DateTime.UnixEpoch.AddSeconds(reportTime.endUnix);
+                var reportDate = DateTime.UnixEpoch.AddSeconds(reportTime.endUnix);
                 var reportData = await _financeSabaPlayBll.GetReport(_tpId, null, reportTime);
 
                 if (reportData.Any())
@@ -95,8 +95,11 @@ namespace ThirdPartyWager.Workers.SabaPlay
                     // process
                     var dailyData = _financeSabaPlayBll.DealReport(_tpId, reportDate, reportData);
 
-                    // write
-                    _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        // write
+                        _financeService.SetFinanceTpDailySummary(data);
+                    }
                 }
 
 

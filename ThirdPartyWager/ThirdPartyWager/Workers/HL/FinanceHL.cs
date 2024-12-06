@@ -11,7 +11,7 @@ public class FinanceHL : BackgroundService
     private readonly ILogger<FinanceHL> _logger;
     private readonly FinanceHLBLL _financeHLBLL;
     private readonly ThirdPartyBLL _thirdPartyBLL;
-    private readonly FincanceService _fincanceService;
+    private readonly FinanceService _financeService;
     private readonly int _tpId = (int)Tp.HaoLong;
     private readonly string _tpName = Tp.HaoLong.ToString();
     private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -23,7 +23,7 @@ public class FinanceHL : BackgroundService
         _logger = provider.GetRequiredService<ILogger<FinanceHL>>();
         _financeHLBLL = provider.GetRequiredService<FinanceHLBLL>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-        _fincanceService = provider.GetRequiredService<FincanceService>();
+        _financeService = provider.GetRequiredService<FinanceService>();
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -96,7 +96,7 @@ public class FinanceHL : BackgroundService
                     var dailyData = _financeHLBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    result = _financeService.SetFinanceTpDailySummary(dailyData);
                 }
                 else
                 {

@@ -15,7 +15,7 @@ public class FinancePG : BackgroundService
     private Timer _timer;
     private readonly string _tpName = Tp.PG.ToString();
     private readonly ThirdPartyBLL _thirdPartyBLL;
-    private readonly FincanceService _financeService;
+    private readonly FinanceService _financeService;
     private readonly int _tpId = (int)Tp.PG;
     private readonly int _tpType = (int)WagerTimerType.Finance;
     private readonly int _beyond = 2;
@@ -26,7 +26,7 @@ public class FinancePG : BackgroundService
         _logger = provider.GetRequiredService<ILogger<FinancePG>>();
         _financePGBLL = provider.GetRequiredService<FinancePGBLL>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-        _financeService = provider.GetRequiredService<FincanceService>();
+        _financeService = provider.GetRequiredService<FinanceService>();
         _configuration = provider.GetRequiredService<IConfiguration>();
     }
 
@@ -83,9 +83,9 @@ public class FinancePG : BackgroundService
             };
 
             var day = 0;
-            TimeCast reportTime = _financePGBLL.GetReportTime(execTime.StartTime, day);
+            var reportTime = _financePGBLL.GetReportTime(execTime.StartTime, day);
 
-            DateTime reportDate =
+            var reportDate =
                 DateTime.UnixEpoch
                 .AddSeconds(reportTime.endUnix);
 
@@ -99,7 +99,11 @@ public class FinancePG : BackgroundService
                 var dailyData = _financePGBLL.DealReport(_tpId, reportDate, reportData);
 
                 // write to current report
-                _financeService.SetFinanceTpDailySummary(dailyData);
+                foreach (var data in dailyData)
+                {
+                    // write
+                    _financeService.SetFinanceTpDailySummary(data);
+                }
             }
 
             // update timer

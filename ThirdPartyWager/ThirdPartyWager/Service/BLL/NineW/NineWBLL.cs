@@ -16,7 +16,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _tpId = (int)Tp.NineW;
         private readonly string _tpName = Tp.NineW.ToString();
         private readonly NineWConfig _siteConfig;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _fincanceService;
         private readonly IEnumerable<TpCurrency> _currencyList;
         private readonly int _timeZone = 8;
         private readonly List<int> _reportType = new() { 0, 2, 3, 7 };
@@ -29,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _fincanceService = provider.GetRequiredService<FinanceService>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NineWConfig>(Tp.NineW.ToString());
             _log2File = provider.GetRequiredService<Log2File>();

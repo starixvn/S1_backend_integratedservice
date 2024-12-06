@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceSexy> _logger;
         private readonly FinanceSexyBLL _financeSexyBBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _fincanceService;
         private readonly IConfiguration _configuration;
         private readonly int _tpId = (int)Tp.AESexy;
         private readonly string _tpName = Tp.AESexy.ToString();
@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceSexy>>();
             _financeSexyBBLL = provider.GetRequiredService<FinanceSexyBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _fincanceService = provider.GetRequiredService<FinanceService>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -93,8 +93,11 @@ namespace ThirdPartyWager.Workers
                     // process
                     var dailyData = _financeSexyBBLL.DealReport(_tpId, reportDate, reportData);
 
-                    // write
-                     _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        // write
+                        _fincanceService.SetFinanceTpDailySummary(data);
+                    }
                 }
                 
 

@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceNLC> _logger;
         private readonly FinanceNLCBLL _financeNLCBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly NLCConfig _siteConfig;
         private readonly int _tpId = (int)Tp.NLC;
         private readonly string _tpName = Tp.NLC.ToString();
@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceNLC>>();
             _financeNLCBLL = provider.GetRequiredService<FinanceNLCBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NLCConfig>(_tpName);
         }
 
@@ -101,7 +101,7 @@ namespace ThirdPartyWager.Workers
                     var dailyData = _financeNLCBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    result = _financeService.SetFinanceTpDailySummary(dailyData);
                 }
                 else
                 {

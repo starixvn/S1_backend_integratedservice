@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<MGBLL> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly Tp _tp = Tp.MG;
         private readonly IEnumerable<TpCurrency> _tpCurrency;
         private readonly Dictionary<string, int> _currencyId;
@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<MGBLL>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)_tp);
             _currencyId = _tpCurrency.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
         }
@@ -162,7 +162,7 @@ namespace ThirdPartyWager.Service.BLL
                         WinlostAmount = item.WinlostAmount
                     });
                 }
-                _fincanceService.SetFinanceTpDailySummary(dailyData);
+                _financeService.SetFinanceTpDailySummary(dailyData);
             }
 
             if (tpRewardTotalAmountDailySummary.Any())
@@ -187,7 +187,7 @@ namespace ThirdPartyWager.Service.BLL
                         Reward = item.Reward
                     });
                 }
-                _fincanceService.SetFinanceTpDailySummary(dailyData);
+                _financeService.SetFinanceTpDailySummary(dailyData);
             }
 
             if (tpRewardCashDailySummary.Any())
@@ -212,7 +212,7 @@ namespace ThirdPartyWager.Service.BLL
                         Reward = item.Reward
                     });
                 }
-                _fincanceService.SetFinanceTpDailySummary(dailyData);
+                _financeService.SetFinanceTpDailySummary(dailyData);
             }
 
             if (tpRewardFreeGameDailySummary.Any())
@@ -237,7 +237,7 @@ namespace ThirdPartyWager.Service.BLL
                         Reward = item.Reward
                     });
                 }
-                _fincanceService.SetFinanceTpDailySummary(dailyData);
+                _financeService.SetFinanceTpDailySummary(dailyData);
             }
 
             return true;

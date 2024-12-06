@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceNetent> _logger;
         private readonly FinanceNetentBLL _financeNetentBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly NetentConfig _siteConfig;
         private readonly int _tpId = (int)Tp.Netent;
         private readonly string _tpName = Tp.Netent.ToString();
@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceNetent>>();
             _financeNetentBLL = provider.GetRequiredService<FinanceNetentBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NetentConfig>(_tpName);
         }
 
@@ -101,7 +101,7 @@ namespace ThirdPartyWager.Workers
                     var dailyData = _financeNetentBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    result = _financeService.SetFinanceTpDailySummary(dailyData);
                 }
                 else
                 {

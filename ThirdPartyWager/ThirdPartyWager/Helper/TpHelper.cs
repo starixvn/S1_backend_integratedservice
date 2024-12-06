@@ -1,14 +1,18 @@
 ﻿using Newtonsoft.Json;
-using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+
 
 namespace ThirdPartyWager.Helper
 {
     public static class TpHelper
     {
+        private static int GetCurrencyId(IDictionary<string, CurrencyModel> currency, string tpCurrency)
+        {
+            return currency.ContainsKey(tpCurrency) ? currency[tpCurrency].CurrencyId : 0;
+        }
         public static IEnumerable<FincanceDailySummary> DealReport(
-            IDictionary<string, CurrencyModel> currencyIdDic, 
+            IDictionary<string, CurrencyModel> currency,
             int tpId, 
             DateTime reportDate,
             List<dynamic> reportData)
@@ -23,10 +27,10 @@ namespace ThirdPartyWager.Helper
                 .Select(i => i.BettingDate)
                 .SelectMany(x => x)
                 .GroupBy(i => i.CurrencyIso)
-                .Select(g => new
+            .Select(g => new
                 {
-                    currencyIdDic.GetValue(g.Key).CurrencyId,
-                    currencyIdDic.GetValue(g.Key).ExchangeRate,
+                    CurrencyIso=g.Key,
+                    CurrencyId= GetCurrencyId(currency, g.Key),
                     Stake = g.Sum(s => s.Stake),
                     ActualStake = g.Sum(s => s.ActualStake),
                     NetStake = g.Sum(s => s.NetStake),
@@ -43,10 +47,11 @@ namespace ThirdPartyWager.Helper
                     SummaryDate = reportDate,
                     TpId = tpId,
                     CurrencyId = item.CurrencyId,
-                    Stake = item.Stake * item.ExchangeRate,
-                    ValidBet = item.Stake * item.ExchangeRate,
-                    WinlostAmount = (item.WinLose - item.NetStake) * item.ExchangeRate,
-                    Payout = item.WinLose * item.ExchangeRate
+                    CurrencyIso = item.CurrencyIso,
+                    Stake = item.Stake,
+                    ValidBet = item.ActualStake,
+                    WinlostAmount = (item.WinLose - item.ActualStake),
+                    Payout = item.WinLose
                 });
         }
     }

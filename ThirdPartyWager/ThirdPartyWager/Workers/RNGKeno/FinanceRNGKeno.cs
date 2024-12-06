@@ -1,7 +1,5 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.PG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -14,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceRNGKeno> _logger;
         private readonly FinanceRNGKenoBLL _financeRNGKenoBBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.RNGKeno;
         private readonly string _tpName = Tp.RNGKeno.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -27,7 +25,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceRNGKeno>>();
             _financeRNGKenoBBLL = provider.GetRequiredService<FinanceRNGKenoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _configuration=provider.GetRequiredService<IConfiguration>();
         }
 
@@ -96,7 +94,11 @@ namespace ThirdPartyWager.Workers
                     var dailyData = _financeRNGKenoBBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        // write
+                        _financeService.SetFinanceTpDailySummary(data);
+                    }
                 }
                 
 

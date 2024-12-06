@@ -15,7 +15,7 @@ namespace ThirdPartyWager.Workers.Live22
         private Timer _timer;
         private readonly string _tpName = Tp.Live22.ToString();
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _financeService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.Live22;
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Workers.Live22
             _logger = provider.GetRequiredService<ILogger<FinanceLive22>>();
             _financeLive22Bll = provider.GetRequiredService<FinanceLive22BLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _financeService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
@@ -97,8 +97,11 @@ namespace ThirdPartyWager.Workers.Live22
                     // compare
                     var dailyData = _financeLive22Bll.DealReport(_tpId, reportDate, reportData);
 
-                    // write to current report
-                    _financeService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        // write
+                        _financeService.SetFinanceTpDailySummary(data);
+                    }
                 }
 
                 // update timer

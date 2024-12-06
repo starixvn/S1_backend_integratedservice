@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Helper;
-using ThirdPartyWager.Service.BLL.UuSlots;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
@@ -13,18 +12,18 @@ namespace ThirdPartyWager.Service.BLL.WE
     {
         private readonly ILogger<FinanceWEBLL> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly CommonBLL _commonBLL;
         private readonly ApiMaxGameBLL _apiMaxGameBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
         private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
         private readonly string _tpName = Tp.WE.ToString();
+        private readonly CommonBLL _commonBLL;
 
         public FinanceWEBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceWEBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetService<CommonBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiMaxGameBLL = provider.GetRequiredService<ApiMaxGameBLL>();
             _dateTimeHelper = provider.GetService<DateTimeHelper>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);

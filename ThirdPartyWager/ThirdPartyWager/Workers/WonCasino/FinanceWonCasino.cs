@@ -11,7 +11,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceWonCasino> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FinanceWonCasinoBLL _financeWonCasinoBLL;
-        private readonly FincanceService _financeService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.WonCasino;
         private readonly string _tpName = Tp.WonCasino.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -23,7 +23,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceWonCasino>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _financeWonCasinoBLL = provider.GetRequiredService<FinanceWonCasinoBLL>();
-            _financeService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {

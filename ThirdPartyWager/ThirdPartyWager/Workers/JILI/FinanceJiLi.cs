@@ -15,7 +15,7 @@ public class FinanceJiLi : BackgroundService
     private Timer _timer;
     private readonly string _tpName = Tp.JILI.ToString();
     private readonly ThirdPartyBLL _thirdPartyBLL;
-    private readonly FincanceService _financeService;
+    private readonly FinanceService _financeService;
     private readonly int _tpId = (int)Tp.JILI;
     private readonly int _tpType = (int)WagerTimerType.Finance;
     private readonly int _beyond = 2;
@@ -26,7 +26,7 @@ public class FinanceJiLi : BackgroundService
         _logger = provider.GetRequiredService<ILogger<FinanceJiLi>>();
         _financeJiLiBll = provider.GetRequiredService<FinanceJiLiBLL>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-        _financeService = provider.GetRequiredService<FincanceService>();
+        _financeService = provider.GetRequiredService<FinanceService>();
         _configuration = provider.GetRequiredService<IConfiguration>();
     }
 
@@ -82,10 +82,10 @@ public class FinanceJiLi : BackgroundService
                 StartTime = (dataTpTimer == null) ? DateTime.UtcNow.AddDays(-3) : dataTpTimer.StartTime.AddSeconds(1),
             };
 
-            var day = 0;
-            TimeCast reportTime = _financeJiLiBll.GetReportTime(execTime.StartTime, day);
+            const int day = 0;
+            var reportTime = _financeJiLiBll.GetReportTime(execTime.StartTime, day);
 
-            DateTime reportDate =
+            var reportDate =
                 DateTime.UnixEpoch
                 .AddSeconds(reportTime.endUnix);
 
@@ -98,7 +98,11 @@ public class FinanceJiLi : BackgroundService
                 var dailyData = _financeJiLiBll.DealReport(_tpId, reportDate, reportData);
 
                 // write to current report
-                _financeService.SetFinanceTpDailySummary(dailyData);
+                foreach (var data in dailyData)
+                {
+                    // write
+                    _financeService.SetFinanceTpDailySummary(data);
+                }
             }
            
 

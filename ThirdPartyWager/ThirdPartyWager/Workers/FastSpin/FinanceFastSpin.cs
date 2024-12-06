@@ -14,7 +14,7 @@ namespace ThirdPartyWager.Workers.FastSpin
         private readonly ILogger<FinanceFastSpin> _logger;
         private readonly FinanceFastSpinBLL _financeFastSpinBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.FastSpin;
         private readonly string _tpName = Tp.FastSpin.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -27,7 +27,7 @@ namespace ThirdPartyWager.Workers.FastSpin
             _logger = provider.GetRequiredService<ILogger<FinanceFastSpin>>();
             _financeFastSpinBll = provider.GetRequiredService<FinanceFastSpinBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
@@ -95,8 +95,11 @@ namespace ThirdPartyWager.Workers.FastSpin
                     // process
                     var dailyData = _financeFastSpinBll.DealReport(_tpId, reportDate, reportData);
 
-                    // write
-                    _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        // write
+                        _financeService.SetFinanceTpDailySummary(data);
+                    }
                 }
                
 

@@ -14,7 +14,7 @@ namespace ThirdPartyWager.Workers.AllBet
         private readonly ILogger<FinanceAllBet> _logger;
         private readonly FinanceAllBetBLL _financeAllBetBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.Allbet;
         private readonly string _tpName = Tp.Allbet.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -27,7 +27,7 @@ namespace ThirdPartyWager.Workers.AllBet
             _logger = provider.GetRequiredService<ILogger<FinanceAllBet>>();
             _financeAllBetBll = provider.GetRequiredService<FinanceAllBetBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
@@ -96,7 +96,11 @@ namespace ThirdPartyWager.Workers.AllBet
                     var dailyData = _financeAllBetBll.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        // write
+                        _financeService.SetFinanceTpDailySummary(data);
+                    }
                 }
 
                 _logger.LogInformation("{Tp} set {Timer}", _tpName, JsonConvert.SerializeObject(reportTime));

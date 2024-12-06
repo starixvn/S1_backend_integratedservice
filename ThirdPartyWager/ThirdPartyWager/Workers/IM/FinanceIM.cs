@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceIM> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FinanceIMBLL _financeIMBLL;
-        private readonly FincanceService _financeService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.IM;
         private readonly string _tpName = Tp.IM.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -24,7 +24,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceIM>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _financeIMBLL = provider.GetRequiredService<FinanceIMBLL>();
-            _financeService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

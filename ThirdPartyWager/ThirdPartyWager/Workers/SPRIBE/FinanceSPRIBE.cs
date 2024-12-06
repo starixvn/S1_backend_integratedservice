@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinanceSPRIBE> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FinanceSPRIBEBLL _financeSPRIBEBLL;
-        private readonly FincanceService _financeService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.SPRIBE;
         private readonly string _tpName = Tp.SPRIBE.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -24,7 +24,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinanceSPRIBE>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _financeSPRIBEBLL = provider.GetRequiredService<FinanceSPRIBEBLL>();
-            _financeService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

@@ -11,7 +11,7 @@ public class FinanceNTConnect : BackgroundService
     private readonly ILogger<FinanceNTConnect> _logger;
     private readonly FinanceNTConnectBLL _financeNTConnectBLL;
     private readonly ThirdPartyBLL _thirdPartyBLL;
-    private readonly FincanceService _fincanceService;
+    private readonly FinanceService _financeService;
     private readonly int _tpId = (int)Tp.NTConnect;
     private readonly string _tpName = Tp.NTConnect.ToString();
     private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -23,7 +23,7 @@ public class FinanceNTConnect : BackgroundService
         _logger = provider.GetRequiredService<ILogger<FinanceNTConnect>>();
         _financeNTConnectBLL = provider.GetRequiredService<FinanceNTConnectBLL>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-        _fincanceService = provider.GetRequiredService<FincanceService>();
+        _financeService = provider.GetRequiredService<FinanceService>();
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -96,7 +96,7 @@ public class FinanceNTConnect : BackgroundService
                     var dailyData = _financeNTConnectBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
-                    result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    result = _financeService.SetFinanceTpDailySummary(dailyData);
                 }
                 else
                 {

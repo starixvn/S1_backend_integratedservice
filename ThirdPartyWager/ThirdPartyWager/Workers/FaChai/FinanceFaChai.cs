@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Workers.FaChai
         private readonly ILogger<FinanceFaChai> _logger;
         private readonly FinanceFaChaiBLL _financeFaChaiBBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly IConfiguration _configuration;
         private readonly int _tpId = (int)Tp.FaChai;
         private readonly string _tpName = Tp.FaChai.ToString();
@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Workers.FaChai
             _logger = provider.GetRequiredService<ILogger<FinanceFaChai>>();
             _financeFaChaiBBLL = provider.GetRequiredService<FinanceFaChaiBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
@@ -92,9 +92,11 @@ namespace ThirdPartyWager.Workers.FaChai
                 {
                     // process
                     var dailyData = _financeFaChaiBBLL.DealReport(_tpId, reportDate, reportData);
-
-                    // write
-                   _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        // write
+                        _financeService.SetFinanceTpDailySummary(data);
+                    }
                 }
 
                 // update timer

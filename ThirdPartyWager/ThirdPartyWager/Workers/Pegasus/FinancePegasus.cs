@@ -11,7 +11,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<FinancePegasus> _logger;
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly FinancePegasusBLL _financePegasusBll;
-        private readonly FincanceService _financeService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.Pegasus;
         private readonly string _tpName = Tp.Pegasus.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -23,7 +23,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<FinancePegasus>>();
             _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
             _financePegasusBll = provider.GetRequiredService<FinancePegasusBLL>();
-            _financeService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

@@ -34,9 +34,10 @@ public class FinanceFaChaiBLL : ITpReportBLL
         var currencyIdDic = _commonBLL
             .GetTpCurrencyList(tpId)
             .ToDictionary(i => i.TpCurrencyId,
-                i => new CurrencyModel {
-                    CurrencyId=i.CurrencyId,
-                    ExchangeRate=i.ExchangeRate
+                i => new CurrencyModel
+                {
+                    CurrencyId = i.CurrencyId,
+                    ExchangeRate = i.ExchangeRate
                 });
 
         return TpHelper.DealReport(currencyIdDic, tpId, reportDate, reportData);

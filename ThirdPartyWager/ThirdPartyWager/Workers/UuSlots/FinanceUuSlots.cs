@@ -14,7 +14,7 @@ namespace ThirdPartyWager.Workers.UuSlots
         private readonly ILogger<FinanceUuSlots> _logger;
         private readonly FinanceUuSlotsBLL _financeFinanceUuSlotsBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FincanceService _fincanceService;
+        private readonly FinanceService _financeService;
         private readonly int _tpId = (int)Tp.UuSlots;
         private readonly string _tpName = Tp.UuSlots.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -27,7 +27,7 @@ namespace ThirdPartyWager.Workers.UuSlots
             _logger = provider.GetRequiredService<ILogger<FinanceUuSlots>>();
             _financeFinanceUuSlotsBll = provider.GetRequiredService<FinanceUuSlotsBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _financeService = provider.GetRequiredService<FinanceService>();
             _configuration = provider.GetRequiredService<IConfiguration>();
         }
 
@@ -95,8 +95,11 @@ namespace ThirdPartyWager.Workers.UuSlots
                     // process
                     var dailyData = _financeFinanceUuSlotsBll.DealReport(_tpId, reportDate, reportData);
 
-                    // write
-                    _fincanceService.SetFinanceTpDailySummary(dailyData);
+                    foreach (var data in dailyData)
+                    {
+                        // write
+                        _financeService.SetFinanceTpDailySummary(data);
+                    }
                 }
 
                 // update timer

@@ -73,7 +73,7 @@ namespace ThirdPartyWager.Manual
             services.AddSingleton<WagerEVOService>();
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
-            services.AddSingleton<FincanceService>();
+            services.AddSingleton<FinanceService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
