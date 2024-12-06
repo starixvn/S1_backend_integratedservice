@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -9,7 +10,7 @@ namespace ThirdPartyWager.Helper
     {
         private static int GetCurrencyId(IDictionary<string, CurrencyModel> currency, string tpCurrency)
         {
-            return currency.ContainsKey(tpCurrency) ? currency[tpCurrency].CurrencyId : 0;
+            return currency.ContainsKey(tpCurrency) ? currency[tpCurrency].CurrencyId : 4;
         }
         public static IEnumerable<FincanceDailySummary> DealReport(
             IDictionary<string, CurrencyModel> currency,
@@ -49,8 +50,8 @@ namespace ThirdPartyWager.Helper
                     CurrencyId = item.CurrencyId,
                     CurrencyIso = item.CurrencyIso,
                     Stake = item.Stake,
-                    ValidBet = item.ActualStake,
-                    WinlostAmount = (item.WinLose - item.ActualStake),
+                    ValidBet = item.NetStake,
+                    WinlostAmount = (item.WinLose - item.NetStake),
                     Payout = item.WinLose
                 });
         }
