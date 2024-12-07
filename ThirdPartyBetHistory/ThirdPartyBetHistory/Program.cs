@@ -1,6 +1,7 @@
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
+using Serilog.Sinks.Network;
 using ThirdPartyBetHistory;
 using ThirdPartyBetHistory.Extensions;
 using ThirdPartyBetHistory.Service.Worker;
@@ -25,8 +26,13 @@ builder.Host.UseSerilog((context, Configuration) =>
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item)
                                                || c.MessageTemplate.ToString().Equals(excludesResponseEmptyMessage))))
         .Enrich.WithExceptionDetails()
-        .Enrich.WithProperty("ApplicationName", "ThirdPartyBetHistory")
-        //.WriteTo.Console()
+        .Enrich.WithProperty("ApplicationName", nameof(ThirdPartyBetHistory))
+        .Enrich.WithProperty("Env", builder.Configuration.GetValue<string>("OpenSearch:Env"))
+        .WriteTo.Console()
+        .WriteTo.UDPSink(
+            builder.Configuration.GetValue<string>("OpenSearch:Uri"),
+            builder.Configuration.GetValue<int>("OpenSearch:Port"),
+            new Serilog.Formatting.Json.JsonFormatter())
         .WriteTo.Sentry(o =>
         {
             // Debug and higher are stored as breadcrumbs (default is Information)

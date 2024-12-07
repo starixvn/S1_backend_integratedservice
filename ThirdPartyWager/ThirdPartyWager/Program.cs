@@ -23,8 +23,8 @@ builder.Host.UseSerilog((context, Configuration) =>
                 excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails()
-        .Enrich.WithProperty("ApplicationName", builder.Configuration.GetValue<string>("ServiceName"))
-        .Enrich.WithProperty("Env", builder.Configuration.GetValue<string>("env"))
+        .Enrich.WithProperty("ApplicationName", nameof(ThirdPartyWager))
+        .Enrich.WithProperty("Env", builder.Configuration.GetValue<string>("OpenSearch:Env"))
         .WriteTo.UDPSink(
             builder.Configuration.GetValue<string>("OpenSearch:Uri"),
             builder.Configuration.GetValue<int>("OpenSearch:Port"),
