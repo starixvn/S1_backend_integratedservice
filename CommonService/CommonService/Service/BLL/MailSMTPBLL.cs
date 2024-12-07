@@ -3,9 +3,6 @@ using System.Net.Mime;
 using System.Text;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using static CommonService.Service.Model.SendGridResetPassword;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace CommonService.Service.BLL
 {
