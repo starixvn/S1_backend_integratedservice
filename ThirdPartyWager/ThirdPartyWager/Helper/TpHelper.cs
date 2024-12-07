@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Helper
                     CurrencyIso = item.CurrencyIso,
                     Stake = item.Stake,
                     ValidBet = item.NetStake,
-                    WinlostAmount = (item.WinLose - item.NetStake),
+                    WinlostAmount = (item.WinLose - item.ActualStake),
                     Payout = item.WinLose
                 });
         }
