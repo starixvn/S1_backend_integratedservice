@@ -3,7 +3,7 @@ using ThirdPartyBetHistory.Extensions;
 using ThirdPartyBetHistory.Service.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.WebHost.UseSentry();
 var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
