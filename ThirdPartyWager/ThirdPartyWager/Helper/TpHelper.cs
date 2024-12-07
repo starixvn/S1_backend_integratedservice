@@ -8,9 +8,14 @@ namespace ThirdPartyWager.Helper
 {
     public static class TpHelper
     {
+        /// <summary>
+        /// When vendor pass tpCurrencyId not exists on my system, we will use default id=4 (currency: TBH)
+        /// </summary>
+        private const int DEFAULT_CURRENCYID = 4;
+
         private static int GetCurrencyId(IDictionary<string, CurrencyModel> currency, string tpCurrency)
         {
-            return currency.ContainsKey(tpCurrency) ? currency[tpCurrency].CurrencyId : 4;
+            return currency.ContainsKey(tpCurrency) ? currency[tpCurrency].CurrencyId : DEFAULT_CURRENCYID;
         }
         public static IEnumerable<FincanceDailySummary> DealReport(
             IDictionary<string, CurrencyModel> currency,
