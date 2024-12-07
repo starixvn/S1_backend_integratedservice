@@ -15,6 +15,7 @@ namespace ThirdParty.SabaPlay
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, SabaPlayConfig> _siteConfigDic;
         private readonly IPayloadLogger _payloadLogService;
+        private readonly Dictionary<string, string> _gameNameList;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -24,6 +25,7 @@ namespace ThirdParty.SabaPlay
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SabaPlayConfig>(TpEnum.SabaPlay.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.SabaPlay).ToDictionary(d => d.GameId, d => d.Name);
         }
 
         #region Request
@@ -201,7 +203,7 @@ namespace ThirdParty.SabaPlay
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = GameId,
-                Game = GameId,
+                Game = GetGameName(GameId),
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
@@ -315,6 +317,16 @@ namespace ThirdParty.SabaPlay
         {
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return gameCode;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return (dic != null) ? dic.TryGetValue("en", out string result) ? result : gameCode : gameCode;
         }
     }
 }

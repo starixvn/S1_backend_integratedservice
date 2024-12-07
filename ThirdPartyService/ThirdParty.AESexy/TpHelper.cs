@@ -19,9 +19,11 @@ namespace ThirdParty.AESexy
 
         private readonly Dictionary<int, AESexyConfig> _siteConfigDic;
         private readonly IPayloadLogger _payloadLogService;
+        private readonly Dictionary<string, string> _gameNameList;
 
         public TpHelper(IServiceProvider provider)
         {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.AESexy).ToDictionary(d => d.GameId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AESexyConfig>(TpEnum.AESexy.ToString());
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
@@ -237,7 +239,7 @@ namespace ThirdParty.AESexy
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = GameId,
-                Game = GameId,
+                Game = GetGameName(GameId),
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
@@ -261,6 +263,16 @@ namespace ThirdParty.AESexy
         {
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return gameCode;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : gameCode : gameCode;
         }
 
         public class DetailResult

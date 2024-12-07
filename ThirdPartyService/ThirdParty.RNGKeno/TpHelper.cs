@@ -18,9 +18,11 @@ namespace ThirdParty.RNGKeno
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
 
         public TpHelper(IServiceProvider provider)
         {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.RNGKeno).ToDictionary(d => d.GameId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KenoConfig>(TpEnum.RNGKeno.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
@@ -206,7 +208,7 @@ namespace ThirdParty.RNGKeno
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = gameId,
-                Game = gameId,
+                Game = GetGameName(gameId),
                 RefNo = gameRoundId,
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
@@ -313,6 +315,16 @@ namespace ThirdParty.RNGKeno
         {
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return gameCode;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : gameCode : gameCode;
         }
     }
 }

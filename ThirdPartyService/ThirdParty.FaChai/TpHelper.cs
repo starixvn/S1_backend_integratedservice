@@ -206,7 +206,7 @@ namespace ThirdParty.FaChai
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
             }
-            var GameId = detail.GetStringValue("GameId");
+            var GameId = detail.GetStringValue("GameID");
             var GameRoundId = detail.GetStringValue("GameRoundId");
 
             // No need MatchId

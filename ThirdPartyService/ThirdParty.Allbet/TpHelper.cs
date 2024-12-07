@@ -14,12 +14,14 @@ namespace ThirdParty.Allbet
     {
         private readonly Dictionary<int, AllBetConfig> _siteConfigDic;
         private readonly IPayloadLogger _payloadLogService;
+        private readonly Dictionary<string, string> _gameNameList;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
 
         public TpHelper(IServiceProvider provider)
         {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Allbet).ToDictionary(d => d.GameId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AllBetConfig>(TpEnum.Allbet.ToString());
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
@@ -157,7 +159,7 @@ namespace ThirdParty.Allbet
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = GameId,
-                Game = GameId,
+                Game = GetGameName(GameId),
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
@@ -261,6 +263,16 @@ namespace ThirdParty.Allbet
         {
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return gameCode;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : gameCode : gameCode;
         }
     }
 }

@@ -24,7 +24,7 @@ namespace ThirdParty.FastSpin
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FastSpinConfig>(TpEnum.FastSpin.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Live22).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.FastSpin).ToDictionary(d => d.AppId, d => d.Name);
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
