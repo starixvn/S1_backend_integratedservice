@@ -1,10 +1,10 @@
-FROM hub.lumigame.com/base/dotnet/core/sdk:6.0 as builder
+FROM hub.nexdev.net/base/dotnet/core/sdk:6.0 AS builder
 
 COPY . .
 WORKDIR ThirdPartyBetHistory/ThirdPartyBetHistory
 RUN dotnet publish "ThirdPartyBetHistory.csproj" -c Release -o /app
 
-FROM hub.lumigame.com/base/dotnet/core/sdk:6.0
+FROM hub.nexdev.net/base/dotnet/core/aspnet:6.0-alpine
 WORKDIR /app
 COPY --from=builder /app .
 EXPOSE 5000
