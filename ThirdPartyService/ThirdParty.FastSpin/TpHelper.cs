@@ -15,6 +15,7 @@ namespace ThirdParty.FastSpin
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, FastSpinConfig> _siteConfigDic;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -24,6 +25,7 @@ namespace ThirdParty.FastSpin
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FastSpinConfig>(TpEnum.FastSpin.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Live22).ToDictionary(d => d.AppId, d => d.Name);
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
         #region Request
@@ -277,8 +279,14 @@ namespace ThirdParty.FastSpin
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
+            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
+            {
+                GameType = nameof(FastSpin),
+                Action = nameof(Login)
+            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
             ApiResult oApiResult = new ApiResult();
 
             if (IsJSON(result))

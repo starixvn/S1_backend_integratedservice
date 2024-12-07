@@ -15,12 +15,14 @@ namespace ThirdParty.Live22
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, Live22Config> _siteConfigDic;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
 
         public TpHelper(IServiceProvider provider)
         {
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Live22Config>(TpEnum.Live22.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Live22).ToDictionary(d => d.AppId, d => d.Name);
@@ -267,14 +269,14 @@ namespace ThirdParty.Live22
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
-            SentrySdk.CaptureMessage($"{nameof(TpHelper)} at {DateTime.Now}" +
-                                     $"{Environment.NewLine}--ApiUrl {JsonConvert.SerializeObject(ApiUrl)}" +
-                                     $"{Environment.NewLine}--postdata {postdata}" +
-                                     $"{Environment.NewLine}---header {JsonConvert.SerializeObject(header)}");
-
+            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
+            {
+                GameType = nameof(Live22),
+                Action = nameof(Login)
+            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(Live22), ApiUrl, header, postdata, result);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 

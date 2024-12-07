@@ -14,6 +14,7 @@ namespace ThirdParty.MaxGame
     {
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
+        private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -22,6 +23,7 @@ namespace ThirdParty.MaxGame
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(TpEnum.MaxGame.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
         #region Request
@@ -247,9 +249,17 @@ namespace ThirdParty.MaxGame
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
+
+            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
+            {
+                GameType = nameof(MaxGame),
+                Action = nameof(Login)
+            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
             temporaryLogSentryService.WriteLogLaunchGame(nameof(MaxGame), ApiUrl, header, postdata, result);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
+
 
             ApiResult oApiResult = new ApiResult();
 

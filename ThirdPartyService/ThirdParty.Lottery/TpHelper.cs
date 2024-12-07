@@ -14,6 +14,7 @@ namespace ThirdParty.Lottery
     {
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, LotteryConfig> _siteConfigDic;
+        private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -22,6 +23,7 @@ namespace ThirdParty.Lottery
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<LotteryConfig>(TpEnum.Lottery.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
         #region Request
@@ -255,8 +257,14 @@ namespace ThirdParty.Lottery
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
+            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
+            {
+                GameType = nameof(Lottery),
+                Action = nameof(Login)
+            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(Lottery), ApiUrl, header, postdata, result);
+
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 

@@ -15,6 +15,7 @@ namespace ThirdParty.JILI
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, JILIConfig> _siteConfigDic;
+        private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -24,6 +25,7 @@ namespace ThirdParty.JILI
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.JILI).ToDictionary(d => d.AppId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<JILIConfig>(TpEnum.JILI.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
         #region Response
@@ -113,9 +115,15 @@ namespace ThirdParty.JILI
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
+
+            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
+            {
+                GameType = nameof(JILI),
+                Action = nameof(Login)
+            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(JILI), ApiUrl, header, postdata, result);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 

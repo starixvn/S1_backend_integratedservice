@@ -12,16 +12,16 @@ namespace ThirdParty.TableGame
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, TableGameConfig> _siteConfigDic;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
+        private readonly IPayloadLogger _payloadLogService;
 
         public TpHelper(IServiceProvider provider)
         {
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TableGameConfig>(TpEnum.TableGame.ToString());
-            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
         #region Request
@@ -257,10 +257,15 @@ namespace ThirdParty.TableGame
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
+               
+            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
+            {
+                GameType = nameof(TableGame),
+                Action = nameof(Login)
+            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(TableGame), ApiUrl, header, postdata, result);
-
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
             ApiResult oApiResult = new ApiResult();
 
             if (IsJSON(result))

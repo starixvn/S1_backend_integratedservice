@@ -18,6 +18,7 @@ namespace ThirdParty.FaChai
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, FaChaiConfig> _siteConfigDic;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -27,6 +28,7 @@ namespace ThirdParty.FaChai
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FaChaiConfig>(TpEnum.FaChai.ToString());
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.FaChai).ToDictionary(d => d.GameId, d => d.Name);
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
         public class CreateMemberRequest
@@ -264,9 +266,17 @@ namespace ThirdParty.FaChai
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
+            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
+            {
+                GameType = nameof(FaChai),
+                Action = nameof(Login)
+            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
             temporaryLogSentryService.WriteLogLaunchGame(nameof(FaChai), ApiUrl, header, postdata, result);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
+
+
 
             ApiResult oApiResult = new ApiResult();
 

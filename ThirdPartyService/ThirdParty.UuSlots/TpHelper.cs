@@ -12,9 +12,9 @@ namespace ThirdParty.UuSlots
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, UuSlotsConfig> _siteConfigDic;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -22,7 +22,7 @@ namespace ThirdParty.UuSlots
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<UuSlotsConfig>(TpEnum.UuSlots.ToString());
-            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.UuSlots).ToDictionary(d => d.AppId, d => d.Name);
         }
 
@@ -275,10 +275,14 @@ namespace ThirdParty.UuSlots
                 { "operator-pwd", config.OperatorPwd},
                 { "operator-sign", Encrypt(postdata, config)},
             };
-
+            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
+            {
+                GameType = nameof(UuSlots),
+                Action = nameof(Login)
+            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(UuSlots), ApiUrl, header, postdata, result);
 
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
             ApiResult oApiResult = new ApiResult();
 
             if (IsJSON(result))

@@ -276,7 +276,8 @@ public class TpHelper : ThirdPartyHelperBase
             { "operator-sign", Encrypt(postdata, config)},
         };
         _temporaryLogPayloadService.LogDetailedPayload(postdata, new PayloadLogMeta() {
-            GameType = gameType
+            GameType = gameType,
+            Action = nameof(Login)
         });
         var result = HttpPost(ApiUrl, postdata, "application/json", header);
         _temporaryLogPayloadService.UpdateDetailedPayLoadWithResponse(postdata, result);

@@ -18,12 +18,12 @@ namespace ThirdParty.AESexy
         private const string _testCurrency = "UUS";
 
         private readonly Dictionary<int, AESexyConfig> _siteConfigDic;
-        private readonly TemporaryLogSentryService temporaryLogSentryService;
+        private readonly IPayloadLogger _payloadLogService;
 
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AESexyConfig>(TpEnum.AESexy.ToString());
-            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
         #region Response
@@ -118,10 +118,14 @@ namespace ThirdParty.AESexy
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
+            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
+            {
+                GameType = nameof(AESexy),
+                Action = nameof(Login)
+            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(AESexy), ApiUrl, header, postdata, result);
-
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
             ApiResult oApiResult = new ApiResult();
 
             if (IsJSON(result))
