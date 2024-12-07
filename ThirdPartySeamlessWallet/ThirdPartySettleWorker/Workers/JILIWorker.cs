@@ -64,18 +64,11 @@ namespace ThirdPartySettleWorker.Workers
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
-                tpUnsettleList = new List<TpUnsettle>()
+                
+                if (!tpUnsettleList.Any())
                 {
-                    new TpUnsettle()
-                    {
-                        TransId = "5100|$|DnsDemo_651848|$|1523652481478400077|$|1523652481478400077",
-                        PartitionTime = DateTime.Now
-                    }
-                };
-                //if (!tpUnsettleList.Any())
-                //{
-                //    throw new UnsettleNotFoundException($"{_tpName} {gameType} Round no unsettle data.");
-                //}
+                    throw new UnsettleNotFoundException($"{_tpName} {gameType} Round no unsettle data.");
+                }
 
                 forContinue = tpUnsettleList.Count() == 200;
                 foreach (var unsettled in tpUnsettleList)
@@ -123,16 +116,15 @@ namespace ThirdPartySettleWorker.Workers
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo);
                         if (result == 1)
                         {
-                            var ticketStatus = (int)betRecordInfo.TicketStatus;
                             var settledTime = betRecordInfo.SettledTime;
                             var transTime = betRecordInfo.TransTime;
                             Task.Run(() =>
                             {
                                 _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
-                                _ = _settledBLL.SetSettleFlag_BettransRng_JILI(bettransSet, unsettled.TransId, ticketStatus, settledTime);
+                                _ = _settledBLL.SetSettleFlag_BettransRng_JILI(bettransSet, unsettled.TransId, settledTime);
                                 if (tt != st)
                                 {
-                                    _ = _settledBLL.SetSettleFlag_BettransRng_JILI(bettransSet, unsettled.TransId, ticketStatus, transTime);
+                                    _ = _settledBLL.SetSettleFlag_BettransRng_JILI(bettransSet, unsettled.TransId, transTime);
                                 }
                             });
                         }

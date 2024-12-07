@@ -1987,9 +1987,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_JILI(category, TransId, TicketStatus);
         }
 
-        public int SetSettleFlag_BettransRng_JILI(string spName, string transId, int ticketStatus, long settleTime)
+        public int SetSettleFlag_BettransRng_JILI(string spName, string transId, long settleTime)
         {
-            return settledService.SetSettleFlag_BettransRng_JILI(spName, transId, ticketStatus, settleTime);
+            return settledService.SetSettleFlag_BettransRng_JILI(spName, transId, settleTime);
         }
 
         public IEnumerable<CheckBettingData_JILI> GetTransactionCheck_JILI(string YYYYMM)

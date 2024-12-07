@@ -3814,7 +3814,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute(sp, parameters: new DynamicParameters(new { TransId = TransId, TicketStatus = TicketStatus }));
         }
 
-        public int SetSettleFlag_BettransRng_JILI(string spName, string transId, int ticketStatus, long settleTime)
+        public int SetSettleFlag_BettransRng_JILI(string spName, string transId, long settleTime)
         {
             var result = 0;
             var partitionTime = DateTimeOffset.FromUnixTimeSeconds(settleTime).DateTime;
@@ -3823,7 +3823,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             var trans = conn.BeginTransaction();
 
-            result = _partitionService.Execute(partitionTime, spName, new DynamicParameters(new { TransId = transId, TicketStatus = ticketStatus }), trans);
+            result = _partitionService.Execute(partitionTime, spName, new DynamicParameters(new { TransId = transId }), trans);
             if (result > 0)
             {
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);

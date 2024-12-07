@@ -51,6 +51,7 @@ namespace ThirdPartySettleWorker.Workers
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, GameType.FaChai_RNG);
+               
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} {GameType.FaChai_RNG} no unsettle data.");
