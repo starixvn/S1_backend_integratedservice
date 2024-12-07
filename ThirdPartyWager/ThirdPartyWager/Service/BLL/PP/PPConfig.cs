@@ -7,5 +7,6 @@ namespace ThirdPartyWager.Service.BLL.PP
         public string LiveCasinoGameType { get; set; }
 
         public string LiveCasinoApiUrl { get; set; }
+
     }
 }

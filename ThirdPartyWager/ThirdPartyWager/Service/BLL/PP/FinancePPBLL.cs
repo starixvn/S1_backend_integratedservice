@@ -49,8 +49,7 @@ public class FinancePPBLL: ITpReportBLL
             var config = _siteConfigDic[site.SiteId];
             if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
             {
-                _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType,
-                config.DailySumApiUrl);
+                _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType, config.DailySumApiUrl);
                 continue;
             }
             var dailyBetSummary =
@@ -64,14 +63,39 @@ public class FinancePPBLL: ITpReportBLL
                     }
                 );
 
+            var dailyBetSummaryForLiveCasino =
+                await _apiMaxGameBLL.GetDailySummaryDataAsync(
+                    config,
+                    _tpName,
+                    new PayloadRequestDailySummaryData_MaxGame()
+                    {
+                        TargetDate = GetCheckDateFromUnixTimestamp(reportTime.startUnix),
+                        GameType = config.LiveCasinoGameType
+                    }
+                );
+
             if (dailyBetSummary.ErrorCode != 0)
             {
-                _logger.LogError("{DaiLySummaryTableGameError}",
+                _logger.LogError("{DaiLySummaryPPRngError}",
                     JsonConvert.SerializeObject(dailyBetSummary)
                 );
-                continue;
             }
 
+            if (dailyBetSummaryForLiveCasino.ErrorCode != 0)
+            {
+                _logger.LogError("{DaiLySummaryPPLiveCasinoError}",
+                    JsonConvert.SerializeObject(dailyBetSummary)
+                );
+            }
+
+            if (dailyBetSummaryForLiveCasino.ErrorCode != 0 && dailyBetSummary.ErrorCode != 0) 
+                continue;
+
+            if (dailyBetSummaryForLiveCasino.Payload.GameTypes.Any())
+            {
+                reportData.Add(dailyBetSummaryForLiveCasino.Payload);
+            }
+            
             if (dailyBetSummary.Payload.GameTypes.Any())
             {
                 reportData.Add(dailyBetSummary.Payload);
