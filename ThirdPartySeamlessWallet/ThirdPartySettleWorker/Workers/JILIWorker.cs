@@ -64,10 +64,18 @@ namespace ThirdPartySettleWorker.Workers
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
-                if (!tpUnsettleList.Any())
+                tpUnsettleList = new List<TpUnsettle>()
                 {
-                    throw new UnsettleNotFoundException($"{_tpName} {gameType} Round no unsettle data.");
-                }
+                    new TpUnsettle()
+                    {
+                        TransId = "5100|$|DnsDemo_651848|$|1523652481478400077|$|1523652481478400077",
+                        PartitionTime = DateTime.Now
+                    }
+                };
+                //if (!tpUnsettleList.Any())
+                //{
+                //    throw new UnsettleNotFoundException($"{_tpName} {gameType} Round no unsettle data.");
+                //}
 
                 forContinue = tpUnsettleList.Count() == 200;
                 foreach (var unsettled in tpUnsettleList)

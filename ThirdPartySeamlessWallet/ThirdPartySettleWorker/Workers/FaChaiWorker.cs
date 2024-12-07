@@ -46,8 +46,8 @@ namespace ThirdPartySettleWorker.Workers
 
             var forContinue = false;
             const string getBettransSp = "Service_BettransRng_FaChai_Get"; // 取得下注紀錄
-            //const string getWagerSp = "Service_TpWager_FaChai_Get"; // 取得Wager資料
-
+            const string bettransSet = "Service_BettransRng_FaChai_Settle_Set";
+            
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, GameType.FaChai_RNG);
@@ -118,6 +118,7 @@ namespace ThirdPartySettleWorker.Workers
                             Task.Run(() =>
                             {
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.FaChai_RNG, tpUnsettle.TransId, true);
+                                _settledBLL.SetSettleFlagOfMonthlyBettrans(bettransSet, betRecordInfo);
                             });
                         }
                     }
