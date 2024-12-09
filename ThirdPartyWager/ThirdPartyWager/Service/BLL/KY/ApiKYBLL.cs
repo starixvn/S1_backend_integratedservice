@@ -104,30 +104,18 @@ namespace ThirdPartyWager.Service.BLL
         private HttpClientHandler CreateHandler()
         {
             var handler = new HttpClientHandler();
-            string proxyHost;
-            int proxyPort;
 
             if (_tokyoProxy != null)
             {
-                handler.UseProxy = true;
-                proxyHost = _tokyoProxy.ProxyHost;
-                proxyPort = _tokyoProxy.ProxyPort;
-                handler.Proxy = new WebProxy(proxyHost, proxyPort);
+                var proxyHost = _tokyoProxy.ProxyHost;
+                var proxyPort = _tokyoProxy.ProxyPort;
 
-                _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
-
-                return handler;
-            }
-
-            proxyHost = _configuration.GetValue<string>("ProxyHost");
-            proxyPort = _configuration.GetValue<int>("ProxyPort");
-
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                handler.UseProxy = true;
-                handler.Proxy = new WebProxy(proxyHost, proxyPort);
-
-                _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
+                if (!string.IsNullOrEmpty(proxyHost) && proxyPort > 0)
+                {
+                    handler.UseProxy = true;
+                    handler.Proxy = new WebProxy(proxyHost, proxyPort);
+                    _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
+                }
             }
 
             return handler;
