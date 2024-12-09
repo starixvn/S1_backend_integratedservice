@@ -1551,14 +1551,11 @@ namespace ThirdPartyService.Service.BLL
                     return;
                 }
 
-                if (gameTypeOption.CategoryId == TpCategory.Slots)
+                _mainDbClient.Execute("Member_RecentlyPlayed_Set", new
                 {
-                    _mainDbClient.Execute("Member_RecentlyPlayed_Set", new
-                    {
-                        tpInfo.CustId,
-                        GameInfo = $"{tpInfo.TpId}_{tpInfo.inputs.GetValueOrDefault("gameId")}"
-                    });
-                }
+                    tpInfo.CustId,
+                    GameInfo = $"{tpInfo.TpId}_{tpInfo.inputs.GetValueOrDefault("gameId")}"
+                });
             }
             catch (Exception ex)
             {
