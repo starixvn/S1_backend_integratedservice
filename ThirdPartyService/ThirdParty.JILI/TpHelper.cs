@@ -12,8 +12,6 @@ namespace ThirdParty.JILI
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly TemporaryLogSentryService temporaryLogSentryService;
-        private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, JILIConfig> _siteConfigDic;
         private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
@@ -22,9 +20,7 @@ namespace ThirdParty.JILI
 
         public TpHelper(IServiceProvider provider)
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.JILI).ToDictionary(d => d.AppId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<JILIConfig>(TpEnum.JILI.ToString());
-            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
@@ -263,14 +259,12 @@ namespace ThirdParty.JILI
             };
         }
 
-        private string GetGameName(string gameCode)
+        private static string GetGameName(string gameId)
         {
-            if (!_gameNameList.TryGetValue(gameCode, out var name))
-            {
-                return string.Empty;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return dic.TryGetValue("en", out var result) ? result : string.Empty;
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.JILI, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
 
         private static string GetFishGameName(string gameCode)

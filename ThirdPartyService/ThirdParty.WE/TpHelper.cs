@@ -14,7 +14,6 @@ namespace ThirdParty.WE
     {
         private readonly Dictionary<int, WEConfig> _siteConfigDic;
         private readonly IPayloadLogger _payloadLogService;
-        private readonly Dictionary<string, string> _gameNameList;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -23,7 +22,6 @@ namespace ThirdParty.WE
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<WEConfig>(TpEnum.WE.ToString());
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.WE).ToDictionary(d => d.GameId, d => d.Name);
         }
 
         #region Request
@@ -311,14 +309,12 @@ namespace ThirdParty.WE
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
 
-        private string GetGameName(string gameCode)
+        private static string GetGameName(string gameId)
         {
-            if (!_gameNameList.TryGetValue(gameCode, out var name))
-            {
-                return gameCode;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : gameCode : gameCode;
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.WE, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
     }
 }

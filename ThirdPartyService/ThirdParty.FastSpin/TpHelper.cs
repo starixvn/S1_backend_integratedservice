@@ -14,7 +14,6 @@ namespace ThirdParty.FastSpin
     {
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, FastSpinConfig> _siteConfigDic;
-        private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
@@ -24,7 +23,6 @@ namespace ThirdParty.FastSpin
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FastSpinConfig>(TpEnum.FastSpin.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.FastSpin).ToDictionary(d => d.AppId, d => d.Name);
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
@@ -334,14 +332,12 @@ namespace ThirdParty.FastSpin
 
 
 
-        private string GetGameName(string gameId)
+        private static string GetGameName(string gameId)
         {
-            if (!_gameNameList.TryGetValue(gameId, out var name))
-            {
-                return gameId;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return dic.TryGetValue("en", out var result) ? result : gameId;
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.FastSpin, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
     }
 }

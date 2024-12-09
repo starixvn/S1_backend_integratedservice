@@ -15,9 +15,11 @@ namespace ThirdPartyService.Service.DAL
         private readonly MySqlClient _mainDbClient;
         private readonly IReadOnlyDictionary<int, List<GameCasinoOption>> _gameCasinoList;
         private readonly IReadOnlyDictionary<int, TpListOption> _tpList;
+        private readonly IEnumerable<GameNameInfo> _gameNameList;
 
         public TpBetRecordService(IServiceProvider provider)
         {
+            _gameNameList = provider.GetRequiredService<IEnumerable<GameNameInfo>>();
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
@@ -88,6 +90,18 @@ namespace ThirdPartyService.Service.DAL
             {
                 return default;
             }
+        }
+
+        public GameNameInfo GetGameNameInfo(int tpId, string gameId, string bettype, string lang)
+        {
+            return _gameNameList.FirstOrDefault(g =>
+                g.TpId == tpId && g.GameId == gameId && g.BetType == bettype && g.Lang == lang);
+        }
+
+        public GameNameInfo GetGameNameInfo(int tpId, string gameId, string lang)
+        {
+            return _gameNameList.FirstOrDefault(g =>
+                g.TpId == tpId && g.GameId == gameId && g.Lang == lang);
         }
     }
 }

@@ -12,9 +12,9 @@ namespace ThirdParty.Live22
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly TemporaryLogSentryService temporaryLogSentryService;
+        
         private readonly Dictionary<int, Live22Config> _siteConfigDic;
-        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+       
         private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
@@ -24,8 +24,6 @@ namespace ThirdParty.Live22
         {
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Live22Config>(TpEnum.Live22.ToString());
-            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Live22).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         #region Request
@@ -323,14 +321,12 @@ namespace ThirdParty.Live22
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
 
-        private string GetGameName(string gameId)
+        private static string GetGameName(string gameId)
         {
-            if (!_gameNameList.TryGetValue(gameId, out var name))
-            {
-                return gameId;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return dic.TryGetValue("en", out var result) ? result : gameId;
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.Live22, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
     }
 }

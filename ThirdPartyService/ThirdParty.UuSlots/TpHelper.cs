@@ -13,7 +13,7 @@ namespace ThirdParty.UuSlots
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, UuSlotsConfig> _siteConfigDic;
-        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+       
         private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
@@ -23,7 +23,6 @@ namespace ThirdParty.UuSlots
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<UuSlotsConfig>(TpEnum.UuSlots.ToString());
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.UuSlots).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         #region Request
@@ -328,14 +327,12 @@ namespace ThirdParty.UuSlots
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
 
-        private string GetGameName(string gameId)
+        private static string GetGameName(string gameId)
         {
-            if (!_gameNameList.TryGetValue(gameId, out var name))
-            {
-                return gameId;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return dic.TryGetValue("en", out var result) ? result : gameId;
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.UuSlots, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
     }
 }

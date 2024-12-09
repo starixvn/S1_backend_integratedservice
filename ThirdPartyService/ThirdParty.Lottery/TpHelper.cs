@@ -12,7 +12,7 @@ namespace ThirdParty.Lottery
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly TemporaryLogSentryService temporaryLogSentryService;
+        
         private readonly Dictionary<int, LotteryConfig> _siteConfigDic;
         private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
@@ -22,7 +22,6 @@ namespace ThirdParty.Lottery
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<LotteryConfig>(TpEnum.Lottery.ToString());
-            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
@@ -206,7 +205,7 @@ namespace ThirdParty.Lottery
             {
                 GameID = GameId,
                 Game = GameId,
-                RefNo = GameRoundId,
+                RefNo = GetGameName(GameId),
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
                 BetType = string.Empty,
@@ -309,6 +308,14 @@ namespace ThirdParty.Lottery
         {
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+        }
+
+        private static string GetGameName(string gameId)
+        {
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.Lottery, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
     }
 }

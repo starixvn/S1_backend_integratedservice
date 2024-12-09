@@ -17,11 +17,10 @@ namespace ThirdParty.TableGame
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
         private readonly IPayloadLogger _payloadLogService;
-        private readonly Dictionary<string, string> _gameNameList;
 
         public TpHelper(IServiceProvider provider)
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.TableGame).ToDictionary(d => d.GameId, d => d.Name);
+           
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TableGameConfig>(TpEnum.TableGame.ToString());
         }
@@ -313,14 +312,12 @@ namespace ThirdParty.TableGame
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
 
-        private string GetGameName(string gameCode)
+        private static string GetGameName(string gameId)
         {
-            if (!_gameNameList.TryGetValue(gameCode, out var name))
-            {
-                return gameCode;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : gameCode : gameCode;
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.TableGame, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
     }
 }

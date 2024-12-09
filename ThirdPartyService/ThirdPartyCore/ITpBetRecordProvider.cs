@@ -15,5 +15,9 @@ namespace ThirdPartyCore
         IReadOnlyDictionary<string, object> DbQueryFirst(string spName, object parameters, DataBase dataBase);
 
         IEnumerable<IReadOnlyDictionary<string, object>> DbQuery(string spName, object parameters, DataBase dataBase);
+
+        GameNameInfo GetGameNameInfo(int tpId, string gameId, string bettype, string lang);
+
+        GameNameInfo GetGameNameInfo(int tpId, string gameId, string lang);
     }
 }

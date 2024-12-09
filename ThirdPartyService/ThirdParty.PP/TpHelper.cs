@@ -19,7 +19,7 @@ namespace ThirdParty.PP
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, PPConfig> _siteConfigDic;
-        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+       
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
@@ -30,7 +30,6 @@ namespace ThirdParty.PP
 
         public TpHelper(IServiceProvider provider)
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.PP).ToDictionary(d => d.AppId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PPConfig>(TpEnum.PP.ToString());
             _temporaryLogPayloadService = provider.GetRequiredService<IPayloadLogger>();
         }
@@ -214,7 +213,7 @@ namespace ThirdParty.PP
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = GameId,
-                Game = GetGameName(GameId, betRecordInfo.GameType),
+                Game = GetGameName(GameId),
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
@@ -349,19 +348,12 @@ namespace ThirdParty.PP
             return "Service_BettransRng_PP_TicketNo_Get";
         }
 
-        private string GetGameName(string gameId, int gameType)
+        private static string GetGameName(string gameId)
         {
-            if (gameType.ToString() == PPLiveCasinoGameTypeId)
-            {
-                return gameId;
-            }
-
-            if (!_gameNameList.TryGetValue(gameId, out var name))
-            {
-                return gameId;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return dic.TryGetValue("en", out var result) ? result : gameId;
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.PP, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
     }
 }

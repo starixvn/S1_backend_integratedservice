@@ -265,14 +265,12 @@ namespace ThirdParty.AESexy
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
 
-        private string GetGameName(string gameCode)
+        private static string GetGameName(string gameId)
         {
-            if (!_gameNameList.TryGetValue(gameCode, out var name))
-            {
-                return gameCode;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : gameCode : gameCode;
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.AESexy, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
 
         public class DetailResult

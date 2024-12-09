@@ -18,14 +18,13 @@ namespace ThirdParty.MaxGame
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
-        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+       
 
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(TpEnum.MaxGame.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.MaxGame).ToDictionary(d => d.GameId, d => d.Name);
         }
 
         #region Request
@@ -308,14 +307,12 @@ namespace ThirdParty.MaxGame
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
 
-        private string GetGameName(string gameCode)
+        private static string GetGameName(string gameId)
         {
-            if (!_gameNameList.TryGetValue(gameCode, out var name))
-            {
-                return gameCode;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : gameCode : gameCode;
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.MaxGame, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
     }
 }
