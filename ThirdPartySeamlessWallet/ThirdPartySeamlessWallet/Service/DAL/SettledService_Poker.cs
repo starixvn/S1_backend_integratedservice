@@ -1875,7 +1875,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
                         bettingDataPK_KY.money,
-                        (int)Tp.V8,
+                        (int)Tp.KY,
                         TransType.Payout,
                         $"Payout: {bettingDataPK_KY.money:#,##0.##} {bettingDataPK_KY.orderId}",
                         bettingDataPK_KY.gameNo,
