@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -58,6 +59,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// </summary>
         public string Address { get; set; }
         
+        public int AgentId
+        {
+            get
+            {
+                var result = _agentIdList.TryGetValue(CurrencyId , out var agent);
+                if (!result)
+                {
+                    throw new KeyNotFoundException();
+                }
+                return agent;
+            }
+        }
+        
+        public string AllAgentId => JsonConvert.SerializeObject(new List<int> {AgentId});
+        
         #endregion
 
         #region CustRegInfo
@@ -76,16 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         #endregion
 
         #region CustWallet
-
-        /// <summary>
-        /// 錢包餘額
-        /// </summary>
-        public decimal Balance { get; set; }
         
-        /// <summary>
-        /// 提款限額
-        /// </summary>
-        public decimal WithdrawalLimit { get; set; }
         /// <summary>
         /// UTC +0
         /// </summary>
@@ -130,6 +137,50 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         #endregion
 
+        #region CustBank
+
+        public List<BankDetail> CustBankDetail { get; set; } = new();
+        public List<EWalletDetail> CustEWalletDetail { get; set; } = new();
+        public List<CryptoWalletDetail> CustCryptoWalletDetail { get; set; } = new();
+
+        public class BankDetail
+        {
+            public int SysId { get; set; }
+            public string AccountNo { get; set; }
+            public string IFSCCode { get; set; }
+        }
+        public class EWalletDetail
+        {
+            public int SysId { get; set; }
+            public string AccountNo { get; set; }
+        }
+        public class CryptoWalletDetail
+        {
+            public int CurrencyId { get; set; }
+            public string Network { get; set; }
+            public string Address { get; set; }
+            public string NickName { get; set; }
+        }
+        
+        #endregion
+        
+        #region private
+
+        private readonly Dictionary<int, int> _agentIdList = new()
+        {
+            { 2, 1 },
+            { 3, 2 },
+            { 4, 3 },
+            { 13, 4 },
+            { 15, 5 },
+            { 45, 6 },
+            { 51, 7 },
+            { 61, 8 },
+            { 72, 9 },
+            { 74, 10 }
+        };
+
+        #endregion
     }
 
     public class MigrationCustomerResponse
@@ -139,6 +190,26 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int ErrorCode { get; set; }
     }
 
+    public class MigrationBalanceRequest
+    {
+        public int SiteId { get; set; }
+        public int CustId { get; set; }
+        /// <summary>
+        /// 錢包餘額
+        /// </summary>
+        public decimal Balance { get; set; }
+        /// <summary>
+        /// 提款限額
+        /// </summary>
+        public decimal WithdrawalLimit { get; set; }
+    }
+    
+    public class MigrationCustomerBalanceResponse
+    {
+        public string Message { get; set; }
+        public int ErrorCode { get; set; }
+    }
+    
     public class MigrationAffiliateRequest
     {
         public int SiteId { get; set; }
