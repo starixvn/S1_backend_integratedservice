@@ -34,7 +34,7 @@ namespace ThirdPartyWager.Service.BLL
             return commonService.GetWagerSummaryBySiteIds(spName, beginTime, endTime, siteIds);
         }
 
-        public Task<IEnumerable<FincanceDailySummary>> GetWagerSummaryBySiteId(string spName, long beginTime, long endTime, int siteId)
+        public Task<IEnumerable<FincanceDailySummary>> GetWagerSummaryBySiteId(string spName, long beginTime, long endTime, string siteId)
         {
             return commonService.GetWagerSummaryBySiteId(spName, beginTime, endTime, siteId);
         }

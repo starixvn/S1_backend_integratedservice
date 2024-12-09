@@ -107,14 +107,14 @@ namespace ThirdPartyWager.Service.BLL
                         var errorCode = dataWager.resp.error_code;
                         if (errorCode != 0)
                         {
-                            msg = "THIRD_PARTY_ERROR";
+                            msg = $"SiteId:{site.SiteId} THIRD_PARTY_ERROR";
                             _logger.LogError($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             return false;
                         }
 
                         if (errorCode == 0 && dataWager.resp.items.total_row == 0)
                         {
-                            msg = "NO_DATA";
+                            msg = $"SiteId:{site.SiteId} NO_DATA";
                             _logger.LogInformation($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             break;
                         }
@@ -137,10 +137,11 @@ namespace ThirdPartyWager.Service.BLL
                         bool check = await CompareSummaryAsync(site.SiteId,wagerTime, gameType, cp);
                         if (check)
                         {
-                            msg = "MATCH";
+                            msg = $"SiteId:{site.SiteId} MATCH";
                             _logger.LogInformation($"{workerName} {msg}");
                             continue;
                         }
+                        _logger.LogInformation($"SiteId:{site.SiteId} NO MATCH");
                         compareStatus = false;
                     }
 
@@ -187,9 +188,12 @@ namespace ThirdPartyWager.Service.BLL
 
         private async Task<bool> CompareSummaryAsync(int siteId,TimeCast wagerTime, int gameType, CompareParam cp)
         {
+            var setting = _siteConfig[siteId];
+            var siteIds = JsonConvert.SerializeObject(setting.CommonSiteIds);
+
             // table summary
             var spName = (gameType == (int)GameType.GPI_RNG) ? "Service_TpWagerRng_GPI_Total_Get" : "Service_TpWagerLT_GPI_Total_Get";
-            var summary = await _commonBLL.GetWagerSummaryBySiteId(spName, wagerTime.startUnix, wagerTime.endUnix - 1,siteId);
+            var summary = await _commonBLL.GetWagerSummaryBySiteId(spName, wagerTime.startUnix, wagerTime.endUnix - 1, siteIds);
             var summaryStake = summary.Sum(x => x.Stake);
             var summaryWinlose = summary.Sum(x => x.WinlostAmount);
 
