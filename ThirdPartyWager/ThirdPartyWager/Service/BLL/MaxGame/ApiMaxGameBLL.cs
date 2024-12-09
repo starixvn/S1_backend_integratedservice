@@ -99,12 +99,18 @@ namespace ThirdPartyWager.Service.BLL
 
             var additionalLogInfo = new Dictionary<string, object>() {
                 {"Request", JsonConvert.SerializeObject(param, Formatting.Indented) },
-                {"Response",JsonConvert.SerializeObject(result, Formatting.Indented) }
+                {"Response",JsonConvert.SerializeObject(result, Formatting.Indented) },
             };
             using (_logger.BeginScope(additionalLogInfo))
             {
                 _logger.LogInformation($"SABA PLUS API CALL, uri: {url}");
             }
+
+            if (result.ErrorCode != 0) {
+                throw new HttpRequestException(
+                    $"API Sabaplus return error code {result?.ErrorCode.ToString() ?? "Unknown" }");
+            }
+
             return result;
         }
 
