@@ -29,12 +29,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.KY
         public SettleFlag SettleFlag { get; set; }
     }
 
-
-    public class BettransData_KY : BettingDataPK_KY
+    public class SettleDataPK_KY : SettleData
     {
-        public BettransType TicketType { get; set; }
-        public TicketStatus TicketStatus { get; set; }
-        public SettleFlag SettleFlag { get; set; }
+        public string GameID { get; set; }
+        public int KindID { get; set; }
     }
 
     public class CurrencyData

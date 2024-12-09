@@ -2090,7 +2090,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_KY.timestamp).DateTime;
 
-                var bettrans = _partitionService.Query<BettransData_KY>(partitionTime, "Service_BettransPK_KY_gameNo_Get", new { gameNo = bettingDataPK_KY.gameNo });
+                var bettrans = _partitionService.Query<BettransDataPK_KY>(partitionTime, "Service_BettransPK_KY_gameNo_Get", new { gameNo = bettingDataPK_KY.gameNo });
 
                 result = _partitionService.Execute(partitionTime, "Service_BettransPK_KY_Ins", p, trans);
 
@@ -2101,7 +2101,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
                         bettingDataPK_KY.money,
-                        (int)Tp.V8,
+                        (int)Tp.KY,
                         TransType.Payout,
                         $"Payout: {bettingDataPK_KY.money:#,##0.##} {bettingDataPK_KY.orderId}",
                         bettingDataPK_KY.gameNo,

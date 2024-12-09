@@ -111,7 +111,8 @@
         DragonGaming_RNG = 123,
         PG2_RNG = 124,
         Eday_Lottery = 125,
-        KY_Poker = 126
+        KY_Poker = 126,
+        KY_Poker_None = 127,
     }
 
 }

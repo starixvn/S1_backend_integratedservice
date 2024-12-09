@@ -301,6 +301,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         walletService: walletService,
                         logger: logger,
                         tpBetRecordExtendBLL: _tpBetRecordExtendBLL)
+                    // TODO: double check the meaning of all methods below
                     .SetData()
                     .CheckRebateExcludeGame()
                     .SetTpSeamlessBonusFlag()

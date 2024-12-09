@@ -73,6 +73,7 @@
         DragonGaming = 70,
         PG2 = 71,
         Eday = 72,
+        KY = 73,
     }
 
     public enum GameType
@@ -130,6 +131,8 @@
         DragonGaming_RNG = 123,
         PG2_RNG = 124,
         Eday_Lottery = 125,
+        KY_Poker = 126,
+        KY_Poker_None = 127,
     }
     public enum SettlementType
     {
