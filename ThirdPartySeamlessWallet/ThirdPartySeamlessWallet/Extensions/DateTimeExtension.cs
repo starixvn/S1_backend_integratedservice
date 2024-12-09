@@ -7,6 +7,19 @@
             return partitionTime.ToString("yyyyMM");
         }
 
+        public static IList<DateTime> GetTimeFrame(this DateTime partitionTime, int partitionCheckDay)
+        {
+            var timeFrame = new List<DateTime>
+            {
+                partitionTime
+            };
+            if (partitionTime.Day <= partitionCheckDay)
+            {
+                timeFrame.Add(partitionTime.AddMonths(-1));
+            }
+            return timeFrame;
+        }
+
         /// <remarks>
         /// partitionCheckDay 為幾號時觸發往前抓一個月
         /// </remarks>

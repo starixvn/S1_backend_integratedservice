@@ -110,22 +110,14 @@ namespace ThirdPartySettleWorker.Workers
                             betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                         }
 
-                        var tt = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.TransTime).DateTime.ToString("yyyyMM");
-                        var st = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.ToString("yyyyMM");
-
+                       
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo);
                         if (result == 1)
                         {
-                            var settledTime = betRecordInfo.SettledTime;
-                            var transTime = betRecordInfo.TransTime;
                             Task.Run(() =>
                             {
                                 _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
-                                _ = _settledBLL.SetSettleFlag_BettransRng_JILI(bettransSet, unsettled.TransId, settledTime);
-                                if (tt != st)
-                                {
-                                    _ = _settledBLL.SetSettleFlag_BettransRng_JILI(bettransSet, unsettled.TransId, transTime);
-                                }
+                                _settledBLL.SetSettleFlagOfMonthlyBettrans(bettransSet, betRecordInfo);
                             });
                         }
                     }
