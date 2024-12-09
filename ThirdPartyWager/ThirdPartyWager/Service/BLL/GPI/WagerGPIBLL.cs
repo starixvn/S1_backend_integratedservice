@@ -168,10 +168,12 @@ namespace ThirdPartyWager.Service.BLL
 
                 msg = "FINISH";
                 _logger.LogInformation($"{workerName} {msg}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
-                if (compareStatus) return true;
+                
 
                 if (compare)
                 {
+                    //都比對成功才return true
+                    if (compareStatus) return true;
                     // after rewrite go check next time
                     return false;
                 }
