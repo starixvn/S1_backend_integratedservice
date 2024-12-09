@@ -54,7 +54,7 @@ namespace ThirdPartyWager.Helper
                     TpId = tpId,
                     CurrencyId = item.CurrencyId,
                     CurrencyIso = item.CurrencyIso,
-                    Stake = item.Stake,
+                    Stake = item.ActualStake,
                     ValidBet = item.NetStake,
                     WinlostAmount = (item.WinLose - item.ActualStake),
                     Payout = item.WinLose
