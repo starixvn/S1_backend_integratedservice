@@ -79,7 +79,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> GetWagersAsync(TimeCast wagerTime, int gameType, bool compare = false)
         {
             var msg = "FATAL_ERROR";
-            var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+            var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId).Where(x => x.TicketKey == 1);
             var wagerData = new List<Items_GPI>();
             var cp = new CompareParam();
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
