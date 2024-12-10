@@ -13,6 +13,7 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class CQ9Controller : ControllerBase
     {
+        private readonly Tools _tools;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingBLL _bettingBLL;
@@ -26,6 +27,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public CQ9Controller(IServiceProvider provider)
         {
+            _tools = provider.GetRequiredService<Tools>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
@@ -306,7 +308,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBalanceResp.status.code = "0";
             getBalanceResp.status.message = "Success";
             getBalanceResp.status.datetime = GetCurrentGameTime();
-            getBalanceResp.data.balance = (tpCheck == null) ? 0 : tpCustBalance.Balance;
+            getBalanceResp.data.balance = (tpCheck == null) ? 0 : _tools.Floor(tpCustBalance.Balance, 4);
             getBalanceResp.data.currency = tpCustBalance.TpCurrencyId;
 
             _log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
@@ -405,7 +407,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (result > 0)
                 {
                     getBetResp.data = new BalanceData();
-                    getBetResp.data.balance = tpAffterAmount;
+                    getBetResp.data.balance = _tools.Floor(tpAffterAmount, 4);
                     getBetResp.data.currency = tokenCurrency;
                     getBetResp.status.code = "0";
                     getBetResp.status.message = "Success";
@@ -527,7 +529,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (result > 0)
                 {
                     getEndRoundResp.data = new BalanceData();
-                    getEndRoundResp.data.balance = tpAffterAmount;
+                    getEndRoundResp.data.balance = _tools.Floor(tpAffterAmount, 4);
                     getEndRoundResp.data.currency = tokenCurrency;
                     getEndRoundResp.status.code = "0";
                     getEndRoundResp.status.message = "Success";
@@ -629,7 +631,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getRefundResp.status.message = "Success";
                     getRefundResp.status.datetime = GetCurrentGameTime();
                     getRefundResp.data = new BalanceData();
-                    getRefundResp.data.balance = tpCustBalance.Balance;
+                    getRefundResp.data.balance = _tools.Floor(tpCustBalance.Balance, 4);
                     getRefundResp.data.currency = tpCustBalance.TpCurrencyId;
                     _log2File.Info($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
                     return getRefundResp;
@@ -798,7 +800,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, debitReq.account, (int)gameType);
                     apiResponse.data = new BalanceData();
-                    apiResponse.data.balance = tpAffterAmount;
+                    apiResponse.data.balance = _tools.Floor(tpAffterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
@@ -907,7 +909,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, creditReq.account, (int)gameType);
                     apiResponse.data = new BalanceData();
-                    apiResponse.data.balance = tpAffterAmount;
+                    apiResponse.data.balance = _tools.Floor(tpAffterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
@@ -1000,7 +1002,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, payoffReq.account);/*Just for TpCurrencyId*/
                     apiResponse.data = new BalanceData();
-                    apiResponse.data.balance = tpAffterAmount;
+                    apiResponse.data.balance = _tools.Floor(tpAffterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
@@ -1138,7 +1140,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, rolloutReq.account, (int)gameType);
                     apiResponse.data = new BalanceData();
-                    apiResponse.data.balance = tpAfterAmount;
+                    apiResponse.data.balance = _tools.Floor(tpAfterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
@@ -1262,8 +1264,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (result > 0)
                 {
                     apiResponse.data = new TakeAllData();
-                    apiResponse.data.amount = tpCustBalance.Balance;
-                    apiResponse.data.balance = tpAffterAmount;
+                    apiResponse.data.amount = _tools.Floor(tpCustBalance.Balance, 4);
+                    apiResponse.data.balance = _tools.Floor(tpAffterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
@@ -1402,7 +1404,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, rollinReq.account, (int)gameType);
                     apiResponse.data = new BalanceData();
-                    apiResponse.data.balance = tpAfterAmount;
+                    apiResponse.data.balance = _tools.Floor(tpAfterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
