@@ -204,8 +204,8 @@ namespace ThirdParty.Lottery
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = GameId,
-                Game = GameId,
-                RefNo = GetGameName(GameId),
+                Game = GetGameName(GameId),
+                RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
                 MatchID = string.Empty,
                 BetType = string.Empty,
