@@ -66,14 +66,6 @@ public class FinancePGBLL : ITpReportBLL
                         GameType = config.GameType
                     }
                 );
-
-            if (dailyBetSummary.ErrorCode != 0)
-            {
-                _logger.LogError("{DaiLySummaryTableGameError}",
-                    JsonConvert.SerializeObject(dailyBetSummary)
-                );
-                continue;
-            }
             
             if (!dailyBetSummary.Payload.GameTypes.Any()) {
                 _logger.LogWarning($"GetDailySummary of {config.GameType} return no data");

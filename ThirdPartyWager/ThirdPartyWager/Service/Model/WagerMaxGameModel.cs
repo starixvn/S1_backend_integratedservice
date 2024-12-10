@@ -138,7 +138,7 @@ namespace ThirdPartyWager.Service.Model
     public class DailySummaryData_MaxGame {
         public string Seq { get; set; }
         public int ErrorCode { get; set; }
-        public string ErrorMessage { get; set; }
+        public string ErrorMsg { get; set; }
         public DateTime TimeStamp { get; set; }
         public PayloadDailySummaryData_MaxGame Payload { get; set; }
     }

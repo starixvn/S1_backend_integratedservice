@@ -71,15 +71,6 @@ namespace ThirdPartyWager.Service.BLL
                         }
                     );
 
-                if (dailyBetSummary.ErrorCode != 0)
-                {
-                    _logger.LogError("{DaiLySummaryFaChaiError}",
-                        JsonConvert.SerializeObject(dailyBetSummary)
-                    );
-
-                    continue;
-                }
-
                 if (dailyBetSummary.Payload.GameTypes.Any())
                 {
                     reportData.Add(dailyBetSummary.Payload);
