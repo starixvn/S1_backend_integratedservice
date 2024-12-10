@@ -4,8 +4,10 @@ using System.Net;
 using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.KY
@@ -141,12 +143,94 @@ namespace ThirdParty.KY
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_KY_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
+            var detail = ToJson(wagerDetail);
+            // TODO: How to determine the TpCategory? w/ or w/o revenue?
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.P2P => new PokerDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("TableID")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("Accounts")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("GameStartTime", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("GameEndTime", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("AllBet") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("Profit") * tpCurrency.ExchangeRate,
+                    GameCode = wagerDetail.GetValueOrDefault("KindID")?.ToString(),
+                },
+                TpCategory.Games => new PokerDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("TableID")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("Accounts")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("GameStartTime", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("GameEndTime", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("AllBet") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("Profit") * tpCurrency.ExchangeRate,
+                    GameCode = wagerDetail.GetValueOrDefault("KindID")?.ToString(),
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_KY_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            var gameCode = detail.GetStringValue("KindID");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameCode,
+                Game = GetGameName(gameCode),
+                RefNo = detail.GetStringValue("GameID"),
+                Title = tpGameType.TypeName,
+                MatchID = detail.GetStringValue("TableID"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
+        }
+
+        // TODO: ask opening game
+        private string GetGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "890" => "Banker Bull-Bull After Check Card",
+                "910" => "Baccarat",
+                "860" => "Three-Facecard",
+                "600" => "Black Jack",
+                "220" => "Golden Flower",
+                "830" => "Banker Bull-Bull",
+                "620" => "Texas Hold'em Poker",
+                "630" => "Pineapple Poker",
+                "950" => "Red-Black War",
+                "610" => "Landlord",
+                "930" => "Niu–niu for thousands person",
+                "510" => "Fishing",
+                "920" => "Forest Party",
+                "1860" => "Casino Poker",
+                "3006" => "H-Baccarat",
+                "8130" => "Run Fast",
+                _ => string.Empty,
+            };
         }
     }
 }
