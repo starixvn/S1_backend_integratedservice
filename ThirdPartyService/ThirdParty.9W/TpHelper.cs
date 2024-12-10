@@ -21,7 +21,8 @@ namespace ThirdParty.NineW
         private readonly Dictionary<int, NineWConfig> _siteConfigDic;
         // 643947 Nova EttaTestINR
         // 1428020 12B EttaTestINR
-        private readonly IEnumerable<int> uATAllowCustId = new List<int>() { 643947, 1428020 };
+        // 651941 noble888 ricktestar
+        private readonly IEnumerable<int> uATAllowCustId = new List<int>() { 643947, 1428020, 651941 };
 
         public TpHelper(IServiceProvider provider)
         {
