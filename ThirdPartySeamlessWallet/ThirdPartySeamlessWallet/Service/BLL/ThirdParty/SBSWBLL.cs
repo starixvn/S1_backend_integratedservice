@@ -104,6 +104,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var seq = Guid.NewGuid().ToString();
                 _payloadLogService.LogDetailedPayload(seq, bodyText, logMeta);
                 _payloadLogService.UpdateDetailedPayLoadWithResponse(seq, response, logMeta);
+                _logger.LogInformation("[SBSW] Action: {Action}, Request Payload: {Payload}, Response: {Response}",
+                    logMeta.Action, bodyText, JsonConvert.SerializeObject(response));
             }
         }
 
