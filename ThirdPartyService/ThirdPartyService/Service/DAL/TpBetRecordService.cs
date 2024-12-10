@@ -1,5 +1,5 @@
 ﻿using Dapper;
-
+using Microsoft.Extensions.Caching.Memory;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -15,11 +15,11 @@ namespace ThirdPartyService.Service.DAL
         private readonly MySqlClient _mainDbClient;
         private readonly IReadOnlyDictionary<int, List<GameCasinoOption>> _gameCasinoList;
         private readonly IReadOnlyDictionary<int, TpListOption> _tpList;
-        private readonly IEnumerable<GameNameInfo> _gameNameList;
+        private readonly IMemoryCache cache;
 
         public TpBetRecordService(IServiceProvider provider)
         {
-            _gameNameList = provider.GetRequiredService<IEnumerable<GameNameInfo>>();
+            cache = provider.GetRequiredService<IMemoryCache>();
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
@@ -92,15 +92,37 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
+        private IList<GameNameInfo> GetAllGameName()
+        {
+            try
+            {
+                string key = "GameName";
+                var gameNameInfo = cache.Get<IList<GameNameInfo>>(key);
+                if (gameNameInfo == null)
+                {
+                    gameNameInfo = _reportDbClient.Query<GameNameInfo>("Game_Name_Get").ToList();
+                    cache.Set(key, gameNameInfo, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                }
+
+                return gameNameInfo;
+            }
+            catch (Exception e)
+            {
+                return new List<GameNameInfo>();
+            }
+            
+        }
+
         public GameNameInfo GetGameNameInfo(int tpId, string gameId, string bettype, string lang)
         {
-            return _gameNameList.FirstOrDefault(g =>
+
+            return GetAllGameName().FirstOrDefault(g =>
                 g.TpId == tpId && g.GameId == gameId && g.BetType == bettype && g.Lang == lang);
         }
 
         public GameNameInfo GetGameNameInfo(int tpId, string gameId, string lang)
         {
-            return _gameNameList.FirstOrDefault(g =>
+            return GetAllGameName().FirstOrDefault(g =>
                 g.TpId == tpId && g.GameId == gameId && g.Lang == lang);
         }
     }
