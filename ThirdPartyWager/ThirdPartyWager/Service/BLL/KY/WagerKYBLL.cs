@@ -42,6 +42,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}");
                 }
+                Thread.Sleep(11000);
             }
 
             return quick;
