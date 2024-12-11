@@ -2118,6 +2118,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return -3;
                 }
+                
+                //確認TxId是否重複
+                if (bettrans.Any(i => i.txId == cancelData_Eday.txId))
+                {
+                    return -4;
+                }
 
                 var cancelTransId = $"{cancelData_Eday.billId}_{cancelData_Eday.roundCode}";
                 var cancelData = new BettransLTEdayCancelBet()
@@ -2208,6 +2214,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (bettransLTEday.All(i => i.TicketType == (int)BettransType.CancelBet))
                 {
                     return -3;
+                }
+                
+                //確認TxId是否重複
+                if (bettransLTEday.Any(i => i.txId == settleData_Eday.txId))
+                {
+                    return -4;
                 }
                 
                 //驗是否為Void draw及Void round
@@ -2322,6 +2334,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var tpCategory = TpCategory.Lottery;
             var CancelSpName = "Service_BettransLT_Eday_Round_CancelBet_Set";
             var GetSpName = "Service_BettransLT_Eday_Round_Get";
+            var CancelRoundInsSpName = "Service_BettransLT_Eday_Ins";
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -2340,6 +2353,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (!bettransLTEday.Any())
                 {
                     return -2;
+                }
+
+                //確認TxId是否重複
+                if (bettransLTEday.Any(i => i.txId == voidRoundData_Eday.txId))
+                {
+                    return -3;
                 }
                 
                 var cancelData = new BettransLTEdayRoundCancelBet()
@@ -2381,6 +2400,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans,
                         AllowNegative.Allow
                     );
+                    
+                    //最後塞一筆txId的空單，以免重複Refund
+                    var voidEdayData = new BettransLTEdayPayoutRequest
+                    {
+                        txId = voidRoundData_Eday.txId,
+                        token = bettransLTEday.FirstOrDefault().token,
+                        billId =  $"{voidRoundId}_VR_{voidRoundData_Eday.eventId}",
+                        transId = $"{voidRoundId}_VR_{voidRoundData_Eday.eventId}",
+                        player = voidRoundData_Eday.player,
+                        amount = voidRoundData_Eday.bet,
+                        timestamp = voidRoundData_Eday.timestamp,
+                        roundCode = voidRoundData_Eday.roundCode,
+                        gameCode = voidRoundData_Eday.gameCode,
+                        betType = 4,
+                        eventId = voidRoundData_Eday.eventId,
+                        betTotal = voidRoundData_Eday.bet,
+                        winTotal = voidRoundData_Eday.win,
+                        ticketCount = 0,
+                        UTCBetTime = bettransLTEday.FirstOrDefault().UTCBetTime,
+                        UTCSettleTime = voidRoundData_Eday.UTCSettleBetTime,
+                        TicketStatus = voidRoundData_Eday.TicketStatus,
+                        TicketType = voidRoundData_Eday.TicketType,
+                        SettleFlag = voidRoundData_Eday.SettleFlag
+                    };
+                
+                    p = new DynamicParameters(voidEdayData);
+                    _ = _mainDbClient.Execute(CancelRoundInsSpName, p, conn,trans);
                 }
 
                 if (result > 0)
@@ -2417,6 +2463,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var tpCategory = TpCategory.Lottery;
             var CancelRoundSpName = "Service_BettransLT_Eday_Round_CancelBet_Set";
             var GetRoundSpName = "Service_BettransLT_Eday_Round_Get";
+            var CancelRoundInsSpName = "Service_BettransLT_Eday_Ins";
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -2492,6 +2539,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans,
                         AllowNegative.Allow
                     );
+                    
+                    //最後塞一筆txId的空單，以免重複Refund
+                    var voidEdayData = new BettransLTEdayPayoutRequest
+                    {
+                        txId = voidDrawData_Eday.txId,
+                        token = bettransLTEday.FirstOrDefault().token,
+                        billId =  $"{voidDrawRoundId}_VD_{voidDrawData_Eday.eventId}",
+                        transId = $"{voidDrawRoundId}_VD_{voidDrawData_Eday.eventId}",
+                        player = voidDrawData_Eday.player,
+                        amount = voidDrawData_Eday.bet,
+                        timestamp = voidDrawData_Eday.timestamp,
+                        roundCode = voidDrawData_Eday.roundCode,
+                        gameCode = voidDrawData_Eday.gameCode,
+                        betType = 4,
+                        eventId = voidDrawData_Eday.eventId,
+                        betTotal = voidDrawData_Eday.bet,
+                        winTotal = voidDrawData_Eday.win,
+                        ticketCount = 0,
+                        UTCBetTime = bettransLTEday.FirstOrDefault().UTCBetTime,
+                        UTCSettleTime = voidDrawData_Eday.UTCSettleBetTime,
+                        TicketStatus = voidDrawData_Eday.TicketStatus,
+                        TicketType = voidDrawData_Eday.TicketType,
+                        SettleFlag = voidDrawData_Eday.SettleFlag
+                    };
+                
+                    p = new DynamicParameters(voidEdayData);
+                    _ = _mainDbClient.Execute(CancelRoundInsSpName, p, conn,trans);
                 }
 
                 if (result > 0)
