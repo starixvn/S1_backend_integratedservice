@@ -1059,6 +1059,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return -1;
                 }
                 
+                //確認TxId是否重複
+                if (bettrans.Any(i => i.txId == bettingDataLT_Eday.txId))
+                {
+                    return -2;
+                }
+                
                 var edayBetId = $"{bettingDataLT_Eday.billId}_{bettingDataLT_Eday.roundCode}";
                 var refTransId = $"{bettingDataLT_Eday.roundCode}_{bettingDataLT_Eday.player}" ;
                 bettingDataLT_Eday.player = tpCustInfo.TpUserName;
