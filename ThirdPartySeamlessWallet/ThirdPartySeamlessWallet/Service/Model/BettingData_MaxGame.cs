@@ -60,7 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public decimal Odds { get; set; }
         public string BetChoice { get; set; }
         public string TableCode { get; set; }
-        public Dictionary<string,string> OtherBetInfo { get; set; }
+        public Dictionary<string, string> OtherBetInfo { get; set; }
     }
 
     public class PayoutData_MaxGame
@@ -74,6 +74,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
     {
         public string OperatorCustId { get; set; }
         public string GameType { get; set; }
+        public string IpAddress { get; set; }
         public List<BetDataSet_EndGameReq_MaxGame> BetDataSet { get; set; }
     }
 
@@ -90,6 +91,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public string GameResult { get; set; }
         public string ResultId { get; set; }
         public DateTime SettleDate { get; set; }
+
         public long SettleDateUnix
         {
             get
@@ -97,6 +99,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
                 return new DateTimeOffset(SettleDate, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds();
             }
         }
+
         public Dictionary<string, string>? OtherBetInfo { get; set; }
     }
 
@@ -150,6 +153,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public string BonusName { get; set; }
         public string PrizeName { get; set; }
         public DateTime SettleDate { get; set; }
+
         public long SettleDateUnix
         {
             get
@@ -185,6 +189,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public decimal NetStake { get; set; }
         public decimal Payout { get; set; }
         public DateTime SettleDate { get; set; }
+
         public long SettleDateUnix
         {
             get
@@ -273,7 +278,6 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public decimal Max { get; set; }
     }
 
-
     public class GetPlayerInfoResp : BaseResp
     {
         public GetPlayerInfoResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
@@ -292,6 +296,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public string UserName { get; set; }
         public string CurrencyISO { get; set; }
         public string Currency { get; set; }
+
         public decimal Balance
         {
             get
@@ -299,11 +304,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
                 _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
                 return _Balance;
             }
+
             set
             {
                 _Balance = value;
             }
         }
+
         public decimal MinBet
         {
             get
@@ -311,11 +318,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
                 _ = decimal.TryParse(_MinBet.ToString("N2"), out _MinBet);
                 return _MinBet;
             }
+
             set
             {
                 _MinBet = value;
             }
         }
+
         public decimal MaxBet
         {
             get
@@ -323,11 +332,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
                 _ = decimal.TryParse(_MaxBet.ToString("N2"), out _MaxBet);
                 return _MaxBet;
             }
+
             set
             {
                 _MaxBet = value;
             }
         }
+
         public string BetGroup { get; set; }
         public string WalletSideToken { get; set; }
     }
@@ -337,12 +348,14 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public GetBalanceResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
         {
         }
+
         public Payload_GetBalanceResp Payload { get; set; }
     }
 
     public class Payload_GetBalanceResp
     {
         private decimal _Balance = 0m;
+
         public decimal Balance
         {
             get
@@ -350,6 +363,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
                 _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
                 return _Balance;
             }
+
             set
             {
                 _Balance = value;
@@ -370,6 +384,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
     {
         private decimal _Balance = 0m;
         public string OperatorCustId { get; set; }
+
         public decimal Balance
         {
             get
@@ -377,11 +392,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
                 _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
                 return _Balance;
             }
+
             set
             {
                 _Balance = value;
             }
         }
+
         public List<BetDataSetList_MaxGame> BetDataSet { get; set; }
     }
 
@@ -390,6 +407,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public EndGameResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
         {
         }
+
         public Payload_EndGameResp Payload { get; set; }
     }
 
@@ -397,6 +415,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
     {
         private decimal _Balance = 0m;
         public string OperatorCustId { get; set; }
+
         public decimal Balance
         {
             get
@@ -404,6 +423,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
                 _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
                 return _Balance;
             }
+
             set
             {
                 _Balance = value;
@@ -428,6 +448,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public BonusResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
         {
         }
+
         public Payload_BonusResp Payload { get; set; }
     }
 
@@ -435,6 +456,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
     {
         private decimal _Balance = 0m;
         public string OperatorCustId { get; set; }
+
         public decimal Balance
         {
             get
@@ -442,11 +464,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
                 _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
                 return _Balance;
             }
+
             set
             {
                 _Balance = value;
             }
         }
+
         public string RefNo { get; set; }
     }
 
@@ -463,6 +487,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
     {
         private decimal _Balance = 0m;
         public string OperatorCustId { get; set; }
+
         public decimal Balance
         {
             get
@@ -470,11 +495,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
                 _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
                 return _Balance;
             }
+
             set
             {
                 _Balance = value;
             }
         }
+
         public List<BetDataSetList_MaxGame> BetDataSet { get; set; }
     }
 }
