@@ -100,6 +100,7 @@ namespace ThirdPartyWager.Service.BLL
             var additionalLogInfo = new Dictionary<string, object>() {
                 {"Request", JsonConvert.SerializeObject(param, Formatting.Indented) },
                 {"Response",JsonConvert.SerializeObject(result, Formatting.Indented) },
+                {"Remark", "Testing Duplicated API Calls" },
             };
             using (_logger.BeginScope(additionalLogInfo))
             {
