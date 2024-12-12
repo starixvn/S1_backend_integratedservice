@@ -496,6 +496,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getEndRoundResp;
                 }
 
+                var mtcode = string.Empty;
                 // check item param
                 foreach (var item in endRoundReq.detail)
                 {
@@ -518,6 +519,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return getEndRoundResp;
                     }
                     item.eventUnix = chkEventTimeParse;
+                    // 紀錄最後的mtcode
+                    mtcode = item.mtcode;
                 }
 
 
@@ -528,6 +531,25 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (result > 0 || result == -1)
                 {
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, endRoundReq.account, (int)gameType);
+                    if (tpAffterAmount == 0)
+                    {
+                        tpAffterAmount = tpCustBalance.Balance;
+                    }
+                    if (result == -1)
+                    {
+                        var record = _settledBLL.GetRecordRNG_CQ9(mtcode).FirstOrDefault(i => i.TicketType == (int)BettransType.Payout && i.mtcode == mtcode);
+                        if (record == null)
+                        {
+                            tpAffterAmount = tpCustBalance.Balance;
+                        }
+                        else
+                        {
+                            // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
+                            tpAffterAmount = record.Balance / tpCustBalance.ExchangeRate;
+                        }
+                    }
+
                     getEndRoundResp.data = new BalanceData();
                     getEndRoundResp.data.balance = _tools.Floor(tpAffterAmount, 4);
                     getEndRoundResp.data.currency = tokenCurrency;
@@ -561,7 +583,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         [Route("[controller]/transaction/game/refund")]
         [Route("[controller]/{sitename}/transaction/game/refund")]
-        public GetApiResp Refund([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRefundReq, string sitename = "") 
+        public GetApiResp Refund([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRefundReq, string sitename = "")
         {
             string logName = $"{_tpGameName}_Refund";
             var json = JsonConvert.SerializeObject(getRefundReq);
@@ -608,11 +630,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var refGameType = record.First().TableType;
                     var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, refundReq.account, (int)refGameType);
+                    // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
+                    var balance = record.First().Balance / tpCustBalance.ExchangeRate;
+
                     getRefundResp.status.code = "0";
                     getRefundResp.status.message = "Success";
                     getRefundResp.status.datetime = GetCurrentGameTime();
                     getRefundResp.data = new BalanceData();
-                    getRefundResp.data.balance = _tools.Floor(tpCustBalance.Balance, 4);
+                    getRefundResp.data.balance = _tools.Floor(balance, 4);
                     getRefundResp.data.currency = tpCustBalance.TpCurrencyId;
                     _log2File.Info($"refunded\r\n{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
                     return getRefundResp;
@@ -798,6 +823,24 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (result > 0 || result == -1)
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, debitReq.account, (int)gameType);
+                    if (tpAffterAmount == 0)
+                    {
+                        tpAffterAmount = tpCustBalance.Balance;
+                    }
+                    if (result == -1)
+                    {
+                        var record = _settledBLL.GetRecordRNG_CQ9(debitReq.mtcode).FirstOrDefault(i => i.TicketType == (int)BettransType.Payout && i.mtcode == debitReq.mtcode);
+                        if (record == null)
+                        {
+                            tpAffterAmount = tpCustBalance.Balance;
+                        }
+                        else
+                        {
+                            // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
+                            tpAffterAmount = record.Balance / tpCustBalance.ExchangeRate;
+                        }
+                    }
+
                     apiResponse.data = new BalanceData();
                     apiResponse.data.balance = _tools.Floor(tpAffterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
@@ -901,6 +944,24 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (result > 0 || result == -1)
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, creditReq.account, (int)gameType);
+                    if (tpAffterAmount == 0)
+                    {
+                        tpAffterAmount = tpCustBalance.Balance;
+                    }
+                    if (result == -1)
+                    {
+                        var record = _settledBLL.GetRecordRNG_CQ9(creditReq.mtcode).FirstOrDefault(i => i.TicketType == (int)BettransType.Payout && i.mtcode == creditReq.mtcode);
+                        if (record == null)
+                        {
+                            tpAffterAmount = tpCustBalance.Balance;
+                        }
+                        else
+                        {
+                            // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
+                            tpAffterAmount = record.Balance / tpCustBalance.ExchangeRate;
+                        }
+                    }
+
                     apiResponse.data = new BalanceData();
                     apiResponse.data.balance = _tools.Floor(tpAffterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
@@ -988,6 +1049,23 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (result > 0 || result == -1)
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, payoffReq.account);/*Just for TpCurrencyId*/
+                    if (tpAffterAmount == 0)
+                    {
+                        tpAffterAmount = tpCustBalance.Balance;
+                    }
+                    if (result == -1)
+                    {
+                        var record = _settledBLL.GetRecordRNG_CQ9(payoffReq.mtcode).FirstOrDefault(i => i.TicketType == (int)BettransType.Bonus && i.mtcode == payoffReq.mtcode);
+                        if (record == null)
+                        {
+                            tpAffterAmount = tpCustBalance.Balance;
+                        }
+                        else
+                        {
+                            // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
+                            tpAffterAmount = record.Balance / tpCustBalance.ExchangeRate;
+                        }
+                    }
                     apiResponse.data = new BalanceData();
                     apiResponse.data.balance = _tools.Floor(tpAffterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
@@ -1384,6 +1462,23 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (result > 0 || result == -1)
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, rollinReq.account, (int)gameType);
+                    if (tpAfterAmount == 0)
+                    {
+                        tpAfterAmount = tpCustBalance.Balance;
+                    }
+                    if (result == -1)
+                    {
+                        var record = _settledBLL.GetRecordRNG_CQ9(rollinReq.mtcode).FirstOrDefault(i => i.TicketType == (int)BettransType.Payout && i.mtcode == rollinReq.mtcode);
+                        if (record == null)
+                        {
+                            tpAfterAmount = tpCustBalance.Balance;
+                        }
+                        else
+                        {
+                            // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
+                            tpAfterAmount = record.Balance / tpCustBalance.ExchangeRate;
+                        }
+                    }
                     apiResponse.data = new BalanceData();
                     apiResponse.data.balance = _tools.Floor(tpAfterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
@@ -1427,7 +1522,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return apiResponse;
         }
 
-        private long CheckTimeParse(string time)
+        private static long CheckTimeParse(string time)
         {
             DateTime dtFormat;
             if (!DateTime.TryParse(time, out dtFormat))
@@ -1446,13 +1541,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             return new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
         }
 
-        private string GetCurrentGameTime()
+        private static string GetCurrentGameTime()
         {
             var currentAt = new DateTimeOffset(DateTime.Now);
             return currentAt.ToOffset(new TimeSpan(-4, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK");
         }
 
-        private string GetTokenCurrency(string token)
+        private static string GetTokenCurrency(string token)
         {
             var parts = token.Split('.');
             var header = parts[0];
@@ -1502,7 +1597,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return _defaultConfig;
             }
 
-            return _siteNameConfigs.TryGetValue(siteName,out var result) ? result : _defaultConfig;
+            return _siteNameConfigs.TryGetValue(siteName, out var result) ? result : _defaultConfig;
         }
     }
 }
