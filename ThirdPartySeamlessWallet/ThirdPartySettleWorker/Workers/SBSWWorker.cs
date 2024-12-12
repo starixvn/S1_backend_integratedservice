@@ -258,8 +258,11 @@ namespace ThirdPartySettleWorker.Workers
                             }
 
                             // 只有體育類有Rollover
-                            if ((betRecordInfo.GameType != GameType.SBSW_Sports && betRecordInfo.SettlementType == SettlementType.SettledForValid)
-                                || sport_type == 157)
+                            if (((betRecordInfo.GameType != GameType.SBSW_Sports && betRecordInfo.SettlementType == SettlementType.SettledForValid)
+                                || sport_type == 157) &&
+                                (betRecordInfo.GameType != GameType.SBSW_VirtualSports2 &&
+                                 betRecordInfo.GameType != GameType.SBSW_VirtualSports &&
+                                 betRecordInfo.GameType != GameType.SBSW_NumberGame))
                             {
                                 betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                             }
@@ -270,6 +273,7 @@ namespace ThirdPartySettleWorker.Workers
                                 betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                                 betRecordInfo.TicketKey = 0;  //主播打賞不記BA
                             }
+
 
                             lgsw8.Stop();
                             settleFlowLog.AppendLine($"4C.Amount Check : {lgsw8.Elapsed}");
@@ -404,92 +408,103 @@ namespace ThirdPartySettleWorker.Workers
                         betRecordInfo.ValidBet = betDetial.discount_stake ?? 0;
                     }
 
-                    /*Cause Hard to Win So Cal to Valid*/
-                    if ((betDetial.bet_type ?? 0) == (int)BetType.FootballScoreHandicap ||
-                        (betDetial.bet_type ?? 0) == (int)BetType.FootballScoreOverUnder ||
-                        (betDetial.bet_type ?? 0) == (int)BetType.Parlay ||
-                        (betDetial.bet_type ?? 0) == (int)BetType.SingleMatchParlay)
-                    {
-                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                    }
-                    else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.MalayOdds)
-                    {
-                        if (betDetial.odds < 0 && isEBV)
-                        {
-                            betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
-                        }
-
-                        if (betDetial.odds > 0 && betDetial.odds < 0.7m)
-                        {
-                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                        }
-                        else
-                        {
-                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                        }
-                    }
-                    else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.ChinaOdds)
-                    {
-                        if (betDetial.odds < 0.7m)
-                        {
-                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                        }
-                        else
-                        {
-                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                        }
-                    }
-                    else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.DecimalOdds)
-                    {
-                        if (betDetial.odds < 1.7m)
-                        {
-                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                        }
-                        else
-                        {
-                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                        }
-                    }
-                    else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.IndoOdds)
-                    {
-                        if (betDetial.odds < 0 && isEBV)
-                        {
-                            betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
-                        }
-
-                        if (betDetial.odds < -1.43m)
-                        {
-                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                        }
-                        else
-                        {
-                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                        }
-                    }
-                    else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.AmericanOdds)
-                    {
-                        if (betDetial.odds < 0)
-                        {
-                            betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds) / 100;
-                        }
-
-                        if (betDetial.odds < -143m)
-                        {
-                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                        }
-                        else
-                        {
-                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                        }
-                    }
-                    else if ((betDetial.odds_type ?? 0) == 29)
+                    // Odds only apply for sportsbook
+                    // Vs with Number Game can be reach Bonus, so bonus not apply to this game type
+                    if (betRecordInfo.GameType is GameType.SBSW_VirtualSports or GameType.SBSW_VirtualSports2
+                        or GameType.SBSW_NumberGame)
                     {
                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
                     }
                     else
                     {
-                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                        /*Cause Hard to Win So Cal to Valid*/
+                        if ((betDetial.bet_type ?? 0) == (int)BetType.FootballScoreHandicap ||
+                            (betDetial.bet_type ?? 0) == (int)BetType.FootballScoreOverUnder ||
+                            (betDetial.bet_type ?? 0) == (int)BetType.Parlay ||
+                            (betDetial.bet_type ?? 0) == (int)BetType.SingleMatchParlay)
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                        }
+                        else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.MalayOdds)
+                        {
+                            if (betDetial.odds < 0 && isEBV)
+                            {
+                                betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
+                            }
+
+                            if (betDetial.odds > 0 && betDetial.odds < 0.7m)
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                            }
+                            else
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                            }
+                        }
+                        else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.ChinaOdds)
+                        {
+                            if (betDetial.odds < 0.7m)
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                            }
+                            else
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                            }
+                        }
+                        else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.DecimalOdds)
+                        {
+                            if (betDetial.odds < 1.7m)
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                            }
+                            else
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                            }
+                        }
+                        else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.IndoOdds)
+                        {
+                            if (betDetial.odds < 0 && isEBV)
+                            {
+                                betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
+                            }
+
+                            if (betDetial.odds < -1.43m)
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                            }
+                            else
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                            }
+                        }
+                        else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.AmericanOdds)
+                        {
+                            if (betDetial.odds < 0)
+                            {
+                                betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds) / 100;
+                            }
+
+                            if (betDetial.odds < -143m)
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                            }
+                            else
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                            }
+                        }
+                        else if ((betDetial.odds_type ?? 0) == 29)
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                        }
+                        else
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                        }
                     }
+                    
                 }
 
                 //half won/half lose/won/lose/void/running/draw/reject/refund/waiting
