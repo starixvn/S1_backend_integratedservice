@@ -546,7 +546,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else
                         {
                             // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
-                            tpAffterAmount = record.Balance / tpCustBalance.ExchangeRate;
+                            tpAffterAmount = record.Balance;
                         }
                     }
 
@@ -631,7 +631,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var refGameType = record.First().TableType;
                     var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, refundReq.account, (int)refGameType);
                     // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
-                    var balance = record.First().Balance / tpCustBalance.ExchangeRate;
+                    var balance = record.First().Balance;
 
                     getRefundResp.status.code = "0";
                     getRefundResp.status.message = "Success";
@@ -837,7 +837,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else
                         {
                             // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
-                            tpAffterAmount = record.Balance / tpCustBalance.ExchangeRate;
+                            tpAffterAmount = record.Balance;
                         }
                     }
 
@@ -958,7 +958,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else
                         {
                             // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
-                            tpAffterAmount = record.Balance / tpCustBalance.ExchangeRate;
+                            tpAffterAmount = record.Balance;
                         }
                     }
 
@@ -1063,7 +1063,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else
                         {
                             // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
-                            tpAffterAmount = record.Balance / tpCustBalance.ExchangeRate;
+                            tpAffterAmount = record.Balance;
                         }
                     }
                     apiResponse.data = new BalanceData();
@@ -1198,6 +1198,24 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (result > 0)
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, rolloutReq.account, (int)gameType);
+                    if (tpAfterAmount == 0)
+                    {
+                        tpAfterAmount = tpCustBalance.Balance;
+                    }
+                    if (result == -1)
+                    {
+                        var record = _settledBLL.GetRecordRNG_CQ9(rolloutReq.mtcode).FirstOrDefault(i => i.TicketType == (int)BettransType.Bet && i.mtcode == rolloutReq.mtcode);
+                        if (record == null)
+                        {
+                            tpAfterAmount = tpCustBalance.Balance;
+                        }
+                        else
+                        {
+                            // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
+                            tpAfterAmount = record.Balance;
+                        }
+                    }
+
                     apiResponse.data = new BalanceData();
                     apiResponse.data.balance = _tools.Floor(tpAfterAmount, 4);
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
@@ -1476,7 +1494,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else
                         {
                             // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
-                            tpAfterAmount = record.Balance / tpCustBalance.ExchangeRate;
+                            tpAfterAmount = record.Balance;
                         }
                     }
                     apiResponse.data = new BalanceData();
