@@ -17,7 +17,7 @@ namespace ThirdParty.FaChai
     {
         private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, FaChaiConfig> _siteConfigDic;
-       
+
         private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
@@ -219,7 +219,7 @@ namespace ThirdParty.FaChai
                 BetChoice = string.Empty,
                 Result = string.Empty,
                 DeviceType = DeviceType.None,
-                IP = string.Empty,
+                IP = detail.GetStringValue("IpAddress"),
                 MatchID = string.Empty
             };
         }
@@ -274,8 +274,6 @@ namespace ThirdParty.FaChai
 
             temporaryLogSentryService.WriteLogLaunchGame(nameof(FaChai), ApiUrl, header, postdata, result);
             _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
-
-
 
             ApiResult oApiResult = new ApiResult();
 
@@ -429,7 +427,7 @@ namespace ThirdParty.FaChai
 
         private static string GetGameName(string gameId)
         {
-            var gameInfo=TpBetRecordProvider.GetGameNameInfo((int)TpEnum.FaChai, gameId, "en");
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.FaChai, gameId, "en");
             return gameInfo is null
                 ? gameId
                 : gameInfo.Name;
