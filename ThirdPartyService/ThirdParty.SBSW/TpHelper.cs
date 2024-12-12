@@ -42,7 +42,7 @@ namespace ThirdParty.SBSW
                 userName = tpCustInfo.TpUserName,
                 maxtransfer = int.MaxValue,
                 mintransfer = 1,
-                currency = tpCustInfo.IsTest ? 20 : Convert.ToInt32(tpCustInfo.TpCurrencyId),
+                currency = Convert.ToInt32(tpCustInfo.TpCurrencyId),
                 oddsType = "1",
             };
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input));
@@ -458,7 +458,7 @@ namespace ThirdParty.SBSW
                 return;
             }
 
-            foreach(var parlayTicket in betDetail["ParlayData"])
+            foreach (var parlayTicket in betDetail["ParlayData"])
             {
                 parlayTicket["parlay_id"] = parlayTicket["parlay_id"].ToString();
             }
