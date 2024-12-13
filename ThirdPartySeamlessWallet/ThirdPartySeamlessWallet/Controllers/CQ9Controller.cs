@@ -631,7 +631,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var refGameType = record.First().TableType;
                     var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, refundReq.account, (int)refGameType);
                     // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
-                    var balance = record.First().Balance;
+                    var balance = record.First().Balance + Math.Abs(record.First().amount);
 
                     getRefundResp.status.code = "0";
                     getRefundResp.status.message = "Success";

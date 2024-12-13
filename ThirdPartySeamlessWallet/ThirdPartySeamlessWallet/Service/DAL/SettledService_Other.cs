@@ -1927,7 +1927,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var tpCategory = TpCategory.Cockfighting;
             var result = 0;
             int bonusId = 0;
-            afterAmount = 0;
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -2025,13 +2024,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         
-        public int RefundWCC_CQ9(TpCustInfo tpCustInfo, RefundDataRNG_CQ9 refundDataRNG_CQ9, out decimal afterAmount)
+        public int RefundWCC_CQ9(TpCustInfo tpCustInfo, RefundDataRNG_CQ9 refundDataRNG_CQ9, ref decimal afterAmount)
         {
             var tpId = Tp.CQ9;
             var tpGameType = GameType.CQ9_WCC;
             var tpCategory = TpCategory.Cockfighting;
             int bonusId = 0;
-            afterAmount = 0;
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
