@@ -3,6 +3,8 @@ using System.Net.Mime;
 using System.Text;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+using Newtonsoft.Json;
+using Org.BouncyCastle.Crypto.Tls;
 
 namespace CommonService.Service.BLL
 {
@@ -78,12 +80,41 @@ namespace CommonService.Service.BLL
             message.AlternateViews.Add(
                 AlternateView.CreateAlternateViewFromString(content, Encoding.UTF8, MediaTypeNames.Text.Html));
 
+            var logDetails = new
+            {
+                EmailSettings = new
+                {
+                    emailSettings.FromMail,
+                    emailSettings.FromName,
+                    emailSettings.SmtpServer,
+                    emailSettings.Port,
+                    emailSettings.Username,
+                    emailSettings.Password,
+                },
+                MessageDetails = new
+                {
+                    From = message.From.Address,
+                    To = message.To.Select(addr => addr.Address).ToList(),
+                    CC = message.CC.Select(addr => addr.Address).ToList(),
+                    BCC = message.Bcc.Select(addr => addr.Address).ToList(),
+                    Subject = message.Subject,
+                    Body = content
+                }
+            };
+
             try
             {
                 await _smtpClient.SendMailAsync(message).ConfigureAwait(false);
+
+                SentrySdk.CaptureMessage($"Email sent successfully. Details: {JsonConvert.SerializeObject(logDetails)}");
             }
             catch (Exception ex)
             {
+                SentrySdk.CaptureMessage(
+                    $"Failed to send email. Details: {JsonConvert.SerializeObject(logDetails)}" +
+                    $"Exception: {ex.Message}, StackTrace: {ex.StackTrace}"
+                );
+
                 return new ApiResult
                 {
                     ErrorCode = ErrorCode.Fail,
