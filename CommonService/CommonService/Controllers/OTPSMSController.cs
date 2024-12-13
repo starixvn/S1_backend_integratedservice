@@ -35,9 +35,9 @@ namespace CommonService.Controllers
             {
                 { OTPProvider.SkyLine, _skyLineBLL.SendOTP},
                 { OTPProvider.NxCloud, provider.GetRequiredService<NxCloudSMSBLL>().SendOTP},
-                { OTPProvider.YC, provider.GetRequiredService<YCBLL>().SendOTP},
-                { OTPProvider.AWS, provider.GetRequiredService<AWSBLL>().SendOTP},
-                { OTPProvider.SmsCloud, provider.GetRequiredService<SmsCloudBLL>().SendOTP},
+                //{ OTPProvider.YC, provider.GetRequiredService<YCBLL>().SendOTP},
+                //{ OTPProvider.AWS, provider.GetRequiredService<AWSBLL>().SendOTP},
+                //{ OTPProvider.SmsCloud, provider.GetRequiredService<SmsCloudBLL>().SendOTP},
             };
             _environment = provider.GetRequiredService<IConfiguration>().GetSection("env").Get<string>();
         }
