@@ -47,6 +47,7 @@ namespace CommonService.Service.BLL
 
                     if (isUsingMailSMTP)
                     {
+                        SentrySdk.CaptureMessage($"Send Mail");
                         sendMailResult = await _smtpMailBll.SendMailAsync(custInfo, verificationUrl, TemplateType.VerificationMail);
                     }
                     else
