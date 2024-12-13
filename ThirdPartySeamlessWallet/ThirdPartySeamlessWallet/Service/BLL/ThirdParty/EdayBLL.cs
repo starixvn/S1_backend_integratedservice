@@ -61,7 +61,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 message = EdayResultCode.Success.GetEnumDescription(),
                 data = new EdayGetBalanceResponse()
                 {
-                    balance = Math.Round(tpCustBalance.Balance, 2) //四捨五入小數點兩位數
+                    balance = Math.Truncate(tpCustBalance.Balance * 100) / 100 //無條件捨去
                 }
             };
             
@@ -119,7 +119,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     if (tpAfterAmount == 0 || result == -1)
                     {
                         var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.player, _gameType);
-                        tpAfterAmount = Math.Round(tpCustBalance.Balance, 2); //四捨五入小數點兩位數
+                        tpAfterAmount = Math.Truncate(tpCustBalance.Balance * 100) / 100; //無條件捨去
                     }
                     
                     return new EdayResponse<EdayBetRequestResponse>()
