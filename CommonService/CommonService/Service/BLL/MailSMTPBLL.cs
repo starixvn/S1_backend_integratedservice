@@ -84,6 +84,7 @@ namespace CommonService.Service.BLL
             }
             catch (Exception ex)
             {
+                SentrySdk.CaptureMessage($"PublishHtmlAsync: {ex.ToString()}");
                 return new ApiResult
                 {
                     ErrorCode = ErrorCode.Fail,
