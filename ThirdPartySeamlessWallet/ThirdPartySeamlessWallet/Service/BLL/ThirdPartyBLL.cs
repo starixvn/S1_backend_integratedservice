@@ -170,6 +170,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     {
                         gameType = GameType.CQ9_WCC;
                     }
+                    /*
+                     GB11 : Arcade 街机
+                     GINKGO01 : Live 真人视讯
+                     GO03 : Table 牌桌游戏
+                     */
+                    if (gameId == "GINKGO01" || gameId == "GO03")
+                    {
+                        gameType = GameType.CQ9_Fish;
+                    }
+                    if (gameId == "GB11")
+                    {
+                        gameType = GameType.CQ9_RNG;
+                    }
                     break;
                 case (int)Tp.JILI:
                     gameType = GameType.JILI_RNG;

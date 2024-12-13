@@ -1178,6 +1178,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check gametype
             var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, rolloutReq.gamecode);
+            if(rolloutReq.gamecode == "GB11")
+            {
+                gameType = GameType.CQ9_Fish;
+            }
             if (!validGameTypes.Contains(gameType))
             {
                 apiResponse.status.code = "1100";
@@ -1311,6 +1315,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check gametype
             var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, takeAllReq.gamecode);
+            if (rolloutReq.gamecode == "GB11")
+            {
+                gameType = GameType.CQ9_Fish;
+            }
             if (gameType != GameType.CQ9_Fish)
             {
                 apiResponse.status.code = "1100";
@@ -1460,6 +1468,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check gametype
             var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, rollinReq.gamecode);
+            if (rolloutReq.gamecode == "GB11")
+            {
+                gameType = GameType.CQ9_Fish;
+            }
             if (!validGameTypes.Contains(gameType))
             {
                 apiResponse.status.code = "1100";
