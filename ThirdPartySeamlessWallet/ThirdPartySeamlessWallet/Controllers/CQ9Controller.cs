@@ -628,10 +628,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (record.FirstOrDefault()?.TicketStatus == (int)TicketStatus.Refund)
                 {
-                    var refGameType = record.First().TableType;
+                    var refundData = record.First();
+                    var refGameType = refundData.TableType;
                     var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, refundReq.account, (int)refGameType);
                     // 請求若與前一次mtcode相同時，回應上一次mtcode成功的餘額，不必再對該玩家進行額度的增減
-                    var balance = record.First().Balance + Math.Abs(record.First().amount);
+                    var balance = refundData.Balance;
+                    if (refGameType != (int)GameType.CQ9_RNG)
+                    {
+                        balance += Math.Abs(refundData.amount);
+                    }
 
                     getRefundResp.status.code = "0";
                     getRefundResp.status.message = "Success";
@@ -645,8 +650,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 refundReq.amount = record.First().amount;
                 refundReq.roundid = record.First().roundid;
-
                 var gameType = record.First().TableType;
+
                 var result = _settledBLL.RefundRNG_CQ9(refundReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
