@@ -1712,10 +1712,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int RefundFish_CQ9(TpCustInfo tpCustInfo, RefundDataRNG_CQ9 refundDataRNG_CQ9, out decimal afterAmount)
+        public int RefundFish_CQ9(TpCustInfo tpCustInfo, RefundDataRNG_CQ9 refundDataRNG_CQ9, ref decimal afterAmount)
         {
-            afterAmount = 0;
-
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
