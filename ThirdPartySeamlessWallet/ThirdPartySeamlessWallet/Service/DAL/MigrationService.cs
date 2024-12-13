@@ -36,6 +36,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 _DeviceType = (int)request.DeviceType,
                 _SignupIp = request.SignupIp ?? "",
                 _VipLevel = request.VipLevel == 0 ? 1 : request.VipLevel,
+                _RewardPoint = request.RewardPoint,
+                _SportCBStatus = request.SportCBStatus is not null ? JsonConvert.SerializeObject(request.SportCBStatus) : "{}"
             });
             p.Add("_CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("_ResultCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
@@ -108,6 +110,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var resultCode = p.Get<int>("_ResultCode");
             
             return resultCode;
+        }
+        
+        public int MigrationCustomerPhotoIns(int custId ,int siteId , MySqlConnection conn, MySqlTransaction trans)
+        {
+            var p = new DynamicParameters(new
+            {
+                _CustId = custId,
+                _SiteId = siteId
+            });
+            var result = _mainDbClient.Execute("Service_MigrationPhoto_Ins", p ,conn ,trans);
+            
+            return result;
         }
         
         public async Task<bool> MigrationAffiliateIns(MigrationAffiliateRequest request)

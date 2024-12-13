@@ -96,7 +96,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                               break;
                           case -11:
                               resp.Message = "Error at table CustTransSummary; ";
+                              break;
+                          case -12:
+                              resp.Message = "Error at table CustRewardPoint; ";
                               break; 
+                          case -13:
+                              resp.Message = "Error at table CustBackupSportCBStatus; ";
+                              break;  
                     }
                   }
             }
