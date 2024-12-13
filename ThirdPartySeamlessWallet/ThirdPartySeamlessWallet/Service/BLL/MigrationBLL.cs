@@ -58,6 +58,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 return (-1, result);
             }
             
+            for (var i = 0; i < request.IsKYC; i++)
+            {
+                var photoResult = _migrationService.MigrationCustomerPhotoIns(custId, request.SiteId, conn, trans);
+                if (photoResult == 0)
+                {
+                   break;
+                }
+            }
+            
             if (result == 0)
             {
                 await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);

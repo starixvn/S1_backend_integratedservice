@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -74,6 +75,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         
         public string AllAgentId => JsonConvert.SerializeObject(new List<int> {AgentId});
         
+        [Range(0,2)]
+        public int IsKYC { get; set; }
         #endregion
 
         #region CustRegInfo
@@ -163,6 +166,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         }
         
         #endregion
+
+        #region Store
+
+        public int RewardPoint { get; set; }
+
+        #endregion
+        
+        public SportCBStatus SportCBStatus { get; set; }
         
         #region private
 
@@ -228,6 +239,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int CustId { get; set; }
     }
 
+    public class SportCBStatus
+    {
+        public int ActiveMonths { get; set; }
+        public int Consecutive { get; set; }
+        public int PreActiveMonths { get; set; }
+        public int PreConsecutive { get; set; }
+        public DateTime JoinDate { get; set; }
+        public int MinActiveMonths { get; set; }
+    }
     
     public class MigrationAffiliateResponse
     {
