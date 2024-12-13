@@ -1315,7 +1315,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check gametype
             var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, takeAllReq.gamecode);
-            if (rolloutReq.gamecode == "GB11")
+            if (takeAllReq.gamecode == "GB11")
             {
                 gameType = GameType.CQ9_Fish;
             }
@@ -1468,7 +1468,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check gametype
             var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, rollinReq.gamecode);
-            if (rolloutReq.gamecode == "GB11")
+            if (rollinReq.gamecode == "GB11")
             {
                 gameType = GameType.CQ9_Fish;
             }
