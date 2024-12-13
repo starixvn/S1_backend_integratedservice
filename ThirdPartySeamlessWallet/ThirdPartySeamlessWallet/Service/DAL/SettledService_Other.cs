@@ -2128,11 +2128,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var cancelTransId = $"{cancelData_Eday.billId}_{cancelData_Eday.roundCode}";
                 var cancelData = new BettransLTEdayCancelBet()
                 {
-                    transId = cancelTransId,
-                    player = tpCustInfo.TpUserName,
                     TicketType = cancelData_Eday.TicketType,
                     TicketStatus = cancelData_Eday.TicketStatus,
-                    SettleFlag = (int)SettleFlag.EndGame
+                    SettleFlag = (int)SettleFlag.EndGame,
+                    billId = cancelData_Eday.billId,
+                    player = tpCustInfo.TpUserName,
                 };
                 
                 var cancelBetId = $"{cancelData_Eday.roundCode}_{cancelData_Eday.player}";
