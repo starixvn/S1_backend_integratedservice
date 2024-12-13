@@ -1276,12 +1276,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 refundDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
             }
 
+            // needInitialAfterAmount
+            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.CQ9, refundDataRNG_CQ9.account, gameType);
+            afterAmount = tpCustBalance.Balance;
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount *= tpCurrency.ExchangeRate;
+            }
+
             result = gameType switch
             {
-                (int)GameType.CQ9_Fish => settledService.RefundFish_CQ9(tpCustInfo, refundDataRNG_CQ9, out afterAmount),
-                (int)GameType.CQ9_RNG => settledService.RefundRNG_CQ9(tpCustInfo, refundDataRNG_CQ9,
-                    refundDataRNG_CQ9.amount, refundDataRNG_CQ9.roundid, out afterAmount),
-                (int)GameType.CQ9_WCC => settledService.RefundWCC_CQ9(tpCustInfo, refundDataRNG_CQ9, out afterAmount),
+                (int)GameType.CQ9_Fish => settledService.RefundFish_CQ9(tpCustInfo, refundDataRNG_CQ9, ref afterAmount),
+                (int)GameType.CQ9_RNG => settledService.RefundRNG_CQ9(tpCustInfo, refundDataRNG_CQ9, refundDataRNG_CQ9.amount, refundDataRNG_CQ9.roundid, out afterAmount),
+                (int)GameType.CQ9_WCC => settledService.RefundWCC_CQ9(tpCustInfo, refundDataRNG_CQ9, ref afterAmount),
                 _ => result
             };
 
