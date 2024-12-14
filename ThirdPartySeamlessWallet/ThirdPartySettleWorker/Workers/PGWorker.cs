@@ -89,6 +89,11 @@ namespace ThirdPartySettleWorker.Workers
                             continue;
                         }
 
+                        if (siteId == 0  && tpCustInfo.SiteId is 1 or 2 or 3)
+                        {
+                            continue;
+                        }
+
                         var fix = false;
                         if ((settleData.TransTime >= 1712320200 && settleData.TransTime <= 1712348100) && (tpCustInfo.CurrencyId == 51 || tpCustInfo.CurrencyId == 15))
                         {
