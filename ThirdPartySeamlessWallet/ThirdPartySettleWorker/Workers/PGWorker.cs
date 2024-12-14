@@ -14,8 +14,6 @@ namespace ThirdPartySettleWorker.Workers
         public Tp Tp { get => Tp.PG; }
 
         private Timer novaTimer;
-        private Timer goalTimer;
-        private Timer bwingTimer;
         private Timer timer;
 
         private readonly SettledBLL _settledBLL;
@@ -38,8 +36,6 @@ namespace ThirdPartySettleWorker.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             novaTimer = new Timer(DoSettle, 1, TimeSpan.Zero, TimeSpan.Zero);
-            goalTimer = new Timer(DoSettle, 2, TimeSpan.Zero, TimeSpan.Zero);
-            bwingTimer = new Timer(DoSettle, 3, TimeSpan.Zero, TimeSpan.Zero);
             timer = new Timer(DoSettle, 0, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -47,8 +43,6 @@ namespace ThirdPartySettleWorker.Workers
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             novaTimer?.Change(Timeout.Infinite, 0);
-            goalTimer?.Change(Timeout.Infinite, 0);
-            bwingTimer?.Change(Timeout.Infinite, 0);
             timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
@@ -70,7 +64,7 @@ namespace ThirdPartySettleWorker.Workers
             var setSP = $"Service_BettransRng_PG_Settle_Set_V2";
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 5000);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 2000);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
@@ -89,7 +83,7 @@ namespace ThirdPartySettleWorker.Workers
                             continue;
                         }
 
-                        if (siteId == 0  && tpCustInfo.SiteId is 1 or 2 or 3)
+                        if (siteId == 0  && tpCustInfo.SiteId is 1)
                         {
                             continue;
                         }
@@ -168,14 +162,6 @@ namespace ThirdPartySettleWorker.Workers
                 if (siteId == 1) 
                 {
                     novaTimer.Change(dueTimeSpan, TimeSpan.Zero);   
-                }
-                else if (siteId == 2)
-                {
-                    goalTimer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else if (siteId == 3)
-                {
-                    bwingTimer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
