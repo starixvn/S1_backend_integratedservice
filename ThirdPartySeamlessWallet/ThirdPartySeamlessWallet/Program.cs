@@ -2,6 +2,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
 using Serilog.Formatting.Json;
+using Serilog.Sinks.Network;
 using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
 
@@ -30,6 +31,12 @@ builder.Host.UseSerilog((context, Configuration) =>
                 || c.MessageTemplate.ToString().Equals(excludesResponseEmptyMessage))))
         .Enrich.WithExceptionDetails()
         .Enrich.WithProperty("ApplicationName", "ThirdPartySeamlessWallet")
+        .Enrich.WithProperty("ApplicationName", nameof(ThirdPartySeamlessWallet))
+        .Enrich.WithProperty("Env", builder.Configuration.GetValue<string>("OpenSearch:Env"))
+        .WriteTo.UDPSink(
+            builder.Configuration.GetValue<string>("OpenSearch:Uri"),
+            builder.Configuration.GetValue<int>("OpenSearch:Port"),
+            new Serilog.Formatting.Json.JsonFormatter())
         //.WriteTo.Console()
         .WriteTo.Sentry(o =>
         {

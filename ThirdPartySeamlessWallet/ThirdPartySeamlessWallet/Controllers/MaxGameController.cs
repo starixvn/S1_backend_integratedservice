@@ -183,7 +183,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 content = await reader.ReadToEndAsync();
-                _payloadLogService.LogDetailedPayload(content, logMeta);
 
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
