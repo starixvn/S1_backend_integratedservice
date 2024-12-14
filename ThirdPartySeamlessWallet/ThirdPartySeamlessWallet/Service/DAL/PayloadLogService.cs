@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Dapper;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -11,15 +10,14 @@ internal class DetailedRequestBody
     public string Seq { get; set; }
     public DateTime TimeStamp { get; set; }
 
-    public object Payload { get; set; }
+    public PayloadBody Payload { get; set; }
 }
 
-internal class DetailedRequestBodyPayload
+internal class PayloadBody
 {
     public string OperatorCustId { get; set; }
     public string WalletSideToken { get; set; }
     public string GameType { get; set; }
-
     public string GameId { get; set; }
     public object Additional { get; set; }
 }
@@ -40,92 +38,43 @@ public class PayloadLogService
 {
     private const string InsertDetailedPayloadSpName = "Service_BettransPK_MaxGame_Payload_Ins_v2";
 
-    private const string UpdateDetailedResponseSpName = "Service_BettransPK_MaxGame_Payload_Set_v2";
-
     private readonly PartitionService _partitionService;
-    private readonly string _environmentName = "";
+    private readonly string _environmentName;
 
-    private readonly PayloadLogConfig _config = default;
+    private readonly PayloadLogConfig _config;
 
     public PayloadLogService(IServiceProvider provider)
     {
         _environmentName = provider.GetRequiredService<ConfigBLL>().GetEnvironmentName() ?? "Unspecified";
         _partitionService = provider.GetRequiredService<PartitionService>();
-        _config = provider.GetService<IOptions<PayloadLogConfig>>().Value;
+        _config = provider.GetService<IOptions<PayloadLogConfig>>()?.Value;
     }
 
-    public virtual void LogDetailedPayload(string content, PayloadLogMeta meta = null)
+    public virtual void LogDetailedPayload(string actionName, string requestContent, object responseContent, double elapsed)
     {
         if (!_config.Enabled) return;
 
-        var action = meta?.Action
-            ?? (new StackTrace().GetFrame(1).GetMethod().Name)
-            ?? "Unknown";
-        if (_config.ExcludedActions.Contains(action)) return;
+        if (_config.ExcludedActions.Contains(actionName)) return;
 
         try
         {
-            var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
-            var payload = getReq?.Payload?.ToString() ?? "{}";
-
-            var gameType = meta?.GameType
-                ?? JsonConvert.DeserializeObject<DetailedRequestBodyPayload>(payload)?.GameType
-                ?? "Unknown";
-
-            var environment = _environmentName;
+            var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent) ?? new DetailedRequestBody();
+            var gameType = getReq.Payload?.GameType ?? "Unknown";
+            var responseText = responseContent as string ?? JsonConvert.SerializeObject(responseContent, Formatting.Indented);
 
             var logParams = new DynamicParameters(new
             {
                 getReq.Seq,
                 getReq.TimeStamp,
-                Payload = payload,
-                Action = action,
+                Payload = requestContent,
+                Action = actionName,
                 GameType = gameType,
-                Environment = environment,
+                Environment = _environmentName,
+                Response = responseText,
+                Elapsed = elapsed,
             });
 
-            _partitionService.Execute(
-                getReq.TimeStamp,
-                InsertDetailedPayloadSpName,
-                logParams
-            );
-        }
-        catch (Exception ex)
-        {
-            SentrySdk.CaptureException(ex);
-        }
-    }
-
-    public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent, double elapsed, PayloadLogMeta meta = null)
-    {
-        if (!_config.Enabled) return;
-
-        var action = meta?.Action
-            ?? (new StackTrace().GetFrame(1).GetMethod().Name)
-            ?? "Unknown";
-        if (_config.ExcludedActions.Contains(action)) return;
-
-        var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent);
-
-        if (responseContent is not null && responseContent is string)
-        {
-            responseContent = JsonConvert.DeserializeObject(responseContent.ToString());
-        }
-        var response = JsonConvert.SerializeObject(responseContent, Formatting.Indented);
-        var logParams = new DynamicParameters(new
-        {
-            getReq.Seq,
-            Response = response,
-            Elapsed= elapsed
-        });
-
-        try
-        {
-            _partitionService.Execute(
-                getReq.TimeStamp,
-                UpdateDetailedResponseSpName,
-                logParams
-            );
+            _partitionService.Execute(getReq.TimeStamp, InsertDetailedPayloadSpName, logParams);
         }
         catch (Exception ex)
         {

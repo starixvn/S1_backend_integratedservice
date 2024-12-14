@@ -84,12 +84,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 LogContext.PushProperty("Action", transType.ToString());
                 _logger.LogInformation(bodyText);
 
-                response= await _requestHandler[transType].Invoke(transType, merchant, bodyText);
+                response = await _requestHandler[transType].Invoke(transType, merchant, bodyText);
                 return response;
             }
             catch (SBSWException ex)
             {
-                response= new ReturnObj(ex);
+                response = new ReturnObj(ex);
                 return response;
             }
             catch (Exception ex)
@@ -101,15 +101,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             finally
             {
                 timmer.Stop();
-                var logMeta = new PayloadLogMeta()
-                {
-                    Action = transType.ToString()
-                };
-                var seq = Guid.NewGuid().ToString();
-                _payloadLogService.LogDetailedPayload(seq, bodyText, logMeta);
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(seq, response, timmer.Elapsed.TotalMilliseconds, logMeta);
-                _logger.LogInformation("[SBSW] Action: {Action}, Request Payload: {Payload}, Response: {Response}",
-                    logMeta.Action, bodyText, JsonConvert.SerializeObject(response));
+                _payloadLogService.LogDetailedPayload(transType.ToString(), bodyText, response, timmer.ElapsedMilliseconds);
             }
         }
 
@@ -293,7 +285,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         conn,
                         trans);
                 }
-
 
                 if (result.SetBalanceResult < 1 || afterAmount < 0)
                 {
