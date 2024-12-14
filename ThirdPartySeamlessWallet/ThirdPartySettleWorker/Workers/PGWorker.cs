@@ -13,6 +13,9 @@ namespace ThirdPartySettleWorker.Workers
     {
         public Tp Tp { get => Tp.PG; }
 
+        private Timer novaTimer;
+        private Timer goalTimer;
+        private Timer bwingTimer;
         private Timer timer;
 
         private readonly SettledBLL _settledBLL;
@@ -34,12 +37,18 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoSettle, GameType.PG_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            novaTimer = new Timer(DoSettle, 1, TimeSpan.Zero, TimeSpan.Zero);
+            goalTimer = new Timer(DoSettle, 2, TimeSpan.Zero, TimeSpan.Zero);
+            bwingTimer = new Timer(DoSettle, 3, TimeSpan.Zero, TimeSpan.Zero);
+            timer = new Timer(DoSettle, 0, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
+            novaTimer?.Change(Timeout.Infinite, 0);
+            goalTimer?.Change(Timeout.Infinite, 0);
+            bwingTimer?.Change(Timeout.Infinite, 0);
             timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
@@ -49,9 +58,10 @@ namespace ThirdPartySettleWorker.Workers
             LogContext.PushProperty("TP", _tpName);
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
 
+            var siteId =(int)state;
             var forContinue = false;
             var isError = false;
-            var gametype = (GameType)state;
+            var gametype = GameType.PG_RNG;
             var tpCategory = TpCategory.Slots;
 
             var logName = $"SettlePG";
@@ -73,6 +83,12 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Main).First();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+                        // 依用戶資訊判斷siteId來決定是否跳過
+                        if (siteId != 0 && tpCustInfo.SiteId != siteId)
+                        {
+                            continue;
+                        }
+
                         var fix = false;
                         if ((settleData.TransTime >= 1712320200 && settleData.TransTime <= 1712348100) && (tpCustInfo.CurrencyId == 51 || tpCustInfo.CurrencyId == 15))
                         {
@@ -144,7 +160,22 @@ namespace ThirdPartySettleWorker.Workers
                     dueTimeSpan = TimeSpan.FromSeconds(30);
                 }
 
-                timer?.Change(dueTimeSpan, TimeSpan.Zero);
+                if (siteId == 1) 
+                {
+                    novaTimer.Change(dueTimeSpan, TimeSpan.Zero);   
+                }
+                else if (siteId == 2)
+                {
+                    goalTimer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else if (siteId == 3)
+                {
+                    bwingTimer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
             }
         }
     }
