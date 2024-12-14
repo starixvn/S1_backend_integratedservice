@@ -96,7 +96,7 @@ public class PayloadLogService
         }
     }
 
-    public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent, PayloadLogMeta meta = null)
+    public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent, double elapsed, PayloadLogMeta meta = null)
     {
         if (!_config.Enabled) return;
 
@@ -115,7 +115,8 @@ public class PayloadLogService
         var logParams = new DynamicParameters(new
         {
             getReq.Seq,
-            Response = response
+            Response = response,
+            Elapsed= elapsed
         });
 
         try

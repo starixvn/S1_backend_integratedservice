@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics;
 using Dapper;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
@@ -74,6 +75,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<ReturnObj> SeamlessWallet(string merchant, SBSWTransType transType, string bodyText)
         {
+            var timmer = new Stopwatch();
+            timmer.Start();
             ReturnObj response = default;
             try
             {
@@ -97,13 +100,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             finally
             {
+                timmer.Stop();
                 var logMeta = new PayloadLogMeta()
                 {
                     Action = transType.ToString()
                 };
                 var seq = Guid.NewGuid().ToString();
                 _payloadLogService.LogDetailedPayload(seq, bodyText, logMeta);
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(seq, response, logMeta);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(seq, response, timmer.Elapsed.TotalMilliseconds, logMeta);
                 _logger.LogInformation("[SBSW] Action: {Action}, Request Payload: {Payload}, Response: {Response}",
                     logMeta.Action, bodyText, JsonConvert.SerializeObject(response));
             }

@@ -62,7 +62,7 @@ public class SBSWPayloadLogService
         }
     }
 
-    public virtual void UpdateDetailedPayLoadWithResponse(string seq, object responseContent, PayloadLogMeta meta = null)
+    public virtual void UpdateDetailedPayLoadWithResponse(string seq, object responseContent, double elapsed, PayloadLogMeta meta = null)
     {
         if (!_config.Enabled)
         {
@@ -81,7 +81,8 @@ public class SBSWPayloadLogService
         var logParams = new DynamicParameters(new
         {
             Seq = seq,
-            Response = response
+            Response = response,
+            Elapsed = elapsed
         });
 
         try
