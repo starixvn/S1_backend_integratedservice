@@ -12,9 +12,9 @@ namespace ThirdPartyWager.Workers
         private readonly WagerKYBLL _wagerKYBLL;
         private readonly CommonBLL _commonBLL;
         private readonly int tpType = (int)WagerTimerType.RedoWager;
-        private readonly int timeRange = 60; //in minutes
+        private readonly int timeRange = 40; //in minutes
         private readonly int quickTime = 5;  // in minutes
-        private readonly int runTime = 1;    // in hours
+        private readonly int runTime = 30;    // in minutes
         private readonly string _tpName = Tp.KY.ToString();
         private readonly int tpId = (int)Tp.KY;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -62,7 +62,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = quick ? TimeSpan.FromMinutes(quickTime) : TimeSpan.FromHours(runTime);
+                var dueTimeSpan = quick ? TimeSpan.FromMinutes(quickTime) : TimeSpan.FromMinutes(runTime);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

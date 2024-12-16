@@ -39,7 +39,6 @@ namespace ThirdPartyWager.Workers
 
         private async void DoReport(object state)
         {
-            // TODO: replace "res" with "quick" (because they mean the same thing) and remove "if"
             var quick = 0;
             try
             {
