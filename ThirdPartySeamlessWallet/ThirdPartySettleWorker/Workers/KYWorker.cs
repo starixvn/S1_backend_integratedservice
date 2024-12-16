@@ -27,16 +27,12 @@ namespace ThirdPartySettleWorker.Workers
         private readonly PartitionService _partitionService;
         private readonly Tools _tools;
         private readonly string _tpName;
-        // TODO: check which kind IDs and skiped kind ID are contained
+
         private readonly int[] _kindId =
         {
-            220, 600, 610, 620, 630,
-            830, 860, 890, 930
+            600, 830, 860, 890
         };
-        private readonly int[] _skipKindId =
-        {
-            510
-        };
+
 
         public KYWorker(IServiceProvider provider)
         {
@@ -99,28 +95,21 @@ namespace ThirdPartySettleWorker.Workers
                         var wager = _tpUnSettledBLL.GetTpUnsettleData<SettleDataPK_KY>(wagerGet, new { TransId = TransId }, DataBase.Wager).FirstOrDefault();
                         if (wager == null)
                         {
-                            LogContext.PushProperty("TP", _tpName);
                             _logger.LogWarning($"{logName}:wager not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
-                        }
-                        if (_skipKindId.Contains(wager.KindID))
-                        {
-                            // TODO: 排除捕魚不比對
-                            skip = true;
                         }
 
                         var bettrans = _partitionService.GetUnsettleDataList<SettleData>(bettransGet, unsettled);
                         if (!bettrans.Any() && !skip)
                         {
-                            LogContext.PushProperty("TP", _tpName);
                             if (wager != null && wager.Stake == 0m && wager.ValidBet == 0m && wager.WinLostAmount == 0m)
                             {
                                 _ = _tpUnSettledBLL.SetSettleFlag(wagerSet, Tp, gametype, TransId, true, DataBase.Wager);
-                                _logger.LogInformation($"{logName}:wager amount 0 no need settle\r\n{JsonConvert.SerializeObject(wager)}");
+                                _logger.LogInformation($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
                             }
                             else
                             {
-                                _logger.LogInformation($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
+                                _logger.LogInformation($"{logName}:wager amount 0 no need settle\r\n{JsonConvert.SerializeObject(wager)}");
                             }
                             continue;
                         }
@@ -138,12 +127,10 @@ namespace ThirdPartySettleWorker.Workers
 
                         if (!CheckAmount(bettrans, wager, skip))
                         {
-                            LogContext.PushProperty("TP", _tpName);
                             _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 
-                        // TODO: revenue games
                         var realGameType = gametype;
                         if (_kindId.Contains(wager.KindID))
                         {
@@ -163,6 +150,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             TpId = (int)Tp,
                             Stake = stake,
+                            ValidBet = validBet,
                             Revenue = revenue,
                             WinlostAmount = winLostAmount,
                             TransId = TransId,
@@ -219,14 +207,12 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
-        // TODO: When does the similar(duplicated with V8) function will be shared from other namespace or other class?
         private void SetSettleFlag(string wagerSet, string bettransSet, GameType gametype, BetRecordInfo betRecordInfo)
         {
             _ = _tpUnSettledBLL.SetSettleFlag(wagerSet, Tp, gametype, betRecordInfo.TransId, true, DataBase.Wager);
             _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(bettransSet, betRecordInfo);
         }
 
-        // TODO: When does the similar(duplicated with V8) function will be shared from other namespace or other class?
         private bool CheckAmount(IEnumerable<SettleData> bettrans, SettleDataPK_KY wager, bool skip)
         {
             if (skip)
