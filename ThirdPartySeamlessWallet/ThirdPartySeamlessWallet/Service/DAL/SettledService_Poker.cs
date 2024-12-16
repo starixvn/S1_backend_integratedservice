@@ -1248,6 +1248,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             OriginSeq = originSeq,
                             Seq = payoutData_MaxGame.Seq,
+                            TicketNo = betDataSet.TicketNo,
                             ActualStake = betDataSet.ActualStake,
                             NetStake = betDataSet.NetStake,
                             Payout = betDataSet.Payout,
@@ -1708,6 +1709,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             OriginSeq = originSeq,
                             Seq = bonusData_MaxGame.Seq,
+                            TicketNo = betDataSet.TicketNo,
                             ActualStake = 0m,
                             NetStake = 0m,
                             Payout = betDataSet.Payout,
@@ -1927,6 +1929,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             OriginSeq = originSeq,
                             Seq = freeSpinData_MaxGame.Seq,
+                            TicketNo = betDataSet.TicketNo,
                             ActualStake = 0m,
                             NetStake = 0m,
                             Payout = betDataSet.Payout,
