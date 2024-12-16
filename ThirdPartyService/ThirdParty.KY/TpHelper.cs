@@ -208,27 +208,17 @@ namespace ThirdParty.KY
             };
         }
 
-        // TODO: ask opening game
+        // TODO: ask opening game / hard code
         private string GetGameName(string gameCode)
         {
             return gameCode switch
             {
+                "600" => "Black Jack",
+                "830" => "Banker Bull-Bull",
+                "860" => "Three-Facecard",
                 "890" => "Banker Bull-Bull After Check Card",
                 "910" => "Baccarat",
-                "860" => "Three-Facecard",
-                "600" => "Black Jack",
-                "220" => "Golden Flower",
-                "830" => "Banker Bull-Bull",
-                "620" => "Texas Hold'em Poker",
-                "630" => "Pineapple Poker",
-                "950" => "Red-Black War",
-                "610" => "Landlord",
-                "930" => "Niu–niu for thousands person",
-                "510" => "Fishing",
-                "920" => "Forest Party",
-                "1860" => "Casino Poker",
-                "3006" => "H-Baccarat",
-                "8130" => "Run Fast",
+
                 _ => string.Empty,
             };
         }
