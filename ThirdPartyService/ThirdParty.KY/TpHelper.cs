@@ -150,7 +150,7 @@ namespace ThirdParty.KY
             };
             var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_KY_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
-            // TODO: How to determine the TpCategory? w/ or w/o revenue?
+
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.P2P => new PokerDetail(getBetDetail.TpGameTypeOption)
@@ -208,7 +208,6 @@ namespace ThirdParty.KY
             };
         }
 
-        // TODO: ask opening game / hard code
         private string GetGameName(string gameCode)
         {
             return gameCode switch
@@ -218,7 +217,6 @@ namespace ThirdParty.KY
                 "860" => "Three-Facecard",
                 "890" => "Banker Bull-Bull After Check Card",
                 "910" => "Baccarat",
-
                 _ => string.Empty,
             };
         }

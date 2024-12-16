@@ -42,6 +42,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}");
                 }
+                // 拉单过于频繁(两次拉单时间间隔必须大于 10 秒)
                 Thread.Sleep(11000);
             }
 
@@ -62,7 +63,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}");
                 }
-                // TODO: 拉单过于频繁(两次拉单时间间隔必须大于 60 秒 或改成 30 秒?API文件)
+                // 拉单过于频繁
                 Thread.Sleep(67000);
                 if (!result)
                 {

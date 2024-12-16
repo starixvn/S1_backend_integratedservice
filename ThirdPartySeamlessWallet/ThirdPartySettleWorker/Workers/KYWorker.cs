@@ -186,7 +186,6 @@ namespace ThirdPartySettleWorker.Workers
             }
             catch (Exception ex)
             {
-                LogContext.PushProperty("TP", _tpName);
                 _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
