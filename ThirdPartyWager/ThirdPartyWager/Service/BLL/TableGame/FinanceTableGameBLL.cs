@@ -47,6 +47,7 @@ public class FinanceTableGameBLL : ITpReportBLL
     {
         var reportData = new List<dynamic>();
         var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+        _logger.LogInformation("[TableGame] siteList: {SiteConfigDic}, {SiteList}", JsonConvert.SerializeObject(_siteConfigDic), JsonConvert.SerializeObject(siteList));
 
         foreach (var site in siteList)
         {

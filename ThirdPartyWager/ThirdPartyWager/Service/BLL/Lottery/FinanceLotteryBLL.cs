@@ -49,7 +49,7 @@ namespace ThirdPartyWager.Service.BLL.Lottery
         {
             var reportData = new List<dynamic>();
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
-
+            _logger.LogInformation("[Lottery] siteList: {SiteConfigDic}, {SiteList}", JsonConvert.SerializeObject(_siteConfigDic), JsonConvert.SerializeObject(siteList));
             foreach (var site in siteList)
             {
                 if (!_siteConfigDic.ContainsKey(site.SiteId))
