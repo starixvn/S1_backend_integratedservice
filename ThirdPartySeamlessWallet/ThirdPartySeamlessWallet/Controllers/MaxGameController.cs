@@ -74,7 +74,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             finally
             {
                 timer.Stop();
-                _payloadLogService.LogDetailedPayload(nameof(GetPlayerInfo), content, response, timer.ElapsedMilliseconds);
+                _payloadLogService.LogDetailedPayload(nameof(GetPlayerInfo), sitename, content, response, timer.ElapsedMilliseconds);
             }
         }
 
@@ -113,7 +113,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             finally
             {
                 timer.Stop();
-                _payloadLogService.LogDetailedPayload(nameof(GetBalance), content, response, timer.ElapsedMilliseconds);
+                _payloadLogService.LogDetailedPayload(nameof(GetBalance), sitename, content, response, timer.ElapsedMilliseconds);
             }
         }
 
@@ -154,7 +154,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             finally
             {
                 timer.Stop();
-                _payloadLogService.LogDetailedPayload(nameof(PlaceBet), content, response, timer.ElapsedMilliseconds);
+                _payloadLogService.LogDetailedPayload(nameof(PlaceBet), sitename, content, response, timer.ElapsedMilliseconds);
             }
         }
 
@@ -193,7 +193,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             finally
             {
                 timer.Stop();
-                _payloadLogService.LogDetailedPayload(nameof(EndGame), content, response, timer.ElapsedMilliseconds);
+                _payloadLogService.LogDetailedPayload(nameof(EndGame), sitename, content, response, timer.ElapsedMilliseconds);
             }
         }
 
@@ -233,7 +233,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             finally
             {
                 timer.Stop();
-                _payloadLogService.LogDetailedPayload(nameof(PlaceBetAndSettle), content, response, timer.ElapsedMilliseconds);
+                _payloadLogService.LogDetailedPayload(nameof(PlaceBetAndSettle), sitename, content, response, timer.ElapsedMilliseconds);
             }
         }
 
@@ -272,7 +272,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             finally
             {
                 timer.Stop();
-                _payloadLogService.LogDetailedPayload(nameof(VoidGame), content, response, timer.ElapsedMilliseconds);
+                _payloadLogService.LogDetailedPayload(nameof(VoidGame), sitename, content, response, timer.ElapsedMilliseconds);
             }
         }
 
@@ -312,7 +312,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             finally
             {
                 timer.Stop();
-                _payloadLogService.LogDetailedPayload(nameof(Bonus), content, response, timer.ElapsedMilliseconds);
+                _payloadLogService.LogDetailedPayload(nameof(Bonus), sitename, content, response, timer.ElapsedMilliseconds);
             }
         }
 
@@ -352,7 +352,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             finally
             {
                 timer.Stop();
-                _payloadLogService.LogDetailedPayload(nameof(FreeSpin), content, response, timer.ElapsedMilliseconds);
+                _payloadLogService.LogDetailedPayload(nameof(FreeSpin), sitename, content, response, timer.ElapsedMilliseconds);
             }
         }
 

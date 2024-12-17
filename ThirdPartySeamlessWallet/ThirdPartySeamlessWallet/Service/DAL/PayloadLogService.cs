@@ -50,7 +50,7 @@ public class PayloadLogService
         _config = provider.GetService<IOptions<PayloadLogConfig>>()?.Value;
     }
 
-    public virtual void LogDetailedPayload(string actionName, string requestContent, object responseContent, double elapsed)
+    public virtual void LogDetailedPayload(string actionName, string siteName, string requestContent, object responseContent, double elapsed)
     {
         if (!_config.Enabled) return;
 
@@ -69,7 +69,7 @@ public class PayloadLogService
                 Payload = requestContent,
                 Action = actionName,
                 GameType = gameType,
-                Environment = _environmentName,
+                Environment = $"{_environmentName}_{siteName}",
                 Response = responseText,
                 Elapsed = elapsed,
             });
