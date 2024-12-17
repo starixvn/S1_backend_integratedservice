@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Service.BLL.Lottery
             _logger.LogInformation("[Lottery] siteList: {SiteConfigDic}, {SiteList}", JsonConvert.SerializeObject(_siteConfigDic), JsonConvert.SerializeObject(siteList));
             foreach (var site in siteList)
             {
-                if (!_siteConfigDic.ContainsKey(site.SiteId))
+                if (!_siteConfigDic.ContainsKey(site.SiteId) || _siteConfigDic[site.SiteId] is null)
                 {
                     continue;
                 }
