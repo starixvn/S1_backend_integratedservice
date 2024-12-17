@@ -1,13 +1,11 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
@@ -23,17 +21,17 @@ public class PGConfig : TpSiteConfig
 public class TpHelper : ThirdPartyHelperBase
 {
     private readonly Dictionary<int, PGConfig> _siteConfigDic;
-   
+
     private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
     private const int _utc = -4;
     private const string _testCurrency = "UUS";
 
-    private readonly IPayloadLogger _temporaryLogPayloadService;
+    private readonly IPayloadLogger _payloadLogService;
 
     public TpHelper(IServiceProvider provider)
     {
         _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PGConfig>(TpEnum.PG.ToString());
-        _temporaryLogPayloadService = provider.GetRequiredService<IPayloadLogger>();
+        _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
     }
 
     #region Request
@@ -165,9 +163,7 @@ public class TpHelper : ThirdPartyHelperBase
 
         var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/GetBetHistory";
         var postdata = JsonConvert.SerializeObject(input, Formatting.None);
-        _temporaryLogPayloadService.LogDetailedPayload(postdata, new PayloadLogMeta() {
-            GameType = config.GameType
-        });
+
         var header = new Dictionary<string, string>()
         {
             { "operator-pwd", config.OperatorPwd},
@@ -175,7 +171,6 @@ public class TpHelper : ThirdPartyHelperBase
         };
 
         var result = HttpPost(ApiUrl, postdata, "application/json", header);
-        _temporaryLogPayloadService.UpdateDetailedPayLoadWithResponse(postdata, result);
 
         if (IsJSON(result))
         {
@@ -233,19 +228,20 @@ public class TpHelper : ThirdPartyHelperBase
 
     public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
     {
+        var stopWatch = Stopwatch.StartNew();
         var config = _siteConfigDic[tpCustInfo.SiteId];
-        string gameId = 
+        string gameId =
             inputs.GetValueOrDefault("gameId", "");
         string homeUrl =
-            inputs.GetValueOrDefault("homeUrl", ""); 
+            inputs.GetValueOrDefault("homeUrl", "");
         var gameTypeSpecificApiUrl = config.ApiUrl;
         var ApiUrl = $"{gameTypeSpecificApiUrl}/api/CommonWallet/LaunchGame";
         var gameType = config.GameType;
         var key = ApplyToken(tpCustInfo);
-
+        var currentDateTime = GetCurrentDateTime();
         var input = new
         {
-            Timestamp = GetCurrentTimeFormat(),
+            Timestamp = GetCurrentTimeFormat(currentDateTime),
             Seq = Guid.NewGuid().ToString(),
             Payload = new
             {
@@ -274,12 +270,20 @@ public class TpHelper : ThirdPartyHelperBase
             { "operator-pwd", config.OperatorPwd},
             { "operator-sign", Encrypt(postdata, config)},
         };
-        _temporaryLogPayloadService.LogDetailedPayload(postdata, new PayloadLogMeta() {
-            GameType = gameType,
-            Action = nameof(Login)
-        });
+
         var result = HttpPost(ApiUrl, postdata, "application/json", header);
-        _temporaryLogPayloadService.UpdateDetailedPayLoadWithResponse(postdata, result);
+
+        _payloadLogService.LogDetailedPayload(new PayloadLogMeta
+        {
+            Seq = input.Seq,
+            TimeStamp = currentDateTime.DateTime,
+            ActionName = nameof(Login),
+            GameType = nameof(PG),
+            SiteName = tpCustInfo.SiteId.ToString(),
+            RequestContent = postdata,
+            ResponseContent = result,
+            Elapsed = stopWatch.ElapsedMilliseconds
+        });
 
         ApiResult oApiResult = new ApiResult();
 
@@ -322,8 +326,18 @@ public class TpHelper : ThirdPartyHelperBase
 
     private static string GetCurrentTimeFormat()
     {
+        return GetCurrentDateTime().ToString(_formatOfTime);
+    }
+
+    private static string GetCurrentTimeFormat(DateTimeOffset currentDateTimeOffset)
+    {
+        return currentDateTimeOffset.ToString(_formatOfTime);
+    }
+
+    private static DateTimeOffset GetCurrentDateTime()
+    {
         var currentAt = new DateTimeOffset(DateTime.UtcNow);
-        return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+        return currentAt.ToOffset(new TimeSpan(_utc, 0, 0));
     }
 
     private static string GetSPNameBasedOnTpGameType()

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
@@ -20,7 +21,6 @@ namespace ThirdParty.TableGame
 
         public TpHelper(IServiceProvider provider)
         {
-           
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TableGameConfig>(TpEnum.TableGame.ToString());
         }
@@ -219,16 +219,17 @@ namespace ThirdParty.TableGame
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            var stopWatch = Stopwatch.StartNew();
             var config = _siteConfigDic[tpCustInfo.SiteId];
             var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
             var key = ApplyToken(tpCustInfo);
-
+            var currentDateTime = GetCurrentDateTime();
             var input = new
             {
-                Timestamp = GetCurrentTimeFormat(),
+                Timestamp = GetCurrentTimeFormat(currentDateTime),
                 Seq = Guid.NewGuid().ToString(),
                 Payload = new
                 {
@@ -258,15 +259,20 @@ namespace ThirdParty.TableGame
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
-               
-            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
-            {
-                GameType = nameof(TableGame),
-                Action = nameof(Login)
-            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
+            _payloadLogService.LogDetailedPayload(new PayloadLogMeta
+            {
+                Seq = input.Seq,
+                TimeStamp = currentDateTime.DateTime,
+                ActionName = nameof(Login),
+                GameType = nameof(TableGame),
+                SiteName = tpCustInfo.SiteId.ToString(),
+                RequestContent = postdata,
+                ResponseContent = result,
+                Elapsed = stopWatch.ElapsedMilliseconds
+            });
+
             ApiResult oApiResult = new ApiResult();
 
             if (IsJSON(result))
@@ -308,8 +314,18 @@ namespace ThirdParty.TableGame
 
         private static string GetCurrentTimeFormat()
         {
+            return GetCurrentDateTime().ToString(_formatOfTime);
+        }
+
+        private static string GetCurrentTimeFormat(DateTimeOffset currentDateTimeOffset)
+        {
+            return currentDateTimeOffset.ToString(_formatOfTime);
+        }
+
+        private static DateTimeOffset GetCurrentDateTime()
+        {
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
-            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0));
         }
 
         private static string GetGameName(string gameId)

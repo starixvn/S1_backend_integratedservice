@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
@@ -12,7 +13,6 @@ namespace ThirdParty.FastSpin
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, FastSpinConfig> _siteConfigDic;
         private readonly IPayloadLogger _payloadLogService;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
@@ -22,7 +22,6 @@ namespace ThirdParty.FastSpin
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FastSpinConfig>(TpEnum.FastSpin.ToString());
-            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
@@ -178,7 +177,6 @@ namespace ThirdParty.FastSpin
             };
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(FastSpin), ApiUrl, header, postdata, result);
 
             if (IsJSON(result))
             {
@@ -238,16 +236,17 @@ namespace ThirdParty.FastSpin
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            var stopWatch = Stopwatch.StartNew();
             var config = _siteConfigDic[tpCustInfo.SiteId];
             var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
             var key = ApplyToken(tpCustInfo);
-
+            var currentDateTime = GetCurrentDateTime();
             var input = new
             {
-                Timestamp = GetCurrentTimeFormat(),
+                Timestamp = GetCurrentTimeFormat(currentDateTime),
                 Seq = Guid.NewGuid().ToString(),
                 Payload = new
                 {
@@ -277,14 +276,20 @@ namespace ThirdParty.FastSpin
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
-            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
-            {
-                GameType = nameof(FastSpin),
-                Action = nameof(Login)
-            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
+            _payloadLogService.LogDetailedPayload(new PayloadLogMeta
+            {
+                Seq = input.Seq,
+                TimeStamp = currentDateTime.DateTime,
+                ActionName = nameof(Login),
+                GameType = nameof(FastSpin),
+                SiteName = tpCustInfo.SiteId.ToString(),
+                RequestContent = postdata,
+                ResponseContent = result,
+                Elapsed = stopWatch.ElapsedMilliseconds
+            });
+
             ApiResult oApiResult = new ApiResult();
 
             if (IsJSON(result))
@@ -326,11 +331,19 @@ namespace ThirdParty.FastSpin
 
         private static string GetCurrentTimeFormat()
         {
-            var currentAt = new DateTimeOffset(DateTime.UtcNow);
-            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+            return GetCurrentDateTime().ToString(_formatOfTime);
         }
 
+        private static string GetCurrentTimeFormat(DateTimeOffset currentDateTimeOffset)
+        {
+            return currentDateTimeOffset.ToString(_formatOfTime);
+        }
 
+        private static DateTimeOffset GetCurrentDateTime()
+        {
+            var currentAt = new DateTimeOffset(DateTime.UtcNow);
+            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0));
+        }
 
         private static string GetGameName(string gameId)
         {

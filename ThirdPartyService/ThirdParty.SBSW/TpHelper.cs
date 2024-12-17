@@ -17,12 +17,10 @@ namespace ThirdParty.SBSW
     {
         private const string ContentType = "application/x-www-form-urlencoded";
         private readonly Dictionary<int, SabaConfig> siteSabaConfigs;
-        private readonly TemporaryLogSentryService temporaryLogSentryService;
 
         public TpHelper(IServiceProvider provider)
         {
             siteSabaConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SabaConfig>(TpEnum.SBSW.ToString());
-            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -48,8 +46,6 @@ namespace ThirdParty.SBSW
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input));
             var postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"))}";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded", timeOutTime: 3);
-
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(SBSW), ApiUrl, null, postdata, result);
 
             var oApiResult = new ApiResult();
             if (IsJSON(result))

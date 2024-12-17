@@ -1,5 +1,4 @@
-﻿using ThirdPartyCore;
-using ThirdPartyCore.BLL;
+﻿using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
@@ -51,8 +50,6 @@ namespace ThirdPartyService
             services.AddSingleton<AuthBLL>();
             services.AddSingleton<GiftInfoBLL>();
 
-            services.AddSingleton<TemporaryLogSentryService>();
-
             //services.AddSingleton<Microsoft.Extensions.Hosting.IHostedService, WorkerService>();
             services.AddControllers();
 
@@ -60,7 +57,6 @@ namespace ThirdPartyService
             services.AddOptionListByDB<GameCasinoOption>("Member_GameCasinoList_Get_V2");
             services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
             services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
-
 
             //處理SiteConfig
             services.AddOptionListByDB<ServerInfoObject>("ServerInfoList_Get");

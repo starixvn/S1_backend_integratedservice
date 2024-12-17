@@ -1,16 +1,13 @@
-﻿using System.Text.RegularExpressions;
-
+﻿using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
@@ -19,19 +16,19 @@ namespace ThirdParty.PP
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, PPConfig> _siteConfigDic;
-       
+
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
 
         private const string PPLiveCasinoGameTypeId = "16";
 
-        private readonly IPayloadLogger _temporaryLogPayloadService;
+        private readonly IPayloadLogger _payloadLogService;
 
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PPConfig>(TpEnum.PP.ToString());
-            _temporaryLogPayloadService = provider.GetRequiredService<IPayloadLogger>();
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
         #region Request
@@ -158,7 +155,6 @@ namespace ThirdParty.PP
                     TicketNo = getBetDetail.TransId,
                     SettleDate = time,
                     Language = "en-US",
-
                 }
             };
 
@@ -227,21 +223,22 @@ namespace ThirdParty.PP
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            var stopWatch = Stopwatch.StartNew();
             var config = _siteConfigDic[tpCustInfo.SiteId];
-            string gameId = 
+            string gameId =
                 inputs.GetValueOrDefault("gameId", "");
             string homeUrl =
-                inputs.GetValueOrDefault("homeUrl", ""); 
-            string tpGameType = 
+                inputs.GetValueOrDefault("homeUrl", "");
+            string tpGameType =
                 inputs.GetValueOrDefault("tpGameType", "0");
             var gameTypeSpecificApiUrl = GetEndpointBasedOnTpGameType(tpGameType, config);
             var ApiUrl = $"{gameTypeSpecificApiUrl}/api/CommonWallet/LaunchGame";
             var gameType = GetGameTypeBasedOnTpGameType(tpGameType, config);
             var key = ApplyToken(tpCustInfo);
-
+            var currentDateTime = GetCurrentDateTime();
             var input = new
             {
-                Timestamp = GetCurrentTimeFormat(),
+                Timestamp = GetCurrentTimeFormat(currentDateTime),
                 Seq = Guid.NewGuid().ToString(),
                 Payload = new
                 {
@@ -270,11 +267,20 @@ namespace ThirdParty.PP
                 { "operator-pwd", config.OperatorPwd},
                 { "operator-sign", Encrypt(postdata, config)},
             };
-            _temporaryLogPayloadService.LogDetailedPayload(postdata, new PayloadLogMeta() {
-                GameType = gameType
-            });
+
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
-            _temporaryLogPayloadService.UpdateDetailedPayLoadWithResponse(postdata, result);
+
+            _payloadLogService.LogDetailedPayload(new PayloadLogMeta
+            {
+                Seq = input.Seq,
+                TimeStamp = currentDateTime.DateTime,
+                ActionName = nameof(Login),
+                GameType = nameof(PP),
+                SiteName = tpCustInfo.SiteId.ToString(),
+                RequestContent = postdata,
+                ResponseContent = result,
+                Elapsed = stopWatch.ElapsedMilliseconds
+            });
 
             ApiResult oApiResult = new ApiResult();
 
@@ -317,19 +323,32 @@ namespace ThirdParty.PP
 
         private static string GetCurrentTimeFormat()
         {
-            var currentAt = new DateTimeOffset(DateTime.UtcNow);
-            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+            return GetCurrentDateTime().ToString(_formatOfTime);
         }
 
-        private static string GetEndpointBasedOnTpGameType(string gameType, PPConfig config) {
-            if (gameType == PPLiveCasinoGameTypeId) {
+        private static string GetCurrentTimeFormat(DateTimeOffset currentDateTimeOffset)
+        {
+            return currentDateTimeOffset.ToString(_formatOfTime);
+        }
+
+        private static DateTimeOffset GetCurrentDateTime()
+        {
+            var currentAt = new DateTimeOffset(DateTime.UtcNow);
+            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0));
+        }
+
+        private static string GetEndpointBasedOnTpGameType(string gameType, PPConfig config)
+        {
+            if (gameType == PPLiveCasinoGameTypeId)
+            {
                 return config.LiveCasinoApiUrl;
             }
 
             return config.ApiUrl;
         }
 
-        private static string GetGameTypeBasedOnTpGameType(string gameType, PPConfig config) {
+        private static string GetGameTypeBasedOnTpGameType(string gameType, PPConfig config)
+        {
             if (gameType == PPLiveCasinoGameTypeId)
             {
                 return config.LiveCasinoGameType;
@@ -338,7 +357,7 @@ namespace ThirdParty.PP
             return config.GameType;
         }
 
-        private static string GetSPNameBasedOnTpGameType(int  gameType)
+        private static string GetSPNameBasedOnTpGameType(int gameType)
         {
             if (gameType.ToString() == PPLiveCasinoGameTypeId)
             {

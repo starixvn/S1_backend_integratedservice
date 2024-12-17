@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -15,7 +16,6 @@ namespace ThirdParty.FaChai
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, FaChaiConfig> _siteConfigDic;
 
         private readonly IPayloadLogger _payloadLogService;
@@ -26,7 +26,6 @@ namespace ThirdParty.FaChai
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FaChaiConfig>(TpEnum.FaChai.ToString());
-            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
         }
 
@@ -226,16 +225,17 @@ namespace ThirdParty.FaChai
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            var stopWatch = Stopwatch.StartNew();
             var config = _siteConfigDic[tpCustInfo.SiteId];
             var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
             var key = ApplyToken(tpCustInfo);
-
+            var currentDateTime = GetCurrentDateTime();
             var input = new
             {
-                Timestamp = GetCurrentTimeFormat(),
+                Timestamp = GetCurrentTimeFormat(currentDateTime),
                 Seq = Guid.NewGuid().ToString(),
                 Payload = new
                 {
@@ -265,15 +265,19 @@ namespace ThirdParty.FaChai
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
-            _payloadLogService.LogDetailedPayload(postdata, new PayloadLogMeta()
-            {
-                GameType = nameof(FaChai),
-                Action = nameof(Login)
-            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(FaChai), ApiUrl, header, postdata, result);
-            _payloadLogService.UpdateDetailedPayLoadWithResponse(postdata, result);
+            _payloadLogService.LogDetailedPayload(new PayloadLogMeta
+            {
+                Seq = input.Seq,
+                TimeStamp = currentDateTime.DateTime,
+                ActionName = nameof(Login),
+                GameType = nameof(FaChai),
+                SiteName = tpCustInfo.SiteId.ToString(),
+                RequestContent = postdata,
+                ResponseContent = result,
+                Elapsed = stopWatch.ElapsedMilliseconds
+            });
 
             ApiResult oApiResult = new ApiResult();
 
@@ -442,8 +446,18 @@ namespace ThirdParty.FaChai
 
         private static string GetCurrentTimeFormat()
         {
+            return GetCurrentDateTime().ToString(_formatOfTime);
+        }
+
+        private static string GetCurrentTimeFormat(DateTimeOffset currentDateTimeOffset)
+        {
+            return currentDateTimeOffset.ToString(_formatOfTime);
+        }
+
+        private static DateTimeOffset GetCurrentDateTime()
+        {
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
-            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0));
         }
     }
 }
