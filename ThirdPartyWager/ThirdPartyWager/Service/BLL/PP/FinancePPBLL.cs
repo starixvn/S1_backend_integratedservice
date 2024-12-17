@@ -47,7 +47,7 @@ public class FinancePPBLL: ITpReportBLL
         foreach (var site in siteList)
         {
             var config = _siteConfigDic[site.SiteId];
-            if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
+            if (string.IsNullOrWhiteSpace(config.DailySumApiUrl) || _siteConfigDic[site.SiteId] is null)
             {
                 _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType, config.DailySumApiUrl);
                 continue;

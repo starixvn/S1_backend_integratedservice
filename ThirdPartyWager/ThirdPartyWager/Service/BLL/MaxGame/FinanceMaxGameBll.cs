@@ -55,7 +55,7 @@ namespace ThirdPartyWager.Service.BLL.MaxGame
                     continue;
                 }
                 var config = _siteConfigDic[site.SiteId];
-                if (string.IsNullOrWhiteSpace(config.DailySumApiUrl))
+                if (string.IsNullOrWhiteSpace(config.DailySumApiUrl) || _siteConfigDic[site.SiteId] is null)
                 {
                     _logger.LogWarning("GetDailySummary of {GameType} is ignore because {DailySumApiUrl} is empty", config.GameType, config.DailySumApiUrl);
                     continue;

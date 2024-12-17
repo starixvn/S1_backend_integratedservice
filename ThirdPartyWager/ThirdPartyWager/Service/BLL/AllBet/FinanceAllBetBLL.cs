@@ -50,7 +50,7 @@ namespace ThirdPartyWager.Service.BLL.AllBet
 
             foreach (var site in siteList)
             {
-                if (!_siteConfigDic.ContainsKey(site.SiteId))
+                if (!_siteConfigDic.ContainsKey(site.SiteId) || _siteConfigDic[site.SiteId] is null)
                 {
                     continue;
                 }
