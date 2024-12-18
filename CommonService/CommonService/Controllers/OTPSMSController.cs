@@ -10,6 +10,7 @@ namespace CommonService.Controllers
     [ApiController]
     public class OTPSMSController
     {
+        private readonly IConfiguration _configuration;
         private readonly ILogger<OTPSMSController> _logger;
         private readonly CustInfoBLL _custInfoBLL;
         private readonly Dictionary<int, SMSSupportConfig> _supportOTPConfig;
@@ -21,8 +22,9 @@ namespace CommonService.Controllers
         private readonly IEnumerable<ServerInfo> _serverInfo;
         private readonly string _environment;
 
-        public OTPSMSController(IServiceProvider provider)
+        public OTPSMSController(IConfiguration configuration, IServiceProvider provider)
         {
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = provider.GetRequiredService<ILogger<OTPSMSController>>();
             _custInfoBLL = provider.GetRequiredService<CustInfoBLL>();
             _supportOTPConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SMSSupportConfig>("SMSAutoSupport");
@@ -105,14 +107,14 @@ namespace CommonService.Controllers
 
             var areaPhoneNo = $"{req.AreaCode}{req.PhoneNo}";
             var siteName = _serverInfo.FirstOrDefault(x => x.SiteId == req.SiteId)?.SiteName;
-            
+
             // check OTP        
             var apiResult = _oTPSMSBLL.GetSignUpOTPVerifyInfo(areaPhoneNo);
             if (apiResult.ErrorCode == 0)
             {
                 return apiResult;
             }
-            
+
             // for singUp Info
             var signUpInfo = new CustInfoProfile
             {
@@ -124,15 +126,15 @@ namespace CommonService.Controllers
                 AreaCode = req.AreaCode,
                 PhoneNo = req.PhoneNo,
             };
-            
+
             var request = new OTPRequestObject
             {
                 CustInfoProfile = signUpInfo,
                 OTPNum = _tools.GetRandomNumString(6)
             };
-            var otpProvider = GetSupportOTP(req.SiteId ,req.AreaCode ,req.PhoneNo );
+            var otpProvider = GetSupportOTP(req.SiteId, req.AreaCode, req.PhoneNo);
             var otpProviderResult = await _requestHandler[otpProvider].Invoke(request);
-            
+
             if (otpProviderResult.ErrorCode != ErrorCode.Success)
             {
                 return new ApiResult<SendOTPSMSResult>()
@@ -141,10 +143,10 @@ namespace CommonService.Controllers
                     Message = otpProviderResult.Message
                 };
             }
-            
+
             return _oTPSMSBLL.SignUpOTPVerifyinfoInsAsync(areaPhoneNo, request.OTPNum);
         }
-        
+
         [HttpPost]
         public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
@@ -153,8 +155,9 @@ namespace CommonService.Controllers
             try
             {
                 var custInfo = _custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
+                var brandName = _configuration.GetSection("BrandName").Get<string>();
 
-                _logger.LogInformation($"UserName: {custInfo.UserName}\r\nPhoneNo: {custInfo.PhoneNo}\r\nInput: {verifyOTPReq.InputOTP}", $"{custInfo.SiteName}_Verify");
+                _logger.LogInformation($"UserName: {custInfo.UserName}\r\nPhoneNo: {custInfo.PhoneNo}\r\nInput: {verifyOTPReq.InputOTP}", $"{brandName}_Verify");
 
                 if (verifyOTPReq.InputOTP.Length >= 10)
                 {
@@ -218,7 +221,7 @@ namespace CommonService.Controllers
 
             return apiResult;
         }
-            
+
         [HttpPost]
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(RequestObject req)
         {
@@ -275,7 +278,7 @@ namespace CommonService.Controllers
             return apiResult;
         }
 
-        private OTPProvider GetSupportOTP(int siteId, string areaCode , string phoneNo, int custId = 0)
+        private OTPProvider GetSupportOTP(int siteId, string areaCode, string phoneNo, int custId = 0)
         {
             try
             {
@@ -283,12 +286,12 @@ namespace CommonService.Controllers
                 var sMSSupport = _supportOTPConfig[siteId].SMSSupport;
                 // 使用電話國碼取得簡訊供應商支援列表
                 var otpProviderList = sMSSupport.TryGetValue(areaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];
-                
+
                 // 先使用第一個當預設值
                 var result = otpProviderList[0];
 
                 // 檢查玩家之前發送紀錄
-                
+
                 var key = custId == 0 ? $"UserGetSupportOTP:{areaCode}:{phoneNo}" : $"UserGetSupportOTP:{custId}";
                 var alreadyTryProviderList = _redisHelper.GetListByRange<string>(key, 0, -1);
 
@@ -305,11 +308,11 @@ namespace CommonService.Controllers
                     }
                 }
                 else
-                {   
+                {
                     // 全部試過一輪，清掉重來
                     _redisHelper.KeyDelete(key);
                 }
-                
+
 
                 //記錄這一次選擇的結果
                 _redisHelper.InsertList(key, TimeSpan.FromDays(1), new List<string> { result.ToString() });

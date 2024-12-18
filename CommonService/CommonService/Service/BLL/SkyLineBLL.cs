@@ -10,6 +10,7 @@ namespace CommonService.Service.BLL
 {
     public class SkyLineBLL
     {
+        private readonly IConfiguration _configuration;
         private readonly HttpHelper _httpHelper;
         private readonly Dictionary<int, SkyLineSMSServiceTypeConfig> _config;
         private readonly Tools _tools;
@@ -19,8 +20,9 @@ namespace CommonService.Service.BLL
         private readonly OTPSMSBLL _oTPSMSBLL;
         private readonly string _environment;
 
-        public SkyLineBLL(IServiceProvider provider)
+        public SkyLineBLL(IConfiguration configuration, IServiceProvider provider)
         {
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _tools = provider.GetRequiredService<Tools>();
             _selLangBll = provider.GetRequiredService<SelLangBLL>();
@@ -110,9 +112,9 @@ namespace CommonService.Service.BLL
             var config = _config[custInfo.SiteId].OTP;
             var sign = MakeSignString(config.ApiKey, config.ApiSecret, timestamp);
 
-            var siteName = custInfo.SiteName;
+            var brandName = _configuration.GetSection("BrandName").Get<string>();
 
-            var smsMessage = $"[{siteName}]{_selLangBll.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
+            var smsMessage = $"[{brandName}]{_selLangBll.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
 
             var headerParams = new Dictionary<string, string>
             {
@@ -126,7 +128,7 @@ namespace CommonService.Service.BLL
                 { "appId", config.Account },
                 { "content", smsMessage },
                 { "numbers", PhoneNo},
-                { "senderId", siteName }
+                { "senderId", brandName }
             };
 
             var oTPLog = new OTPLog
@@ -150,7 +152,7 @@ namespace CommonService.Service.BLL
                 return SendSkyLineSMSMock(apiResult, oTPLog, _environment);
             }
             using var result = await _httpHelper.HttpPost1Async(config.ResourceURL, headerParams, parameters, "application/json");
-            _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
+            _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{brandName}_DepositRejectSMS");
 
             if (result.StatusCode == HttpStatusCode.OK)
             {
@@ -161,7 +163,7 @@ namespace CommonService.Service.BLL
 
                 if (resultResp.status == 0)
                 {
-                    _logger.LogInformation($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
+                    _logger.LogInformation($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{brandName}_DepositRejectSMS");
                     apiResult.ErrorCode = ErrorCode.Success;
                     oTPLog.OTPStatus = (int)OTPStatus.SendToProvider;
                     oTPLog.Request_id = responseDetail.msgId;
@@ -187,7 +189,7 @@ namespace CommonService.Service.BLL
             {
                 apiResult.ErrorCode = ErrorCode.SMSProviderFail;
                 apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
-                _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
+                _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{brandName}_DepositRejectSMS");
                 oTPLog.OTPResponse = $"SkyLine - Error HttpStatusCode : {result.StatusCode} || {result.ReasonPhrase}";
             }
 
@@ -210,11 +212,11 @@ namespace CommonService.Service.BLL
             var config = _config[custInfo.SiteId].OTP;
             var sign = MakeSignString(config.ApiKey, config.ApiSecret, timestamp);
 
-            var siteName = custInfo.SiteName;
+            var brandName = _configuration.GetSection("BrandName").Get<string>();
 
             #region message
 
-            var smsMessage = $"[{siteName}]{string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), otpNum)}";
+            var smsMessage = $"[{brandName}]{string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), otpNum)}";
             //lbl_OTP
             if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
             {
@@ -230,26 +232,26 @@ namespace CommonService.Service.BLL
             }
             else if (userLang.Equals("hi", StringComparison.OrdinalIgnoreCase))
             {
-                smsMessage = string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), siteName, otpNum);
+                smsMessage = string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), brandName, otpNum);
             }
 
             #endregion
-            
+
             var headerParams = new Dictionary<string, string>
             {
                 { "Sign", sign },
                 { "Timestamp", timestamp.ToString() },
                 { "Api-Key", config.ApiKey }
             };
-            
+
             var acknowledgeVerifySms = new Dictionary<string, string>
             {
                 { "appId", config.Account },
                 { "content", smsMessage },
                 { "numbers", phoneNo},
-                { "senderId", siteName }
+                { "senderId", brandName }
             };
-            
+
             var oTPLog = new OTPLog
             {
                 SiteId = custInfo.SiteId,
@@ -271,7 +273,7 @@ namespace CommonService.Service.BLL
                 return SendSkyLineSMSMock(apiResult, oTPLog, _environment);
             }
             using var result = await _httpHelper.HttpPost1Async(config.ResourceURL, headerParams, parameters, "application/json");
-            _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
+            _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{brandName}_OTP");
 
             if (result.StatusCode == HttpStatusCode.OK)
             {
@@ -282,7 +284,7 @@ namespace CommonService.Service.BLL
 
                 if (resultResp.status == 0)
                 {
-                    _logger.LogInformation($"SkyLine - {phoneNo},{custInfo.UserName},{otpNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
+                    _logger.LogInformation($"SkyLine - {phoneNo},{custInfo.UserName},{otpNum},status:{resultResp.status},reason:{resultResp.reason}", $"{brandName}_OTP");
                     apiResult.ErrorCode = ErrorCode.Success;
                     oTPLog.OTPStatus = (int)OTPStatus.SendToProvider;
                     oTPLog.Request_id = responseDetail.msgId;
@@ -308,7 +310,7 @@ namespace CommonService.Service.BLL
             {
                 apiResult.ErrorCode = ErrorCode.SMSProviderFail;
                 apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
-                _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
+                _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{brandName}_OTP");
                 oTPLog.OTPResponse = $"SkyLine - Error HttpStatusCode : {result.StatusCode} || {result.ReasonPhrase}";
             }
 
@@ -329,7 +331,7 @@ namespace CommonService.Service.BLL
             var tmpStr = $"{key}{secret}{dataTime}";
             return _tools.ToMD5(tmpStr);
         }
-        
+
         private string GetRequestid(SKYLineSMSResult sKYLineSMSResult)
         {
             try

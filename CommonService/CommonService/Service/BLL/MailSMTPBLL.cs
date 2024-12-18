@@ -88,7 +88,7 @@ namespace CommonService.Service.BLL
                 {
                     ErrorCode = ErrorCode.Fail,
                 };
-            } 
+            }
             finally
             {
                 message.Dispose();
@@ -102,24 +102,25 @@ namespace CommonService.Service.BLL
 
         private EmailDetails MakeEmailContext(CustInfoProfile custInfo, string dynamicUrl, TemplateType type)
         {
+            var brandName = _configuration.GetSection("BrandName").Get<string>();
             var userLang = custInfo.UserLang;
-            var siteName = custInfo.SiteName;
 
             var mailContent = string.Empty;
             var mailSubject = string.Empty;
 
             if (type == TemplateType.VerificationMail)
             {
-                mailSubject = string.Format(_selLangBLL.GetResourceValue("lbl_VerifyEmailSubject", userLang), siteName);
-                mailContent = string.Format(_selLangBLL.GetResourceValue("lbl_VerifyEmailContent", userLang), dynamicUrl, siteName);
-            } else if (type == TemplateType.ResetPassword)
+                mailSubject = string.Format(_selLangBLL.GetResourceValue("lbl_VerifyEmailSubject", userLang), brandName);
+                mailContent = string.Format(_selLangBLL.GetResourceValue("lbl_VerifyEmailContent", userLang), dynamicUrl, brandName);
+            }
+            else if (type == TemplateType.ResetPassword)
             {
                 var key = _authBLL.ApplyToken(custInfo);
                 var resetPasswordUrl = $"{dynamicUrl}?key={key}";
-                mailSubject = string.Format(_selLangBLL.GetResourceValue("lbl_ForgottenPasswordEmailSubject", userLang), siteName);
-                mailContent = string.Format(_selLangBLL.GetResourceValue("lbl_ForgottenPasswordEmailContent", userLang), resetPasswordUrl, siteName);
+                mailSubject = string.Format(_selLangBLL.GetResourceValue("lbl_ForgottenPasswordEmailSubject", userLang), brandName);
+                mailContent = string.Format(_selLangBLL.GetResourceValue("lbl_ForgottenPasswordEmailContent", userLang), resetPasswordUrl, brandName);
             }
-            return new EmailDetails { Subject = mailSubject, Content = mailContent};
+            return new EmailDetails { Subject = mailSubject, Content = mailContent };
         }
 
     }

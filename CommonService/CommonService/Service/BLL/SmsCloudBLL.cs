@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Web;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
@@ -10,6 +9,7 @@ namespace CommonService.Service.BLL
 {
     public class SmsCloudBLL
     {
+        private readonly IConfiguration _configuration;
         private readonly HttpHelper _httpHelper;
         private readonly Dictionary<int, SmsCloudTypeConfig> _config;
         private readonly SelLangBLL _selLangBll;
@@ -17,8 +17,9 @@ namespace CommonService.Service.BLL
         private readonly SiteLanguageBLL _siteLanguageBll;
         private readonly OTPSMSBLL _oTpSmsBll;
 
-        public SmsCloudBLL(IServiceProvider provider)
+        public SmsCloudBLL(IConfiguration configuration, IServiceProvider provider)
         {
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _selLangBll = provider.GetRequiredService<SelLangBLL>();
             _logger = provider.GetRequiredService<ILogger<OTPSMSService>>();
@@ -38,7 +39,7 @@ namespace CommonService.Service.BLL
         {
             var userLang = custInfo.UserLang;
             var smsMessage = string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), otpNum);
-           
+
             return smsMessage;
         }
 
@@ -47,6 +48,7 @@ namespace CommonService.Service.BLL
             var apiResult = new ApiResult();
             var config = _config[custInfo.SiteId].OTP.FirstOrDefault(x => x.AreaCode == custInfo.AreaCode);
             var smsMessage = MakeSmsContext(custInfo, otpNum);
+            var brandName = _configuration.GetSection("BrandName").Get<string>();
             var oTpLog = new OTPLog
             {
                 SiteId = custInfo.SiteId,
@@ -72,8 +74,8 @@ namespace CommonService.Service.BLL
                     {"phone", phoneNo},
                     {"msg",  smsMessage},
                 };
-              
-                using var httpResponse = await _httpHelper.HttpGetAsync(config.ResourceURL, null, parameters, null , 9090);
+
+                using var httpResponse = await _httpHelper.HttpGetAsync(config.ResourceURL, null, parameters, null, 9090);
                 if (httpResponse is { StatusCode: HttpStatusCode.OK })
                 {
                     var content = await httpResponse.Content.ReadAsStringAsync();
@@ -83,16 +85,16 @@ namespace CommonService.Service.BLL
                     {
                         var resultDetail = response.result.FirstOrDefault(x => x.phone == phoneNo);
                         oTpLog.OTPResponse = $"{resultDetail.status} || {resultDetail.desc}";
-                        
+
                         if (resultDetail.status.Equals("00000"))
                         {
-                            _logger.LogInformation($"SmsCloud - {phoneNo},{custInfo.UserName},{otpNum},status:{resultDetail.status},reason:{resultDetail.desc},messageId:{response.uid}", $"{custInfo.SiteName}_OTP");
+                            _logger.LogInformation($"SmsCloud - {phoneNo},{custInfo.UserName},{otpNum},status:{resultDetail.status},reason:{resultDetail.desc},messageId:{response.uid}", $"{brandName}_OTP");
                             oTpLog.OTPStatus = (int)OTPStatus.SendToProvider;
                             apiResult.ErrorCode = ErrorCode.Success;
                         }
                         else
                         {
-                            _logger.LogInformation($"SmsCloud - {phoneNo},{custInfo.UserName},{otpNum},status:{resultDetail.status},reason:{resultDetail.desc},messageId:{response.uid}", $"{custInfo.SiteName}_OTP");
+                            _logger.LogInformation($"SmsCloud - {phoneNo},{custInfo.UserName},{otpNum},status:{resultDetail.status},reason:{resultDetail.desc},messageId:{response.uid}", $"{brandName}_OTP");
                             apiResult.ErrorCode = ErrorCode.SMSProviderFail;
                             apiResult.Message = _siteLanguageBll.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                         }

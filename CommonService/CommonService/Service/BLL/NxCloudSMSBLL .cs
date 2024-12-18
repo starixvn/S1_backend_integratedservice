@@ -11,6 +11,7 @@ namespace CommonService.Service.BLL
 {
     public class NxCloudSMSBLL
     {
+        private readonly IConfiguration _configuration;
         private readonly HttpHelper _httpHelper;
         private readonly Dictionary<int, NxcloudSMSServiceTypeConfig> _config;
         private readonly SelLangBLL _selLangBLL;
@@ -18,8 +19,9 @@ namespace CommonService.Service.BLL
         private readonly SiteLanguageBLL _siteLanguageBLL;
         private readonly OTPSMSBLL _oTPSMSBLL;
 
-        public NxCloudSMSBLL(IServiceProvider provider)
+        public NxCloudSMSBLL(IConfiguration configuration, IServiceProvider provider)
         {
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _selLangBLL = provider.GetRequiredService<SelLangBLL>();
             _logger = provider.GetRequiredService<ILogger<OTPSMSService>>();
@@ -37,7 +39,7 @@ namespace CommonService.Service.BLL
 
         private string MakeSMSContext(CustInfoProfile custInfo, string OTPNum, string PhoneNo)
         {
-            var siteName = custInfo.SiteName;
+            var brandName = _configuration.GetSection("BrandName").Get<string>();
             var userLang = custInfo.UserLang;
             var smsMessage = string.Format(_selLangBLL.GetResourceValue("lbl_OTP", userLang), OTPNum);
             var areaCode = custInfo.AreaCode;
@@ -52,7 +54,7 @@ namespace CommonService.Service.BLL
             }
             else if (userLang.Equals("hi", StringComparison.OrdinalIgnoreCase))
             {
-                smsMessage = string.Format(_selLangBLL.GetResourceValue("lbl_OTP", custInfo.UserLang), siteName, OTPNum);
+                smsMessage = string.Format(_selLangBLL.GetResourceValue("lbl_OTP", custInfo.UserLang), brandName, OTPNum);
             }
             return smsMessage;
         }
@@ -60,6 +62,7 @@ namespace CommonService.Service.BLL
         private async Task<ApiResult> SendToNxCloud(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string userLang, int custId)
         {
             var apiResult = new ApiResult();
+            var brandName = _configuration.GetSection("BrandName").Get<string>();
             var Config = _config[custInfo.SiteId].OTP;
             var smsMessage = MakeSMSContext(custInfo, OTPNum, PhoneNo);
             var oTPLog = new OTPLog
@@ -102,13 +105,13 @@ namespace CommonService.Service.BLL
 
                         if (code.Equals("0"))
                         {
-                            _logger.LogInformation($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+                            _logger.LogInformation($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{brandName}_OTP");
                             oTPLog.OTPStatus = (int)OTPStatus.SendToProvider;
                             apiResult.ErrorCode = ErrorCode.Success;
                         }
                         else
                         {
-                            SentrySdk.CaptureMessage($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid},{custInfo.SiteName}_OTP");
+                            SentrySdk.CaptureMessage($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid},{brandName}_OTP");
 
                             if (code.Equals("6"))
                             {
