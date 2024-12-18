@@ -290,7 +290,7 @@ namespace ThirdPartyWager.Service.BLL
                             bet.stake = betItem.stake;
                             bet.payout = betItem.payout;
                             bet.placedOn = betItem.placedOn;
-                            bet.description = betItem.description;
+                            bet.description = !string.IsNullOrEmpty(betItem.description) ? betItem.description : "";
                             bet.transactionId = betItem.transactionId;
                             bet.playMode = playerItem.playMode;
                             bet.mathId = playerItem.mathId;

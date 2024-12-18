@@ -174,7 +174,7 @@ namespace ThirdPartyWager.Service.BLL
                                     stake = betItem.stake,
                                     payout = betItem.payout,
                                     placedOn = betItem.placedOn,
-                                    description = betItem.description,
+                                    description = !string.IsNullOrEmpty(betItem.description) ? betItem.description : "",
                                     transactionId = betItem.transactionId,
                                     //bet.configOverlays = JsonConvert.SerializeObject(playerItem.configOverlays);
                                     playMode = playerItem.playMode,

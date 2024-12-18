@@ -69,7 +69,7 @@ namespace ThirdPartySettleWorker.Workers
                     throw new UnsettleNotFoundException($"{_tpName} {gameType} no unsettle data.");
                 }
 
-                forContinue = tpUnsettleList.Count() == 200;
+                forContinue = tpUnsettleList.Count() > 200;
                 foreach (var unsettled in tpUnsettleList)
                 {
                     try
