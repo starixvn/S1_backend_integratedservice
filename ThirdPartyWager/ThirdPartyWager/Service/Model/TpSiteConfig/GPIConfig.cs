@@ -13,5 +13,7 @@
         public string LiveCasinoUrl { get; set; }
 
         public string WagerMerchPwd { get; set; }
+
+        public List<int> CommonSiteIds { get; set; }
     }
 }
