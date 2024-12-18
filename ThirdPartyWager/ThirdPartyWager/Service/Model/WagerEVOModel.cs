@@ -84,7 +84,7 @@
         public decimal stake { get; set; }
         public decimal payout { get; set; }
         public DateTime placedOn { get; set; }
-        public string description { get; set; }
+        public string description { get; set; } = "";
         public string transactionId { get; set; }
         //public dynamic configOverlays { get; set; }
         public string playMode { get; set; }
