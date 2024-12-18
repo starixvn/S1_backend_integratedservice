@@ -390,12 +390,12 @@ namespace ThirdParty.SBSW
                     decimal.TryParse(betNumberDetail.odds, out decimal odds);
                     return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                     {
-                        GameID = betNumberDetail.sport_type.ToString(),
+                        GameID = betNumberDetail.sport_type,
                         Game = tpGameType.TypeName,
-                        RefNo = betNumberDetail.trans_id.ToString(),
+                        RefNo = betNumberDetail.trans_id,
                         Title = tpGameType.TypeName,
-                        MatchID = betNumberDetail.match_id.ToString(),
-                        BetType = betNumberDetail.bet_type.ToString(),
+                        MatchID = betNumberDetail.match_id,
+                        BetType = betNumberDetail.bet_type,
                         BetChoice = betNumberDetail.bet_team ?? string.Empty,
                         Result = betNumberDetail.ticket_status,
                         DeviceType = GetDeviceType(betNumberDetail.betfrom),
@@ -411,12 +411,12 @@ namespace ThirdParty.SBSW
                     decimal.TryParse(betVirtualSportDetail.odds, out decimal odds);
                     return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                     {
-                        GameID = betVirtualSportDetail.sport_type.ToString(),
+                        GameID = betVirtualSportDetail.sport_type,
                         Game = tpGameType.TypeName,
-                        RefNo = betVirtualSportDetail.parlay_ref_no.ToString(),
+                        RefNo = betVirtualSportDetail.parlay_ref_no,
                         Title = tpGameType.TypeName,
-                        MatchID = betVirtualSportDetail.match_id.ToString(),
-                        BetType = betVirtualSportDetail.bet_type.ToString(),
+                        MatchID = betVirtualSportDetail.match_id,
+                        BetType = betVirtualSportDetail.bet_type,
                         BetChoice = betVirtualSportDetail.bet_team ?? string.Empty,
                         Result = betVirtualSportDetail.ticket_status,
                         DeviceType = GetDeviceType(betVirtualSportDetail.betfrom),
