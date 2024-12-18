@@ -209,7 +209,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
 
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getBalanceReq.userId, _gameType);
+                var tpCustBalance = _environment.IsDevelopment() ? _tpCustInfoBLL.GetBalance((int)_thisTp, getBalanceReq.userId, _gameType) : _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getBalanceReq.userId, _gameType);
                 if (tpCustBalance != null)
                 {
                     GetBalanceResp getBalanceResp = new GetBalanceResp();
