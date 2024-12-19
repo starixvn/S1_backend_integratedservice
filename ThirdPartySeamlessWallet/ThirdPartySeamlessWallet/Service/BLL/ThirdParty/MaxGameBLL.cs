@@ -298,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
-                EndGameResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
+                EndGameResp response = new(ErrorCodeOfMaxGame.OpSideRequestWasDone, getReq.Seq)
                 {
                     Payload = new Payload_EndGameResp()
                     {
@@ -363,7 +363,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
-                EndGameResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
+                EndGameResp response = new(ErrorCodeOfMaxGame.OpSideRequestWasDone, getReq.Seq)
                 {
                     Payload = new Payload_EndGameResp()
                     {
@@ -429,7 +429,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
-                VoidGameResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
+                VoidGameResp response = new(ErrorCodeOfMaxGame.OpSideRequestWasDone, getReq.Seq)
                 {
                     Payload = new Payload_EndGameResp()
                     {
@@ -479,7 +479,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
-                BonusResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
+                BonusResp response = new(ErrorCodeOfMaxGame.OpSideRequestWasDone, getReq.Seq)
                 {
                     Payload = new Payload_BonusResp()
                     {
@@ -530,7 +530,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
-                BonusResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
+                BonusResp response = new(ErrorCodeOfMaxGame.OpSideRequestWasDone, getReq.Seq)
                 {
                     Payload = new Payload_BonusResp()
                     {
