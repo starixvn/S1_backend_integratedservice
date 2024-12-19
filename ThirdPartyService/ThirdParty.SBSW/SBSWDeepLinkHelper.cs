@@ -64,7 +64,7 @@ namespace ThirdParty.SBSW
 
         private readonly Dictionary<string, Func<string>> _sportTypeHandler;
 
-        public SBSWDeepLinkHelper(string sabaUrl, TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs, GameDetail gameDetail)
+        public SBSWDeepLinkHelper(string sabaUrl, TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs, GameDetail gameDetail, SBSWDeepLinkParamConfig deepLinkConfig)
         {
             _sportTypeHandler = new Dictionary<string, Func<string>>
             {
@@ -116,16 +116,30 @@ namespace ThirdParty.SBSW
                 resultUrl.Append($"&isAPP={isAPP}");
             }
 
-            if (inputs.TryGetValue("skin", out var skin))
+            if (deepLinkConfig.WebSkinType != -1)
             {
-                resultUrl.Append($"&skin={skin}");
+                //如果有特殊參數則戴特殊參數，沒有則走原邏輯
+                resultUrl.Append($"&WebSkinType={deepLinkConfig.WebSkinType}");
+            }
+
+            if (deepLinkConfig.skin != -1)
+            {
+                //如果有特殊參數則戴特殊參數，沒有則走原邏輯
+                resultUrl.Append($"&skin={deepLinkConfig.skin}");
             }
             else
             {
-                //vgaming的H5強制加skin = 0
-                if (_appType == AppType.Mobile && _sportType == "171")
+                if (inputs.TryGetValue("skin", out var skin))
                 {
-                    resultUrl.Append($"&skin=0");
+                    resultUrl.Append($"&skin={skin}");
+                }
+                else
+                {
+                    //vgaming的H5強制加skin = 0
+                    if (_appType == AppType.Mobile && _sportType == "171")
+                    {
+                        resultUrl.Append($"&skin=0");
+                    }
                 }
             }
 
