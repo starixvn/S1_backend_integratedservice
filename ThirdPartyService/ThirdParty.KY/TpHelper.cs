@@ -101,7 +101,7 @@ namespace ThirdParty.KY
                     }
 
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = json.d.url;
+                    oApiResult.Message = forward;
                 }
                 else
                 {

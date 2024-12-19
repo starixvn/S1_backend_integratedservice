@@ -110,7 +110,6 @@ namespace ThirdPartyWager.Workers
                 }
 
                 var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
-                // TODO: how to determin the number of _beyond?
                 if (diffDay > _beyond)
                 {
                     quick = true;
