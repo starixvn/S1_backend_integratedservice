@@ -64,7 +64,7 @@ namespace ThirdParty.SBSW
 
         private readonly Dictionary<string, Func<string>> _sportTypeHandler;
 
-        public SBSWDeepLinkHelper(string sabaUrl, TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs, GameDetail gameDetail, SBSWDeepLinkParamConfig deepLinkConfig)
+        public SBSWDeepLinkHelper(string sabaUrl, TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs, GameDetail gameDetail, SabaConfig config)
         {
             _sportTypeHandler = new Dictionary<string, Func<string>>
             {
@@ -116,16 +116,16 @@ namespace ThirdParty.SBSW
                 resultUrl.Append($"&isAPP={isAPP}");
             }
 
-            if (deepLinkConfig.WebSkinType != -1)
+            if (config.WebSkinType != -1)
             {
                 //如果有特殊參數則戴特殊參數，沒有則走原邏輯
-                resultUrl.Append($"&WebSkinType={deepLinkConfig.WebSkinType}");
+                resultUrl.Append($"&WebSkinType={config.WebSkinType}");
             }
 
-            if (deepLinkConfig.skin != -1)
+            if (config.Skin != -1)
             {
                 //如果有特殊參數則戴特殊參數，沒有則走原邏輯
-                resultUrl.Append($"&skin={deepLinkConfig.skin}");
+                resultUrl.Append($"&skin={config.Skin}");
             }
             else
             {
