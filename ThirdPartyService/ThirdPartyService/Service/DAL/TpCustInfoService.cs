@@ -214,8 +214,10 @@ namespace ThirdPartyService.Service.DAL
             }
 
             //特殊設定需使用username建立會員
-            var ruleConfig = _createMemberRuleConfig[customer.SiteId];
-            var createMemberRule = ruleConfig.FirstOrDefault(x => x.TpId == tpId)?.Rule ?? CreateMemberRuleEnum.General;
+            var ruleConfig = _createMemberRuleConfig[customer.SiteId].FirstOrDefault(x => x.TpId == tpId);
+
+            var createMemberRule = ruleConfig?.Rule ?? CreateMemberRuleEnum.General;
+            var useEnvPrefix = ruleConfig?.UseEnvPrefix == 1 || ruleConfig == null; //default true
             var tpUserName = string.Empty;
 
             switch (createMemberRule)
@@ -240,7 +242,7 @@ namespace ThirdPartyService.Service.DAL
                 MemberType = customer.MemberType
             };
 
-            if (_environment.EnvironmentName != "Production")
+            if (useEnvPrefix && _environment.EnvironmentName != "Production")
             {
                 regTpCustInfo.TpUserName = $"{_common.GetEnv()}{tpUserName}";
             }
