@@ -17,13 +17,10 @@ namespace ThirdParty.SBSW
     {
         private const string ContentType = "application/x-www-form-urlencoded";
         private readonly Dictionary<int, SabaConfig> siteSabaConfigs;
-        private readonly Dictionary<int, SBSWDeepLinkParamConfig> _deepLinkParamConfig;
 
         public TpHelper(IServiceProvider provider)
         {
-            var configBll = provider.GetRequiredService<ConfigBLL>();
-            siteSabaConfigs = configBll.GetConfigValuesBySiteId<SabaConfig>(TpEnum.SBSW.ToString());
-            _deepLinkParamConfig = configBll.GetConfigValuesBySiteId<SBSWDeepLinkParamConfig>("SBSWDeepLinkParam");
+            siteSabaConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SabaConfig>(TpEnum.SBSW.ToString());
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -115,13 +112,10 @@ namespace ThirdParty.SBSW
                     gameDetail = getGameDetailResult.Data.FirstOrDefault();
                 }
             }
-
-            var deepLinkParam = _deepLinkParamConfig[tpCustInfo.SiteId];
-
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = new SBSWDeepLinkHelper(loginResult.Data, tpCustInfo, appType, TpLangId, inputs, gameDetail, deepLinkParam).GameUrl
+                Message = new SBSWDeepLinkHelper(loginResult.Data, tpCustInfo, appType, TpLangId, inputs, gameDetail, config).GameUrl
             };
         }
 
@@ -225,12 +219,6 @@ namespace ThirdParty.SBSW
             var json = HttpPost(apiUrl, sParam, ContentType, timeOutTime: 3);
             var result = FromJson<LoginResult>(json);
             return result;
-        }
-
-        public class SabaConfig : TpSiteConfig
-        {
-            public string VendorId { get; set; }
-            public string OperatorId { get; set; }
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
