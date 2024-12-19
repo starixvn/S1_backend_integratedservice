@@ -80,6 +80,7 @@
     <ProjectReference Include="..\ThirdParty.YGG\ThirdParty.YGG.csproj" />
     <ProjectReference Include="..\ThirdParty.YL\ThirdParty.YL.csproj" />
     <ProjectReference Include="..\ThirdParty.Skywind\ThirdParty.Skywind.csproj" />
+    <ProjectReference Include="..\ThirdPartyCore\ThirdPartyCore.csproj" />
     <ProjectReference Include="..\ThiryParty.BG\ThirdParty.BG.csproj" />
     <ProjectReference Include="..\ThirdParty.NTConnect\ThirdParty.NTConnect.csproj" />
     <ProjectReference Include="..\ThirdParty.WonCasino\ThirdParty.WonCasino.csproj" />

@@ -17,10 +17,13 @@ namespace ThirdParty.SBSW
     {
         private const string ContentType = "application/x-www-form-urlencoded";
         private readonly Dictionary<int, SabaConfig> siteSabaConfigs;
+        private readonly Dictionary<int, SBSWDeepLinkParamConfig> _deepLinkParamConfig;
 
         public TpHelper(IServiceProvider provider)
         {
-            siteSabaConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SabaConfig>(TpEnum.SBSW.ToString());
+            var configBll = provider.GetRequiredService<ConfigBLL>();
+            siteSabaConfigs = configBll.GetConfigValuesBySiteId<SabaConfig>(TpEnum.SBSW.ToString());
+            _deepLinkParamConfig = configBll.GetConfigValuesBySiteId<SBSWDeepLinkParamConfig>("SBSWDeepLinkParam");
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -113,10 +116,12 @@ namespace ThirdParty.SBSW
                 }
             }
 
+            var deepLinkParam = _deepLinkParamConfig[tpCustInfo.SiteId];
+
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = new SBSWDeepLinkHelper(loginResult.Data, tpCustInfo, appType, TpLangId, inputs, gameDetail).GameUrl
+                Message = new SBSWDeepLinkHelper(loginResult.Data, tpCustInfo, appType, TpLangId, inputs, gameDetail, deepLinkParam).GameUrl
             };
         }
 

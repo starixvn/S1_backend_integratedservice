@@ -1,11 +1,9 @@
-﻿using System.Data;
-
-using Dapper;
+﻿using Dapper;
 
 using Microsoft.Extensions.Caching.Memory;
 
 using Newtonsoft.Json;
-
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
@@ -26,6 +24,7 @@ namespace ThirdPartyService.Service.DAL
         private readonly IReadOnlyDictionary<int, CurrencyOption> _currencyList;
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
+        private readonly Dictionary<int, IEnumerable<CreateMemberRule>> _createMemberRuleConfig;
 
         public TpCustInfoService(IServiceProvider provider)
         {
@@ -38,6 +37,7 @@ namespace ThirdPartyService.Service.DAL
             _currencyList = provider.GetRequiredService<IEnumerable<CurrencyOption>>().ToDictionary(d => d.CurrencyId, d => d);
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
+            _createMemberRuleConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<IEnumerable<CreateMemberRule>>("CreateMemberRule");
         }
 
         public ApiResult<TpCustInfo> GetTpCustInfo(int custId, int tpId, string langId = "")
@@ -73,7 +73,7 @@ namespace ThirdPartyService.Service.DAL
                         return apiResult;
                     }
 
-                    return CreateMember(customer, tpId, true , langId);
+                    return CreateMember(customer, tpId, true, langId);
                 }
                 else if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
                          tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
@@ -145,8 +145,8 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_TpId", tpId);
             return _reportDbClient.Query<int>("Service_CustWithoutTpCustInfo_Get", parameter);
         }
-        
-        public IEnumerable<int> GetCustCurrencySiteIdWithoutSabaId(int tpId, int siteId,int currencyId)
+
+        public IEnumerable<int> GetCustCurrencySiteIdWithoutSabaId(int tpId, int siteId, int currencyId)
         {
             var parameter = new DynamicParameters();
             parameter.Add("_TpId", tpId);
@@ -161,7 +161,7 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_TpId", tpId);
             return _reportDbClient.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId });
         }
-        
+
 
         public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
         {
@@ -198,7 +198,7 @@ namespace ThirdPartyService.Service.DAL
             return false;
         }
 
-        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId, bool isNeedSendRequest ,string langId = "")
+        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId, bool isNeedSendRequest, string langId = "")
         {
             var apiResult = new ApiResult<TpCustInfo>();
 
@@ -213,20 +213,36 @@ namespace ThirdPartyService.Service.DAL
                 currencyPrefixCode = $"_{currencyPrefix.PrefixCode}";
             }
 
+            //特殊設定需使用username建立會員
+            var ruleConfig = _createMemberRuleConfig[customer.SiteId];
+            var createMemberRule = ruleConfig.FirstOrDefault(x => x.TpId == tpId)?.Rule ?? CreateMemberRuleEnum.General;
+            var tpUserName = string.Empty;
+
+            switch (createMemberRule)
+            {
+                case CreateMemberRuleEnum.UseUserName:
+                    tpUserName = $"{customer.UserName}";
+                    break;
+                case CreateMemberRuleEnum.General:
+                default:
+                    tpUserName = $"{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}";
+                    break;
+            }
+
             var regTpCustInfo = new TpCustInfo
             {
                 TpId = tpId,
                 CustId = customer.CustId,
                 UserName = customer.UserName,
                 SiteId = customer.SiteId,
-                TpUserName = $"{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}",
+                TpUserName = tpUserName,
                 IsoCode = GetCurrencyIsoCode(customer.CurrencyId),
                 MemberType = customer.MemberType
             };
 
             if (_environment.EnvironmentName != "Production")
             {
-                regTpCustInfo.TpUserName = $"{_common.GetEnv()}{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}";
+                regTpCustInfo.TpUserName = $"{_common.GetEnv()}{tpUserName}";
             }
 
             regTpCustInfo.TpPwd = _tools.GetRandomString(7);
@@ -287,7 +303,7 @@ namespace ThirdPartyService.Service.DAL
             }
             return apiResult;
         }
-        
+
         private string GetCurrencyIsoCode(int currencyId)
         {
             return _currencyList.GetValueOrDefault(currencyId).IsoCode;
