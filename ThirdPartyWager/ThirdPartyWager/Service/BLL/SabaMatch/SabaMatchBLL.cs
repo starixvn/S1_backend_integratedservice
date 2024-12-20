@@ -36,9 +36,8 @@ public class SabaMatchBLL
             var response = await _httpHelper.GetClientWithHandler(new HttpClientHandler()).GetAsync(apiUrl);
 
             responseResult = await response.Content.ReadAsStringAsync();
-
+           
             var hotMatchResponse = _common.FromJson<HotMatchResponseModel>(responseResult);
-
             var matchList = hotMatchResponse.Matches
                 .Select(r => new HotMatchInfo
                 {
@@ -61,12 +60,8 @@ public class SabaMatchBLL
                     GameId = SoccerGame
                 }).ToList();
 
-            if (matchList.Count > 0)
-            {
-                var matchesJson = JsonConvert.SerializeObject(matchList);
-                await _sabaMatchService.InsertMatch(new HotMatchRequest { Matches = matchesJson });
-                _logger.LogInformation("UpdateHotMatch run successfully");
-            }
+            var matchesJson = JsonConvert.SerializeObject(matchList);
+            await _sabaMatchService.InsertMatch(new HotMatchRequest { Matches = matchesJson });
 
             _sabaMatchService.UpdateStatusMatch();
 
