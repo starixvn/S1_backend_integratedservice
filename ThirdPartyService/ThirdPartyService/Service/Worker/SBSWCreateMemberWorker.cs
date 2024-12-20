@@ -50,12 +50,12 @@ namespace ThirdPartyService.Service.Worker
 
                 foreach (var custId in custIdList)
                 {
-                    var result = _thirdPartyBll.CreateMember(custId, _tpId, true);
+                    var result = _thirdPartyBll.CreateMember(custId, _tpId, true, false);
                     if (result.ErrorCode is not ErrorCode.Success)
                     {
                         if (result.RawErrorCode is "6") //Duplicate Vendor_Member_ID，補TpCustInfo
                         {
-                            var duplicateResult = _thirdPartyBll.CreateMember(custId, _tpId, false);
+                            var duplicateResult = _thirdPartyBll.CreateMember(custId, _tpId, false, false);
                             if (result.ErrorCode is not ErrorCode.Success)
                             {
                                 _failCustIdList.Add(custId);

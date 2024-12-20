@@ -52,27 +52,15 @@ namespace ThirdPartyService.Service.DAL
                 return apiResult;
             }
 
-            var tpCustInfo = GetTpCustInfoNotContainCreateMember(custId, tpId);
+            var tpCustInfo = GetTpCustInfoFromCacheOrDb(custId, tpId);
 
             if (tpCustInfo == null)
             {
-                var customer = _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
-
-                if (customer == null)
-                {
-                    apiResult.ErrorCode = ErrorCode.UserNotExist;
-                    return apiResult;
-                }
-                else if (customer.Status == (int)CustStatus.Closed || customer.Status == (int)CustStatus.Suspend)
-                {
-                    apiResult.ErrorCode = ErrorCode.UserLocked;
-                    return apiResult;
-                }
-
-                return CreateMember(customer, tpId, true, langId);
+                return CreateMemberPrepare(custId, tpId, true, true, langId);
             }
-            else if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
-                     tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
+
+            if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
+                tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
             {
                 apiResult.Data = tpCustInfo;
                 apiResult.ErrorCode = ErrorCode.UserLocked;
@@ -85,7 +73,7 @@ namespace ThirdPartyService.Service.DAL
             return apiResult;
         }
 
-        public TpCustInfo GetTpCustInfoNotContainCreateMember(int custId, int tpId)
+        public TpCustInfo GetTpCustInfoFromCacheOrDb(int custId, int tpId)
         {
             var sTpCustInfoKey = $"TpCustInfo{tpId}_{custId}";
             var tpCustInfo = _cache.Get<TpCustInfo>(sTpCustInfoKey);
@@ -102,10 +90,25 @@ namespace ThirdPartyService.Service.DAL
             return tpCustInfo;
         }
 
-        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId, bool isNeedSendRequest)
+        public ApiResult<TpCustInfo> CreateMemberPrepare(int custId, int tpId, bool isNeedSendRequest, bool isNeedCheckStatus = true, string langId = "")
         {
+            var apiResult = new ApiResult<TpCustInfo>();
+
             var customer = _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
-            return CreateMember(customer, tpId, isNeedSendRequest);
+
+            if (customer == null)
+            {
+                apiResult.ErrorCode = ErrorCode.UserNotExist;
+                return apiResult;
+            }
+
+            if (isNeedCheckStatus && (customer.Status == (int)CustStatus.Closed || customer.Status == (int)CustStatus.Suspend))
+            {
+                apiResult.ErrorCode = ErrorCode.UserLocked;
+                return apiResult;
+            }
+
+            return CreateMember(customer, tpId, isNeedSendRequest, langId);
         }
 
         public void SetTpLastLoginTime(int custId, int tpId)
