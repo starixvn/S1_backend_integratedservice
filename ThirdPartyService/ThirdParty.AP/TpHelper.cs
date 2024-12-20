@@ -162,7 +162,9 @@ namespace ThirdParty.AP
                     GameCode = gameId,
                     LangCode = LangId,
                     FunPlay = FunPlay,
+                    BrandCode = (SiteCode == "default") ? Config.BrandCode : SiteCode
                 };
+
                 string URL = "";
                 var param = ToJson(sParam);
                 var launchResult = HttpPost($"{ApiUrl}GetLaunchURL", param, "application/json");
@@ -179,8 +181,7 @@ namespace ThirdParty.AP
                 {
                     // 取不到進入遊戲網址 使用原本組連結方式
                     string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&LangCode={LangId}&FunPlay={FunPlay}";
-                    var BrandCode = (SiteCode == "default") ? $"&={Config.BrandCode}" : "";
-                    URL = $"{GameUrl}LaunchGame?{Params}{BrandCode}";
+                    URL = $"{GameUrl}LaunchGame?{Params}";
                 }
 
                 oApiResult.ErrorCode = ErrorCode.Success;
