@@ -13,7 +13,7 @@ using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.SBSW
 {
-    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyBetLimitParticular
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyBetLimitParticular, IThirdPartyTokenParticular
     {
         private const string ContentType = "application/x-www-form-urlencoded";
         private readonly Dictionary<int, SabaConfig> siteSabaConfigs;
@@ -516,5 +516,89 @@ namespace ThirdParty.SBSW
                 return default;
             }
         }
+
+        #region SBSW app use: token 操作
+
+        public ApiResult GetToken(TpCustInfo tpCustInfo)
+        {
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
+            var apiUrl = $"{config.ApiUrl}/GetToken";
+            var sParam = $"vendor_id={config.VendorId}&vendor_member_id={tpCustInfo.TpUserName}";
+            var json = HttpPost(apiUrl, sParam, ContentType, timeOutTime: 3);
+            var result = FromJson<GetTokenResult>(json);
+
+            if (result.error_code != 0)
+            {
+                return new ApiResult()
+                {
+                    RawMessage = result.message,
+                    RawErrorCode = result.error_code.ToString(),
+                    ErrorCode = ErrorCode.Fail
+                };
+            }
+
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success,
+                Message = result.Data,
+                 RawErrorCode = result.error_code.ToString(),
+                RawMessage = result.message,
+            };
+        }
+
+        public ApiResult InvalidateToken(TpCustInfo tpCustInfo)
+        {
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
+            var apiUrl = $"{config.ApiUrl}/InvalidateToken";
+            var sParam = $"vendor_id={config.VendorId}&vendor_member_id={tpCustInfo.TpUserName}";
+            var json = HttpPost(apiUrl, sParam, ContentType, timeOutTime: 3);
+            var result = FromJson<Result>(json);
+
+            if (result.error_code != 0)
+            {
+                return new ApiResult()
+                {
+                    RawMessage = result.message,
+                    RawErrorCode = result.error_code.ToString(),
+                    ErrorCode = ErrorCode.Fail
+                };
+            }
+
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success,
+                RawErrorCode = result.error_code.ToString(),
+                RawMessage = result.message,
+            };
+        }
+
+        public ApiResult VerifyToken(int siteId, string token)
+        {
+            var config = siteSabaConfigs[siteId];
+            var apiUrl = $"{config.ApiUrl}/VerifyToken";
+            var sParam = $"vendor_id={config.VendorId}&token={token}";
+            var json = HttpPost(apiUrl, sParam, ContentType, timeOutTime: 3);
+            var result = FromJson<VerifyTokenResult>(json);
+
+            if (result.error_code != 0)
+            {
+                return new ApiResult()
+                {
+                    RawMessage = result.message,
+                    RawErrorCode = result.error_code.ToString(),
+                    ErrorCode = ErrorCode.Fail
+                };
+            }
+
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success,
+                Message = result.Data.vendor_member_id,
+                RawErrorCode = result.error_code.ToString(),
+                RawMessage = result.message,
+            };
+        }
+
+        #endregion
     }
 }

@@ -44,60 +44,64 @@ namespace ThirdPartyService.Service.DAL
         {
             var apiResult = new ApiResult<TpCustInfo>();
 
-            var sTpCustInfoKey = $"TpCustInfo{tpId}_{custId}";
-            var tpCustInfo = _cache.Get<TpCustInfo>(sTpCustInfoKey);
+            // dev not available
+            if (CheckTpForbidden(custId, tpId))
+            {
+                apiResult.ErrorCode = ErrorCode.Not_allowed_environment;
+                apiResult.Message = "Test environment not supported";
+                return apiResult;
+            }
+
+            var tpCustInfo = GetTpCustInfoNotContainCreateMember(custId, tpId);
+
             if (tpCustInfo == null)
             {
-                // dev not available
-                if (CheckTpForbidden(custId, tpId))
+                var customer = _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
+
+                if (customer == null)
                 {
-                    apiResult.ErrorCode = ErrorCode.Not_allowed_environment;
-                    apiResult.Message = "Test environment not supported";
+                    apiResult.ErrorCode = ErrorCode.UserNotExist;
                     return apiResult;
                 }
-
-                tpCustInfo = _mainDbClient.QueryFirst<TpCustInfo>("TpCustInfo_Get_V2", new { CustId = custId, TpId = tpId });
-
-                if (tpCustInfo == null)
+                else if (customer.Status == (int)CustStatus.Closed || customer.Status == (int)CustStatus.Suspend)
                 {
-                    var customer = _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
-
-                    if (customer == null)
-                    {
-                        apiResult.ErrorCode = ErrorCode.UserNotExist;
-                        return apiResult;
-                    }
-                    else if (customer.Status == (int)CustStatus.Closed || customer.Status == (int)CustStatus.Suspend)
-                    {
-                        apiResult.ErrorCode = ErrorCode.UserLocked;
-                        return apiResult;
-                    }
-
-                    return CreateMember(customer, tpId, true , langId);
-                }
-                else if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
-                         tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
-                {
-                    apiResult.Data = tpCustInfo;
                     apiResult.ErrorCode = ErrorCode.UserLocked;
                     return apiResult;
                 }
 
-                if (tpCustInfo is { CustId: > 0 })
-                {
-                    _cache.Set(sTpCustInfoKey, tpCustInfo, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(30)));
-                    apiResult.Data = tpCustInfo;
-                    apiResult.ErrorCode = ErrorCode.Success;
-                }
+                return CreateMember(customer, tpId, true, langId);
             }
-            else
+            else if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
+                     tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
             {
                 apiResult.Data = tpCustInfo;
-                apiResult.ErrorCode = ErrorCode.Success;
+                apiResult.ErrorCode = ErrorCode.UserLocked;
+                return apiResult;
             }
+
+            apiResult.Data = tpCustInfo;
+            apiResult.ErrorCode = ErrorCode.Success;
 
             return apiResult;
         }
+
+        public TpCustInfo GetTpCustInfoNotContainCreateMember(int custId, int tpId)
+        {
+            var sTpCustInfoKey = $"TpCustInfo{tpId}_{custId}";
+            var tpCustInfo = _cache.Get<TpCustInfo>(sTpCustInfoKey);
+            if (tpCustInfo == null)
+            {
+                tpCustInfo = _mainDbClient.QueryFirst<TpCustInfo>("TpCustInfo_Get_V2", new { CustId = custId, TpId = tpId });
+
+                if (tpCustInfo is { CustId: > 0 })
+                {
+                    _cache.Set(sTpCustInfoKey, tpCustInfo, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(30)));
+                }
+            }
+
+            return tpCustInfo;
+        }
+
         public ApiResult<TpCustInfo> CreateMember(int custId, int tpId, bool isNeedSendRequest)
         {
             var customer = _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
@@ -145,8 +149,8 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_TpId", tpId);
             return _reportDbClient.Query<int>("Service_CustWithoutTpCustInfo_Get", parameter);
         }
-        
-        public IEnumerable<int> GetCustCurrencySiteIdWithoutSabaId(int tpId, int siteId,int currencyId)
+
+        public IEnumerable<int> GetCustCurrencySiteIdWithoutSabaId(int tpId, int siteId, int currencyId)
         {
             var parameter = new DynamicParameters();
             parameter.Add("_TpId", tpId);
@@ -161,7 +165,7 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_TpId", tpId);
             return _reportDbClient.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId });
         }
-        
+
 
         public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
         {
@@ -198,7 +202,7 @@ namespace ThirdPartyService.Service.DAL
             return false;
         }
 
-        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId, bool isNeedSendRequest ,string langId = "")
+        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId, bool isNeedSendRequest, string langId = "")
         {
             var apiResult = new ApiResult<TpCustInfo>();
 
@@ -287,7 +291,7 @@ namespace ThirdPartyService.Service.DAL
             }
             return apiResult;
         }
-        
+
         private string GetCurrencyIsoCode(int currencyId)
         {
             return _currencyList.GetValueOrDefault(currencyId).IsoCode;
