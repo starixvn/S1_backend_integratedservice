@@ -1109,9 +1109,9 @@ namespace ThirdPartyService.Service.BLL
             return _TpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
         }
 
-        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId, bool isNeedSendRequest)
+        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId, bool isNeedSendRequest, bool isNeedCheckStatus)
         {
-            return tpCustInfoService.CreateMember(custId, tpId, isNeedSendRequest);
+            return tpCustInfoService.CreateMemberPrepare(custId, tpId, isNeedSendRequest, isNeedCheckStatus);
         }
 
         public ApiResult AddPrizeToPlayer(AddFreeSpin addFreeSpin)

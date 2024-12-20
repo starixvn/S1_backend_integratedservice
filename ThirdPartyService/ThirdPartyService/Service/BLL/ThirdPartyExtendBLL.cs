@@ -32,7 +32,7 @@ public class ThirdPartyExtendBLL
     {
         var apiResult = new ApiResult<GetTokenResult>();
 
-        var tpCustInfo = _tpCustInfoService.GetTpCustInfoNotContainCreateMember(custId, tpId);
+        var tpCustInfo = _tpCustInfoService.GetTpCustInfoFromCacheOrDb(custId, tpId);
 
         if (tpCustInfo == null)
         {
@@ -73,7 +73,7 @@ public class ThirdPartyExtendBLL
     {
         var apiResult = new ApiResult();
 
-        var tpCustInfo = _tpCustInfoService.GetTpCustInfoNotContainCreateMember(custId, tpId);
+        var tpCustInfo = _tpCustInfoService.GetTpCustInfoFromCacheOrDb(custId, tpId);
 
         if (tpCustInfo == null)
         {
