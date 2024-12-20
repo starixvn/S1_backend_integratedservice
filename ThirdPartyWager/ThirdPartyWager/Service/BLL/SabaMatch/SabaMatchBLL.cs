@@ -35,36 +35,38 @@ public class SabaMatchBLL
             var response = await _httpHelper.GetClientWithHandler(new HttpClientHandler()).GetAsync(apiUrl);
 
             var responseResult = await response.Content.ReadAsStringAsync();
+            SentrySdk.CaptureMessage($"{nameof(ThirdPartyWager)}: Get SabaMatch Success at {DateTime.Now}");
 
             var hotMatchResponse = _common.FromJson<HotMatchResponseModel>(responseResult);
 
-            var matchList = hotMatchResponse.Matches
-                .Select(r => new HotMatchInfo
-                {
-                    MatchId = r.MatchId,
-                    LeagueId = r.LeagueId,
-                    LeagueName = r.LeagueName,
-                    KickOffTime = r.KickOffTime,
-                    HomeTeamName = r.TeamInfo.HomeName,
-                    AwayTeamName = r.TeamInfo.AwayName,
-                    HomeIconUrl = r.TeamInfo.HomeIconUrl,
-                    AwayIconUrl = r.TeamInfo.AwayIconUrl,
-                    LastUpdateTime = DateTime.Now,
-                    LastUpdateUser = "Service",
-                    HomeOdds = r.Markets.First().Selections.First(x => x.Key == "h").OddsPrice.MalayPrice,
-                    AwayOdds = r.Markets.First().Selections.First(x => x.Key == "a").OddsPrice.MalayPrice,
-                    Handicap = r.Markets.First().Selections.First(x => x.Key == "h").Point,
-                    CreateTime = DateTime.Now,
-                    Status = EnableStatus,
-                    TpId = TpId,
-                    GameId = SoccerGame
-                }).ToList();
-
-            if (matchList.Count > 0)
+            if (hotMatchResponse != null && hotMatchResponse.Matches.Any())
             {
+                var matchList = hotMatchResponse.Matches
+                    .Select(r => new HotMatchInfo
+                    {
+                        MatchId = r.MatchId,
+                        LeagueId = r.LeagueId,
+                        LeagueName = r.LeagueName,
+                        KickOffTime = r.KickOffTime,
+                        HomeTeamName = r.TeamInfo.HomeName,
+                        AwayTeamName = r.TeamInfo.AwayName,
+                        HomeIconUrl = r.TeamInfo.HomeIconUrl,
+                        AwayIconUrl = r.TeamInfo.AwayIconUrl,
+                        LastUpdateTime = DateTime.Now,
+                        LastUpdateUser = "Service",
+                        HomeOdds = r.Markets.First().Selections.First(x => x.Key == "h").OddsPrice.MalayPrice,
+                        AwayOdds = r.Markets.First().Selections.First(x => x.Key == "a").OddsPrice.MalayPrice,
+                        Handicap = r.Markets.First().Selections.First(x => x.Key == "h").Point,
+                        CreateTime = DateTime.Now,
+                        Status = EnableStatus,
+                        TpId = TpId,
+                        GameId = SoccerGame
+                    }).ToList();
+
                 var matchesJson = JsonConvert.SerializeObject(matchList);
                 await _sabaMatchService.InsertMatch(new HotMatchRequest { Matches = matchesJson });
                 _logger.LogInformation("UpdateHotMatch run successfully");
+                SentrySdk.CaptureMessage($"{nameof(ThirdPartyWager)}: UpdateHotMatch run successfully at {DateTime.Now}");
             }
 
             _sabaMatchService.UpdateStatusMatch();
