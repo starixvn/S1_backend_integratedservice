@@ -13,5 +13,7 @@ namespace ThirdParty.AP
         public string WagerUrl_MiniGame { get; set; }
         public string SecretKey_MiniGame { get; set; }
         public string MiniGame_CardRacing { get; set; }
+        public string Platform_MiniGame { get; set; }
+        public string BrandCode { get; set; }
     }
 }

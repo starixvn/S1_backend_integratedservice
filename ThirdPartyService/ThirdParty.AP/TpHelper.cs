@@ -179,7 +179,8 @@ namespace ThirdParty.AP
                 {
                     // 取不到進入遊戲網址 使用原本組連結方式
                     string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&LangCode={LangId}&FunPlay={FunPlay}";
-                    URL = $"{GameUrl}LaunchGame?{Params}";
+                    var BrandCode = (SiteCode == "default") ? $"&={Config.BrandCode}" : "";
+                    URL = $"{GameUrl}LaunchGame?{Params}{BrandCode}";
                 }
 
                 oApiResult.ErrorCode = ErrorCode.Success;
@@ -431,6 +432,10 @@ namespace ThirdParty.AP
             var sParam = ToJson(Param);
             var payload = AesEncryptV2(sParam, SecretKey);
             var signature = HmacSha256(payload, SecretKey);
+            if (SiteCode == "default")
+            {
+                SiteCode = config.Platform_MiniGame;
+            }
             return $"{GameUrl}/client/auth?payload={HttpUtility.UrlEncode(payload)}&signature={HttpUtility.UrlEncode(signature)}&platform={SiteCode}";
         }
 
