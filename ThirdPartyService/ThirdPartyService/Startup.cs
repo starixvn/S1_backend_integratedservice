@@ -45,6 +45,7 @@ namespace ThirdPartyService
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
+            services.AddSingleton<ThirdPartyExtendBLL>();
             services.AddSingleton<ServerInfoBLL>();
             services.AddSingleton<TpCustInfoBLL>();
             services.AddSingleton<AuthBLL>();

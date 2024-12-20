@@ -64,4 +64,19 @@
         public bool is_neutral { get; set; }
     }
 
+
+    public class GetTokenResult : Result
+    {
+        public string Data { set; get; }
+    }
+
+    public class VerifyTokenResult : Result
+    {
+        public VerifyResultModel Data { set; get; }
+    }
+
+    public class VerifyResultModel
+    {
+        public string vendor_member_id { set; get; }
+    }
 }
