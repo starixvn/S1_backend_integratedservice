@@ -162,7 +162,7 @@ namespace ThirdParty.AP
                     GameCode = gameId,
                     LangCode = LangId,
                     FunPlay = FunPlay,
-                    BrandCode = (SiteCode == "default") ? Config.BrandCode : SiteCode
+                    BrandCode = Config.BrandCode
                 };
 
                 string URL = "";
