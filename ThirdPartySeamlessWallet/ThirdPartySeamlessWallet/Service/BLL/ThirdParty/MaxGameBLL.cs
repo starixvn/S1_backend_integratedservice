@@ -232,6 +232,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpId = _gameOfTpId[getReq.Payload.GameType.ToLower()];
             var gameType = _thirdPartyBLL.GetGameType((int)tpId, getReq.Payload.GameType.ToLower());
 
+            var betDataCnt = getReq.Payload.BetDataSet.Count;
+            if (betDataCnt > 1)
+            {
+                _log2File.Info($"betDataCnt={betDataCnt}", logName);
+            }
+
             int result = PayoutPK_MaxGame(getReq, (int)tpId, (int)gameType, out decimal tpAffterAmount);
             if (result > 0)
             {
@@ -334,6 +340,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpId = _gameOfTpId[getReq.Payload.GameType.ToLower()];
             var gameType = _thirdPartyBLL.GetGameType((int)tpId, getReq.Payload.GameType.ToLower());
 
+            var betDataCnt = getReq.Payload.BetDataSet.Count;
+            if (betDataCnt > 1)
+            {
+                _log2File.Info($"betDataCnt={betDataCnt}", logName);
+            }
+
             int result = BonusPK_MaxGame(getReq, (int)tpId, (int)gameType, out decimal tpAffterAmount, out string refNo);
             if (result > 0)
             {
@@ -383,6 +395,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             var tpId = _gameOfTpId[getReq.Payload.GameType.ToLower()];
             var gameType = _thirdPartyBLL.GetGameType((int)tpId, getReq.Payload.GameType.ToLower());
+
+            var betDataCnt = getReq.Payload.BetDataSet.Count;
+            if (betDataCnt > 1)
+            {
+                _log2File.Info($"betDataCnt={betDataCnt}", logName);
+            }
 
             int result = FreeSpinPK_MaxGame(getReq, (int)tpId, (int)gameType, out decimal tpAffterAmount, out List<BetDataSetList_MaxGame> refData);
             if (result > 0)
@@ -604,6 +622,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var InsertBettransSpName = "Service_BettransPK_MaxGame_Ins_V2";
             var InsertPayloadSpName = "Service_BettransPK_MaxGame_Payload_Ins";
             var CancelBettransSpName = "Service_BettransPK_MaxGame_CancelBet_Set";
+            var UpdateBettransAmountSpName = "Service_BettransPK_MaxGame_Amount_Set";
 
             switch (gameType)
             {
@@ -611,21 +630,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     GetTicketNoSpName = "Service_BettransPK_SabaPlay_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransPK_SabaPlay_Ins";
                     CancelBettransSpName = "Service_BettransPK_SabaPlay_CancelBet_Set";
+                    UpdateBettransAmountSpName = "Service_BettransPK_SabaPlay_Amount_Set";
                     break;
                 case (int)GameType.UuSlots_RNG:
                     GetTicketNoSpName = "Service_BettransRng_UuSlots_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransRng_UuSlots_Ins";
                     CancelBettransSpName = "Service_BettransRng_UuSlots_CancelBet_Set";
+                    UpdateBettransAmountSpName = "Service_BettransRng_UuSlots_Amount_Set";
                     break;
                 case (int)GameType.Live22_RNG:
                     GetTicketNoSpName = "Service_BettransRng_Live22_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransRng_Live22_Ins";
                     CancelBettransSpName = "Service_BettransRng_Live22_CancelBet_Set";
+                    UpdateBettransAmountSpName = "Service_BettransRng_Live22_Amount_Set";
                     break;
                 case (int)GameType.FastSpin_RNG:
                     GetTicketNoSpName = "Service_BettransRng_FastSpin_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransRng_FastSpin_Ins";
                     CancelBettransSpName = "Service_BettransRng_FastSpin_CancelBet_Set";
+                    UpdateBettransAmountSpName = "Service_BettransRng_FastSpin_Amount_Set";
                     break;
                 default:
                     // GameType.MaxGame_Poker
@@ -638,6 +661,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 InsertBettrans = InsertBettransSpName,
                 InsertPayload = InsertPayloadSpName,
                 SetCancelBet = CancelBettransSpName,
+                SetAmount = UpdateBettransAmountSpName
             };
         }
 
