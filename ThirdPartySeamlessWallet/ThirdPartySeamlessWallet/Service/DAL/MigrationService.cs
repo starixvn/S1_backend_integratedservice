@@ -37,7 +37,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 _SignupIp = request.SignupIp ?? "",
                 _VipLevel = request.VipLevel == 0 ? 1 : request.VipLevel,
                 _RewardPoint = request.RewardPoint,
-                _SportCBStatus = request.SportCBStatus is not null ? JsonConvert.SerializeObject(request.SportCBStatus) : "{}"
+                _ApplyRebate = request.ApplyRebate,
+                _CustActiveMonthsLevel = request.CustActiveMonthsLevel is not null ? JsonConvert.SerializeObject(request.CustActiveMonthsLevel) : "{}"
             });
             p.Add("_CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("_ResultCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
