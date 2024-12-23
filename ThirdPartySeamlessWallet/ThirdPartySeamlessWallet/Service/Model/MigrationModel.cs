@@ -34,6 +34,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// </summary>
         public DateTime RegTime { get; set; }
         /// <summary>
+        /// 用戶是否申請rebate
+        /// </summary>
+        public bool ApplyRebate { get; set; }
+        /// <summary>
         /// 1: Running, 2: Suspend, 3: Closed, 4:Lock
         /// </summary>
         public int Status { get; set; }
@@ -173,7 +177,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         #endregion
         
-        public SportCBStatus SportCBStatus { get; set; }
+        public CustActiveMonthsLevel CustActiveMonthsLevel { get; set; }
         
         #region private
 
@@ -239,14 +243,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int CustId { get; set; }
     }
 
-    public class SportCBStatus
+    public class CustActiveMonthsLevel
     {
+        public int ActiveMonthsLevel { get; set; }
         public int ActiveMonths { get; set; }
         public int Consecutive { get; set; }
         public int PreActiveMonths { get; set; }
         public int PreConsecutive { get; set; }
-        public DateTime JoinDate { get; set; }
         public int MinActiveMonths { get; set; }
+        public decimal SpecialRate { get; set; }
+        public DateTime JoinDate { get; set; }
     }
     
     public class MigrationAffiliateResponse
