@@ -19,7 +19,7 @@ namespace ThirdParty.PP
 
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
-        private const string _testCurrency = "UUS";
+        private const string _testCurrency = "YNG";
 
         private const string PPLiveCasinoGameTypeId = "16";
 
