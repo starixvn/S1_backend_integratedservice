@@ -28,13 +28,14 @@ public class SabaMatchBLL
 
     public async Task<bool> UpdateHotMatch()
     {
+        var responseResult = string.Empty;
         try
         {
             var apiUrl = $"{_hotMatchConfigModel.ApiUrl}/api/saba/event?{CreateQuery()}";
 
             var response = await _httpHelper.GetClientWithHandler(new HttpClientHandler()).GetAsync(apiUrl);
 
-            var responseResult = await response.Content.ReadAsStringAsync();
+            responseResult = await response.Content.ReadAsStringAsync();
 
             var hotMatchResponse = _common.FromJson<HotMatchResponseModel>(responseResult);
 
@@ -73,7 +74,7 @@ public class SabaMatchBLL
         catch (Exception ex)
         {
             _logger.LogError(
-                $"UpdateHotMatch run fail ExceptionMessage：{ex.Message},Exception：{_common.ToJson(ex)}");
+                "UpdateHotMatch run fail ExceptionMessage：{Message},{ResponseResult}", ex.Message, responseResult);
             throw;
         }
 
