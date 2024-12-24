@@ -245,6 +245,7 @@ namespace ThirdParty.AP
                 Seq = uuid,
                 SiteCode = SiteCode,
                 PlayerId = tpCustInfo.TpUserName,
+                BrandCode = Config.BrandCode
             };
             var param = ToJson(sParam);
             var result = HttpPost($"{ApiUrl}GetPlayerToken", param, "application/json");
