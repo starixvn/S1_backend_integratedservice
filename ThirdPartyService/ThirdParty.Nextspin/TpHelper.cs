@@ -1,6 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
+﻿using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
@@ -14,208 +13,327 @@ namespace ThirdParty.Nextspin
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly IReadOnlyDictionary<string, string> _gameNameList;
-        private readonly ILogger<TpHelper> _logger;
-        private readonly Dictionary<int, NextspinConfig> _siteNextspinConfig;
+        private readonly Dictionary<int, NextspinConfig> _siteConfigDic;
+        private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
+        private const int _utc = -4;
+        private const string _testCurrency = "UUS";
+        private readonly IPayloadLogger _payloadLogService;
+
         public TpHelper(IServiceProvider provider)
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Nextspin).ToDictionary(d => d.AppId, d => d.Name);
-            _logger = provider.GetRequiredService<ILogger<TpHelper>>();
-            _siteNextspinConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(TpEnum.Nextspin.ToString());
-        }
-        public class NextspinConfig : TpSiteConfig
-        {
-            public string Agent { get; set; }
-            public string LaunchUrl { get; set; }
-            public string SecretKey { get; set; }
-            public string MerchantCode { get; set; }
+            _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(TpEnum.NextSpin.ToString());
         }
 
-        #region NotImplemented
+        #region Request
+
+        public class CommonReq
+        {
+            public string Timestamp { get; set; }
+            public string Seq { get; set; }
+            public Payload Payload { get; set; }
+        }
+
+        public class Payload
+        {
+            public ProductInfo ProductInfo { get; set; }
+            public CustInfo CustInfo { get; set; }
+            public AgentInfo AgentInfo { get; set; }
+            public string HomeUrl { get; set; }
+            public Additional Additional { get; set; }
+        }
+
+        public class ProductInfo
+        {
+            public string GameType { get; set; }
+            public string GameId { get; set; }
+            public string AppType { get; set; }
+        }
+
+        public class CustInfo
+        {
+            public string OperatorCustomerId { get; set; }
+            public string Language { get; set; }
+            public string Platform { get; set; }
+            public string CurrencyISO { get; set; }
+            public string BrowserUserAgent { get; set; }
+            public string IP { get; set; }
+            public string WalletSideToken { get; set; }
+        }
+
+        public class AgentInfo
+        {
+            public string ExtraInfo { get; set; }
+        }
+
+        public class Additional
+        {
+            public string SpecialKey { get; set; }
+        }
+
+        #endregion Request
+
+        #region Response
+
+        public class LoginResp
+        {
+            public string Seq { get; set; }
+            public DateTime TimeStamp { get; set; }
+            public int ErrorCode { get; set; }
+            public string ErrorMessage { get; set; }
+            public Payload_Login Payload { get; set; }
+        }
+
+        public class Payload_Login
+        {
+            public string ReturnUrl { get; set; }
+        }
+
+        public class GetBetHistoryResp : LoginResp
+        {
+        }
+
+        #endregion Response
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
         }
-        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
-        {
-            throw new NotImplementedException();
-        }
-        public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-        #endregion
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            return new ApiResult()
+            ApiResult oApiResult = new()
             {
-                ErrorCode = ErrorCode.Success,
+                ErrorCode = ErrorCode.Success
             };
-        }
-
-        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
-        {
-            var config = _siteNextspinConfig[tpCustInfo.SiteId];
-            var merchantCode = config.MerchantCode;
-            var launchUrl = config.LaunchUrl;
-            var gameCode = GetInputValue(inputs, "gameId");
-            var apiUrl = config.ApiUrl;
-
-            try
-            {
-                // 透過三方api取得LaunchUrl       
-                launchUrl = GetLaunchUrl(launchUrl, apiUrl, merchantCode);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-            }
-
-            string gameUrl;
-            if (IsFunMode(inputs))
-            {
-                launchUrl = launchUrl.Replace("lobby", "play");
-                gameUrl = $"{launchUrl}/game?merchantCode={merchantCode}&game={gameCode}&language={TpLangId}";
-            }
-            else
-            {
-                var key = ApplyToken(tpCustInfo);
-                gameUrl = $"{launchUrl}/{merchantCode}/auth?acctId={tpCustInfo.TpUserName}&language={TpLangId}&token={key}&game={gameCode}";
-            }
-            var apiResult = new ApiResult()
-            {
-                ErrorCode = ErrorCode.Success,
-                Message = gameUrl
-            };
-            return apiResult;
+            return oApiResult;
         }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>
+            {
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = _siteNextspinConfig[tpCustInfo.SiteId];
-            var merchantCode = config.MerchantCode;
-            var launchUrl = config.LaunchUrl;
-            var secretKey = config.SecretKey;
-            launchUrl = launchUrl.Replace("lobby", "gameapi");
+            var config = _siteConfigDic[tpCustInfo.SiteId];
 
-            var secret = $"{getBetDetail.TransId}|{secretKey}";
-            var token = ToMD5(secret);
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
 
-            var betDetailUrl = $"{launchUrl}/betDetails?merchantId={merchantCode}&token={token}&lang=en&ticketId={getBetDetail.TransId}";
+            var convert = new DateTimeOffset(getBetDetail.SettledTime);
+            var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyyMMdd");
+            var input = new
+            {
+                Timestamp = GetCurrentTimeFormat(),
+                Seq = Guid.NewGuid().ToString(),
+                Payload = new
+                {
+                    config.GameType,
+                    OperatorCustId = tpCustInfo.TpUserName,
+                    TicketNo = getBetDetail.TransId,
+                    Language = "en-US",
+                    SettleDate = time,
+                    AgentInfo = new
+                    {
+                        AgentKey = tpCustInfo.TpCurrencyId
+                    },
+                    OtherBetInfo = new
+                    {
+                        Platform = "D",
+                        EventDate = time
+                    }
+                }
+            };
+
+            var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/GetBetHistory";
+            var postdata = JsonConvert.SerializeObject(input, Formatting.None);
+            var header = new Dictionary<string, string>()
+            {
+                { "operator-pwd", config.OperatorPwd},
+                { "operator-sign", Encrypt(postdata, config)},
+            };
+
+            var result = HttpPost(ApiUrl, postdata, "application/json", header);
+            if (IsJSON(result))
+            {
+                var json = JsonConvert.DeserializeObject<GetBetHistoryResp>(result);
+                if (json.ErrorCode == 0)
+                {
+                    return new BaseDetail(getBetDetail.TpGameTypeOption)
+                    {
+                        TransId = getBetDetail.TransId,
+                        DetailUrl = json.Payload.ReturnUrl,
+                        TpCurrency = tpCurrency,
+                    };
+                }
+            }
 
             return new BaseDetail(getBetDetail.TpGameTypeOption)
             {
                 TransId = getBetDetail.TransId,
-                DetailUrl = betDetailUrl,
-                TpCurrency = new TpCurrency()
-                {
-                    ExchangeRate = tpCustInfo.ExchangeRate,
-                    TpCurrencyId = tpCustInfo.TpCurrencyId,
-                }
+                TpCurrency = tpCurrency,
             };
+        }
+
+        public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var type = betRecordInfo.TransId.Length > 20 ? 1 : 0;
-            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_Nextspin_Detail_Get",
-                new { YYYYMM, betRecordInfo.TransId, Type = type }, DataBase.Main);
-            if (!detail.Any())
+            var detail = TpBetRecordProvider.DbQuery("Service_BettransRng_TableGame_TicketNo_Get", new { YYYYMM, TicketNo = betRecordInfo.TransId }, DataBase.Main);
+            if (detail == null)
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
             }
 
-            var gameCode = detail.GetStringValue("gameCode");
+            var gameId = detail.GetFirstStringValue("GameId");
+            var gameRoundId = detail.GetFirstStringValue("GameRoundId");
+            var ipAddress = detail.GetFirstStringValue("IpAddress");
+            var BetChoice = detail.GetFirstStringValue("BetChoice");
+
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
-                GameID = gameCode,
-                Game = GetGameName(gameCode),
-                RefNo = detail.GetStringValue("referenceId"),
+                GameID = gameId,
+                Game = GetGameName(gameId),
+                RefNo = gameRoundId,
                 Title = tpGameType.TypeName,
-                MatchID = detail.GetStringValue("ticketId"),
+                MatchID = string.Empty,
                 BetType = string.Empty,
-                BetChoice = string.Empty,
+                BetChoice = BetChoice,
                 Result = string.Empty,
-                DeviceType = GetDeviceType(detail.GetStringValue("channel")),
-                IP = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = ipAddress,
             };
         }
 
-        private bool IsFunMode(Dictionary<string, string> inputs)
+        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            return GetInputValue(inputs, "fun") == "1";
-        }
+            var stopWatch = Stopwatch.StartNew();
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
-        private string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
-        {
-            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
+            var key = ApplyToken(tpCustInfo);
+            var currentDateTime = GetCurrentDateTime();
+            var input = new
             {
-                return inputs[key];
-            }
-
-            if (allowNull)
-                return "";
-            throw new Exception($"inputs {key} is empty");
-        }
-        private string GetGameName(string gameCode)
-        {
-            if (!_gameNameList.TryGetValue(gameCode, out var name))
-            {
-                return string.Empty;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return dic.TryGetValue("en", out var result) ? result : string.Empty;
-        }
-        private DeviceType GetDeviceType(string device)
-        {
-            if (device.Equals("Web", StringComparison.OrdinalIgnoreCase))
-            {
-                return DeviceType.Desktop;
-            }
-
-            if (device.Equals("Mobile", StringComparison.OrdinalIgnoreCase))
-            {
-                return DeviceType.Mobile;
-            }
-
-            return DeviceType.None;
-        }
-
-        private string GetLaunchUrl(string launchUrl, string apiUrl, string merchantCode)
-        {
+                Timestamp = GetCurrentTimeFormat(currentDateTime),
+                Seq = Guid.NewGuid().ToString(),
+                Payload = new
+                {
+                    ProductInfo = new
+                    {
+                        GameType = config.GameType,
+                        GameId = gameId,
+                        AppType = (appType == AppType.Desktop) ? "D" : "M",
+                    },
+                    CustInfo = new
+                    {
+                        OperatorCustomerId = tpCustInfo.TpUserName,
+                        OperatorCustomerName = tpCustInfo.TpUserName,
+                        Language = TpLangId,
+                        Platform = (appType == AppType.Desktop) ? "D" : "M",
+                        CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustInfo.TpCurrencyId,
+                        IpAddress = inputs["ClientIP"],
+                        WalletSideToken = key
+                    },
+                    HomeUrl = homeUrl,
+                }
+            };
+            var postdata = JsonConvert.SerializeObject(input, Formatting.None);
             var header = new Dictionary<string, string>()
             {
-                {"API", "getDomainList"},
-                {"DataType", "JSON"}
+                { "operator-pwd", config.OperatorPwd},
+                { "operator-sign", Encrypt(postdata, config)},
             };
-            var parameters = JsonConvert.SerializeObject(new
+
+            var result = HttpPost(ApiUrl, postdata, "application/json", header);
+
+            _payloadLogService.LogDetailedPayload(new PayloadLogMeta
             {
-                merchantCode,
-                serialNo = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                Seq = input.Seq,
+                TimeStamp = currentDateTime.DateTime,
+                ActionName = nameof(Login),
+                GameType = nameof(Nextspin),
+                SiteName = tpCustInfo.SiteId.ToString(),
+                RequestContent = postdata,
+                ResponseContent = result,
+                Elapsed = stopWatch.ElapsedMilliseconds
             });
 
-            var json = HttpPost(apiUrl, parameters, "application/json", header);
-            var result = FromJson<GetDomainListResponse>(json);
+            ApiResult oApiResult = new ApiResult();
 
-            if (result.code == 0)
+            if (IsJSON(result))
             {
-                launchUrl = result.domains[0];
+                var json = JsonConvert.DeserializeObject<LoginResp>(result);
+                if (json.ErrorCode == 0)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Message = json.Payload.ReturnUrl;
+                }
+                else
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = json.ErrorMessage;
+                    oApiResult.RawErrorCode = json.ErrorCode.ToString();
+                }
             }
             else
             {
-                _logger.LogWarning($"Nextspin getDomainList API error: {JsonConvert.SerializeObject(result)}");
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail;
             }
 
-            return launchUrl;
+            return oApiResult;
+        }
+
+        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+
+        private string Encrypt(string req, NextspinConfig config)
+        {
+            var s = req + config.OperatorKey;
+            var sign = ToMD5(s);
+            return sign;
+        }
+
+        private static string GetCurrentTimeFormat()
+        {
+            return GetCurrentDateTime().ToString(_formatOfTime);
+        }
+
+        private static string GetCurrentTimeFormat(DateTimeOffset currentDateTimeOffset)
+        {
+            return currentDateTimeOffset.ToString(_formatOfTime);
+        }
+
+        private static DateTimeOffset GetCurrentDateTime()
+        {
+            var currentAt = new DateTimeOffset(DateTime.UtcNow);
+            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0));
+        }
+
+        private static string GetGameName(string gameId)
+        {
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.TableGame, gameId, "en");
+            return gameInfo is null
+                ? gameId
+                : gameInfo.Name;
         }
     }
 }

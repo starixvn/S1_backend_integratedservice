@@ -288,7 +288,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result.SetBalanceResult < 1 || afterAmount < 0)
                 {
-                    throw new SBSWException(ReturnCode.InsufficientBalance);
+                    throw new SBSWException(ReturnCode.InsufficientBalance, $"CheckBalance | Insufficient. SetBalanceResult={result.SetBalanceResult}. afterAmount={afterAmount}.");
                 }
 
                 await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
