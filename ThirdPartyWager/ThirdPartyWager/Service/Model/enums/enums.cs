@@ -70,7 +70,8 @@
         UuSlots = 67,
         Live22 = 68,
         FastSpin = 69,
-        DragonGaming = 70
+        DragonGaming = 70,
+        PG2 = 71
     }
 
     public enum GameType
@@ -125,7 +126,8 @@
         UuSlots_RNG = 120,
         Live22_RNG = 121,
         FastSpin_RNG = 122,
-        DragonGaming_RNG = 123
+        DragonGaming_RNG = 123,
+        PG2_RNG = 124,
     }
     public enum SettlementType
     {

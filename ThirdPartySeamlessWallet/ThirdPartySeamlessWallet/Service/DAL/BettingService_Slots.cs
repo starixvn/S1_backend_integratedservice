@@ -2328,6 +2328,66 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
+                    }
+
+        #endregion
+
+        #region PG2
+
+        public IEnumerable<BettingDataRNG_PG2> IsExist_PG2(bool checkEndRound, BettingDataRNG_PG2 data)
+        {
+            var query = new { CheckEndRound = checkEndRound, refId = data.refId, roundId = data.roundId, FromAPIType = data.FromAPIType };
+            return _mainDbClient.Query<BettingDataRNG_PG2>("Service_BettransRng_PG2_Check", parameters: query);
+        }
+
+        public bool IsExistParentRoundId_PG2(bool checkEndRound, BettingDataRNG_PG2 data)
+        {
+            var query = new { ParentRoundId = data.parentRoundId};
+            var result = _mainDbClient.Query<BettingDataRNG_PG2>("Service_BettransRng_PG2_ParentRoundIdCheck", parameters: query);
+
+            if (!result.Any())
+                return false;
+
+            // 如果 result 有資料但包含 isEndRound = true(已經結束的回合)
+            if (result.Any(x => x.isEndRound == true))
+                return false;
+
+            // 有尚未結束的ComboRound
+            return true;
+        }
+
+        public bool InsertBettransRng_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
+        {
+            var p = new DynamicParameters(data);
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_Ins", trans, p);
+
+            return result != 0;
+        }
+
+        public bool SetBalance_PG2(TpCustInfo tpCustInfo, BettingDataRNG_PG2 data, bool isComboRound,out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBet(
+                tpCustInfo,
+                //betAPI進來betAmount會=0，直接用data.amount做計算
+                //settlementAPI進來若是ComboRound，betAmount也會=0，
+                data.betAmount == 0 && !isComboRound ? data.amount : data.betAmount * -1,
+                (int)Tp.PG2,
+                data.parentRoundId, //用parentRoundId記錄TpSeamlessBonus，TpBetRecord才能正確紀錄BonusId
+                (int)GameType.PG2_RNG,
+                data.refId,  //RefId
+                out afterAmount,
+                ref bonusId,
+                out _,
+                conn,
+                trans
+            );
+
+            if (result <= 0)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         #endregion
