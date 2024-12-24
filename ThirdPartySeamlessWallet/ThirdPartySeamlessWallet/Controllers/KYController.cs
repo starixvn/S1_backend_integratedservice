@@ -55,7 +55,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 m = "/channelHandle",
                 d = new info
                 {
-                    code = 999
+                    code = 99
                 }
             };
 

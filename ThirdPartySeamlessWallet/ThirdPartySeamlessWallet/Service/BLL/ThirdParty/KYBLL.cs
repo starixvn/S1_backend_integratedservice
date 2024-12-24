@@ -93,7 +93,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 m = "/channelHandle",
                 d = new info
                 {
-                    code = 999
+                    code = 99
                 }
             };
 
@@ -144,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 m = "/channelHandle",
                 d = new info
                 {
-                    code = 999
+                    code = 99
                 }
             };
 
@@ -230,7 +230,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 m = "/channelHandle",
                 d = new info
                 {
-                    code = 999
+                    code = 99
                 }
             };
 
@@ -277,11 +277,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
                 else if (result == -2)
                 {
-                    _log2File.Error("no bet", logName);
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Order;
+                    _log2File.Error($"No Bet {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
                 }
                 else if (result == -3)
                 {
-                    _log2File.Error("duplicate payout", logName);
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Success;
+                    _log2File.Error($"Duplicate Payout {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
                 }
             }
             catch (Exception ex)
@@ -304,7 +308,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 m = "/channelHandle",
                 d = new GetOrderStatusD
                 {
-                    code = 999,
+                    code = 99,
                     status = (int)StatusTypeOfKY.Failure
                 }
             };
@@ -356,7 +360,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 m = "/channelHandle",
                 d = new GetOrderStatusD
                 {
-                    code = 999,
+                    code = 99,
                     status = (int)StatusTypeOfKY.OtherError,
                 }
             };
