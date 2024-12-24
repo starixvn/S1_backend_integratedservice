@@ -21,6 +21,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly Log2File _log2File;
         private readonly Tp _commonTp;
         private const string _testCurrency = "UUS";
+        private const string _testCurrencyForPP = "YNG";
+
+
         private readonly ILogger<MaxGameBLL> _logger;
 
         private readonly Dictionary<string, Tp> _gameOfTpId = new()
@@ -140,15 +143,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _logger.LogInformation("tpId: " + tpId + " ,Payload.GameType:" + getReq.Payload.GameType + " GameType: " + gameType + " limitInfo: " + JsonConvert.SerializeObject(limitInfo));
             // 取出對方支援的Min/Max預設設定
             var limit = JsonConvert.DeserializeObject<Limit>(_tpBetLimitData.Where(i => i.GameType == (int)gameType).FirstOrDefault(item => item.CurrencyId == tpCustInfo.CurrencyId).LimitGroup);
-
+            var currency = tpCustInfo.IsTest
+                ? GetCurrencyByGameTypeForCaseTest((int)gameType)
+                : tpCustBalance.TpCurrencyId;
             GetPlayerInfoResp response = new(ErrorCodeOfMaxGame.Success, getReq.Seq)
             {
                 Payload = new Payload_GetPlayerInfoResp()
                 {
                     OperatorCustId = operatorCustId,
                     UserName = operatorCustId,
-                    CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustBalance.TpCurrencyId,
-                    Currency = tpCustInfo.IsTest ? _testCurrency : tpCustBalance.TpCurrencyId,
+                    CurrencyISO = currency,
+                    Currency = currency,
                     Balance = _tools.Floor(tpCustBalance.Balance, 2),
                     MinBet = limit.Min,
                     MaxBet = limit.Max,
@@ -904,6 +909,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 SetCancelBet = CancelBettransSpName
             };
         }
+
+        private static string GetCurrencyByGameTypeForCaseTest(int gameType)
+            => (gameType is (int)GameType.PP_RNG or (int)GameType.PP_LiveCasino)
+                ? _testCurrencyForPP
+                : _testCurrency;
 
         #endregion ExchangeRate & Service
 
