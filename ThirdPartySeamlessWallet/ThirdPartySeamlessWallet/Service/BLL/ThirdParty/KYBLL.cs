@@ -253,7 +253,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     _log2File.Error($"Account Empty {JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
-                Thread.Sleep(61000);
+
                 result = PayoutPK_KY(req, out decimal tpAfterAmount);
                 if (result > 0 || result == -1)
                 {
