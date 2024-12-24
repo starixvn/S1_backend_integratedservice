@@ -30,7 +30,7 @@ namespace ThirdParty.IM
         public TpHelper(IServiceProvider provider)
         {
             var tokyoProxyConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
-            if (tokyoProxyConfig != null)
+            if (!string.IsNullOrEmpty(tokyoProxyConfig.ProxyHost))
             {
                 _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);
             }
