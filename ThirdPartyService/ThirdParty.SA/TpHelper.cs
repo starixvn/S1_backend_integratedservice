@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Web;
 using System.Xml.Serialization;
 using ThirdPartyCore;
@@ -14,11 +15,16 @@ namespace ThirdParty.SA
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, SAConfig> _siteConfigDic;
+        private readonly ILogger<TpHelper> _logger;
 
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SAConfig>(TpEnum.SA.ToString());
+            _logger = provider.GetRequiredService<ILogger<TpHelper>>();
         }
+
+
+        #region Response
 
         [XmlRoot("APIResponse")]
         public class Result
@@ -40,6 +46,8 @@ namespace ThirdParty.SA
             public string DisplayName { set; get; }
         }
 
+
+
         public class BaseRequest
         {
             public string Method { set; get; }
@@ -50,6 +58,8 @@ namespace ThirdParty.SA
         }
 
         private class CreateMemberReq : BaseRequest { }
+
+        #endregion
 
         #region QueryBetLimit
 
@@ -120,8 +130,9 @@ namespace ThirdParty.SA
             var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncrypKey));
             var s = ToMD5(queryString + config.Md5Key + time + config.SecretKey).ToLower();
             input.Key = s;
-
             var postData = "q=" + q + "&s=" + s;
+
+            _logger.LogInformation($"queryString={queryString}\r\nq={q}\r\ns={s}");
             var result = HttpPost(config.ApiUrl, postData, "application/x-www-form-urlencoded");
             ApiResult oApiResult = new ApiResult();
             if (IsXML(result))
@@ -169,6 +180,7 @@ namespace ThirdParty.SA
             var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncrypKey));
             var s = ToMD5(queryString + config.Md5Key + time + config.SecretKey).ToLower();
             var postData = "q=" + q + "&s=" + s;
+            _logger.LogInformation($"queryString={queryString}\r\nq={q}\r\ns={s}");
 
             var result = HttpPost(config.ApiUrl, postData, "application/x-www-form-urlencoded");
             ApiResult oApiResult = new ApiResult();
