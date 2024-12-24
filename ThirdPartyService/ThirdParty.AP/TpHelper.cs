@@ -162,7 +162,9 @@ namespace ThirdParty.AP
                     GameCode = gameId,
                     LangCode = LangId,
                     FunPlay = FunPlay,
+                    BrandCode = Config.BrandCode
                 };
+
                 string URL = "";
                 var param = ToJson(sParam);
                 var launchResult = HttpPost($"{ApiUrl}GetLaunchURL", param, "application/json");
@@ -243,6 +245,7 @@ namespace ThirdParty.AP
                 Seq = uuid,
                 SiteCode = SiteCode,
                 PlayerId = tpCustInfo.TpUserName,
+                BrandCode = Config.BrandCode
             };
             var param = ToJson(sParam);
             var result = HttpPost($"{ApiUrl}GetPlayerToken", param, "application/json");
@@ -431,6 +434,10 @@ namespace ThirdParty.AP
             var sParam = ToJson(Param);
             var payload = AesEncryptV2(sParam, SecretKey);
             var signature = HmacSha256(payload, SecretKey);
+            if (SiteCode == "default")
+            {
+                SiteCode = config.Platform_MiniGame;
+            }
             return $"{GameUrl}/client/auth?payload={HttpUtility.UrlEncode(payload)}&signature={HttpUtility.UrlEncode(signature)}&platform={SiteCode}";
         }
 
