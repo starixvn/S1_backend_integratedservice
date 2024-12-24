@@ -2094,6 +2094,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_KY.timestamp).DateTime;
 
                 var bettrans = _partitionService.Query<BettransDataPK_KY>(partitionTime, "Service_BettransPK_KY_gameNo_Get", new { gameNo = bettingDataPK_KY.gameNo });
+                // 檢查是否有下注該round
+                if (!bettrans.Any(i => i.TicketType == BettransType.Bet))
+                {
+                    return -2;
+                }
+                // 檢查是否有派彩過
+                if (bettrans.Any(i => i.TicketType == BettransType.Payout))
+                {
+                    return -3;
+                }
 
                 result = _partitionService.Execute(partitionTime, "Service_BettransPK_KY_Ins", p, trans);
 
