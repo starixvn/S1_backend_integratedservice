@@ -19,8 +19,7 @@ namespace ThirdParty.PP
 
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
-        private const string _testCurrency = "UUS";
-        private const string _testCurrencyForPP = "YNG";
+        private const string _testCurrency = "YNG";
 
         private const string PPLiveCasinoGameTypeId = "16";
         private const string PPRNGGameTypeId = "7";
@@ -256,7 +255,7 @@ namespace ThirdParty.PP
                         OperatorCustomerName = tpCustInfo.TpUserName,
                         Language = TpLangId,
                         Platform = (appType == AppType.Desktop) ? "D" : "M",
-                        CurrencyISO = tpCustInfo.IsTest ? GetCurrencyByGameTypeForCaseTest(tpGameType) : tpCustInfo.TpCurrencyId,
+                        CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustInfo.TpCurrencyId,
                         IpAddress = inputs.GetValueOrDefault("ClientIP", ""),
                         WalletSideToken = key,
                     },
@@ -348,11 +347,6 @@ namespace ThirdParty.PP
 
             return config.ApiUrl;
         }
-        
-        private static string GetCurrencyByGameTypeForCaseTest(string gameType)
-            => (gameType is PPLiveCasinoGameTypeId or PPRNGGameTypeId)
-                ? _testCurrencyForPP
-                : _testCurrency;
 
         private static string GetGameTypeBasedOnTpGameType(string gameType, PPConfig config)
         {

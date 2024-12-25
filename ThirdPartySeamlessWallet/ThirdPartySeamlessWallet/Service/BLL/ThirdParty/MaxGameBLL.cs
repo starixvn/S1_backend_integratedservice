@@ -21,7 +21,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly Log2File _log2File;
         private readonly Tp _commonTp;
         private const string _testCurrency = "UUS";
-        private const string _testCurrencyForPP = "YNG";
 
 
         private readonly ILogger<MaxGameBLL> _logger;
@@ -144,7 +143,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             // 取出對方支援的Min/Max預設設定
             var limit = JsonConvert.DeserializeObject<Limit>(_tpBetLimitData.Where(i => i.GameType == (int)gameType).FirstOrDefault(item => item.CurrencyId == tpCustInfo.CurrencyId).LimitGroup);
             var currency = tpCustInfo.IsTest
-                ? GetCurrencyByGameTypeForCaseTest((int)gameType)
+                ? _testCurrency
                 : tpCustBalance.TpCurrencyId;
             GetPlayerInfoResp response = new(ErrorCodeOfMaxGame.Success, getReq.Seq)
             {
@@ -909,11 +908,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 SetCancelBet = CancelBettransSpName
             };
         }
-
-        private static string GetCurrencyByGameTypeForCaseTest(int gameType)
-            => (gameType is (int)GameType.PP_RNG or (int)GameType.PP_LiveCasino)
-                ? _testCurrencyForPP
-                : _testCurrency;
 
         #endregion ExchangeRate & Service
 
