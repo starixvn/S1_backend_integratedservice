@@ -6,19 +6,19 @@ namespace ThirdPartyWager.Workers
 {
     public class WagerRedoAMB : BackgroundService
     {
-        private readonly string _tpName = Tp.AMB.ToString();
         private Timer _timer;
+        private readonly string _tpName = Tp.AMB.ToString();
         private readonly WagerAMBBLL _wagerAMBBLL;
-        private readonly ILogger<WagerGA> _logger;
-        private readonly int timeRange = 9; //in minutes
-        private readonly int quickTime = 5; // in minutes
-        private readonly int runTime = 5; // in minutes
-        private readonly int tpType = (int)WagerTimerType.RedoWager;
+        private readonly ILogger<WagerRedoAMB> _logger;
+        private readonly int _timeRange = 9; //in minutes
+        private readonly int _quickTime = 2; // in minutes
+        private readonly int _runTime = 5; // in minutes
+        private readonly int _tpType = (int)WagerTimerType.RedoWager;
 
         public WagerRedoAMB(IServiceProvider provider)
         {
             _wagerAMBBLL = provider.GetRequiredService<WagerAMBBLL>();
-            _logger = provider.GetRequiredService<ILogger<WagerGA>>();
+            _logger = provider.GetRequiredService<ILogger<WagerRedoAMB>>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -35,7 +35,7 @@ namespace ThirdPartyWager.Workers
 
             try
             {
-                quick = await _wagerAMBBLL.ExecWagerRedoWorker(tpType, timeRange);
+                quick = await _wagerAMBBLL.ExecWagerRedoWorker(_tpType, _timeRange);
             }
             catch (Exception ex)
             {
@@ -43,16 +43,8 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                if (quick)
-                {
-                    var dueTimeSpan = TimeSpan.FromMinutes(quickTime);
-                    _timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromMinutes(runTime);
-                    _timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                var dueTimeSpan = quick ? TimeSpan.FromMinutes(_quickTime) : TimeSpan.FromMinutes(_runTime);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 

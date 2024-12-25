@@ -214,10 +214,12 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public string InsertBettrans { get; set; }
         public string InsertPayload { get; set; }
         public string SetCancelBet { get; set; }
+        public string SetAmount { get; set; }
     }
 
     public class BettransData_MaxGame
     {
+        public long SQ { get; set; }
         public string Timestamp { get; set; }
         public string Seq { get; set; }
         public string OperatorCustId { get; set; }

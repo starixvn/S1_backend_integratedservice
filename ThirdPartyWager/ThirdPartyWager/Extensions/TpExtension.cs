@@ -310,9 +310,11 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerOne789BLL>();
             services.AddSingleton<ApiOne789BLL>();
             services.AddSingleton<FinanceOne789BLL>();
+            services.AddSingleton<TicketOne789BLL>();
 
             services.AddHostedService<WagerOne789>();
             services.AddHostedService<FinanceOne789>();
+            services.AddHostedService<TicketOne789>();
 
             return services;
         }

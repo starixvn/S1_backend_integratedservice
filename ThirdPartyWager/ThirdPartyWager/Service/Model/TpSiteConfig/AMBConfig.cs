@@ -2,16 +2,15 @@
 {
     public class AMBConfig
     {
-        public string PokerAgent { get; set; }
-        public string PokerApiUrl { get; set; }
-        public string PokerSecretKey { get; set; }
-        public List<SlotCurrencyAgent> SlotCurrencyAgent { get; set; }
+        public Dictionary<string, CurrencyDataAMB> PokerCurrencyData { get; set; }
+        public Dictionary<string, CurrencyDataAMB> SlotCurrencyData { get; set; }
     }
-    public class SlotCurrencyAgent
+
+    public class CurrencyDataAMB
     {
         public string CurrencyId { get; set; }
         public string Agent { get; set; }
-        public string SlotApiUrl { get; set; }
+        public string ApiUrl { get; set; }
         public string SecretKey { get; set; }
     }
 }

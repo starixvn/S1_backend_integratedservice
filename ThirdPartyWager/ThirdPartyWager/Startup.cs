@@ -1,5 +1,4 @@
 ﻿using System.Net;
-
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
@@ -71,9 +70,9 @@ namespace ThirdPartyWager
 
             services.AddTpList();
             services.AddSabaOdds();
+            services.AddSabaGameDetail();
             services.AddLiveStreaming();
             services.AddLatestHighlightVideo();
-            services.AddTpRefundWorker();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

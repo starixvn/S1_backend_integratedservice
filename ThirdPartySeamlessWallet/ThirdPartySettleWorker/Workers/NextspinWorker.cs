@@ -57,13 +57,13 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 5000);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
                 }
 
-                forContinue = tpUnsettleList.Count() == 200;
+                forContinue = tpUnsettleList.Count() == 1000;
                 foreach (var tpUnsettle in tpUnsettleList)
                 {
                     try
@@ -81,6 +81,7 @@ namespace ThirdPartySettleWorker.Workers
                             _logger.LogWarning($"transId: {tpUnsettle.TransId} is not equal " +
                                              $"settle: {JsonConvert.SerializeObject(unsettleData)} " +
                                              $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, isSuccess: false);
                             continue;
                         }
                         var betRecordInfo = new BetRecordInfo

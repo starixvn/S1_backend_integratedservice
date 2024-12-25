@@ -13,6 +13,7 @@ namespace ThirdPartySettleWorker.Workers
     {
         public Tp Tp { get => Tp.PG; }
 
+        private Timer novaTimer;
         private Timer timer;
 
         private readonly SettledBLL _settledBLL;
@@ -34,12 +35,14 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoSettle, GameType.PG_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            novaTimer = new Timer(DoSettle, 1, TimeSpan.Zero, TimeSpan.Zero);
+            timer = new Timer(DoSettle, 0, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
+            novaTimer?.Change(Timeout.Infinite, 0);
             timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
@@ -49,9 +52,10 @@ namespace ThirdPartySettleWorker.Workers
             LogContext.PushProperty("TP", _tpName);
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
 
+            var siteId =(int)state;
             var forContinue = false;
             var isError = false;
-            var gametype = (GameType)state;
+            var gametype = GameType.PG_RNG;
             var tpCategory = TpCategory.Slots;
 
             var logName = $"SettlePG";
@@ -60,19 +64,30 @@ namespace ThirdPartySettleWorker.Workers
             var setSP = $"Service_BettransRng_PG_Settle_Set_V2";
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 2000);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
                 }
 
-                forContinue = tpUnsettleList.Count() == 200;
+                forContinue = tpUnsettleList.Count() >= 200;
                 foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
                 {
                     try
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Main).First();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+                        // 依用戶資訊判斷siteId來決定是否跳過
+                        if (siteId != 0 && tpCustInfo.SiteId != siteId)
+                        {
+                            continue;
+                        }
+
+                        if (siteId == 0  && tpCustInfo.SiteId is 1)
+                        {
+                            continue;
+                        }
+
                         var fix = false;
                         if ((settleData.TransTime >= 1712320200 && settleData.TransTime <= 1712348100) && (tpCustInfo.CurrencyId == 51 || tpCustInfo.CurrencyId == 15))
                         {
@@ -134,17 +149,24 @@ namespace ThirdPartySettleWorker.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
+                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(10);
                 if (forContinue)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
                 }
                 else if (isError)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(30);
                 }
 
-                timer?.Change(dueTimeSpan, TimeSpan.Zero);
+                if (siteId == 1) 
+                {
+                    novaTimer.Change(dueTimeSpan, TimeSpan.Zero);   
+                }
+                else
+                {
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
             }
         }
     }

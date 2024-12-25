@@ -46,6 +46,7 @@
         Netent = 37,
         RedTiger = 38,
         AP = 39,
+        SBSW = 41,
         SBO = 42,
         Skywind = 43,
         SimplePlay = 44,

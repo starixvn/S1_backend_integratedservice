@@ -38,7 +38,7 @@ public class DragonGamingController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/get_session")]
-    public async Task<SessionResponse_DragonGaming> GetSessionAsync(SessionRequest_DragonGaming request)
+    public async Task<CommonResponse_DragonGaming> GetSessionAsync(SessionRequest_DragonGaming request)
     {
         return await _dragonGamingBll.GetSession(request);
     }
@@ -49,7 +49,7 @@ public class DragonGamingController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/get_balance")]
-    public async Task<BalanceResponse_DragonGaming> GetBalanceAsync(BalanceRequest_DragonGaming request)
+    public async Task<CommonResponse_DragonGaming> GetBalanceAsync(BalanceRequest_DragonGaming request)
     {
         return await _dragonGamingBll.GetBalance(request);
     }
@@ -60,7 +60,7 @@ public class DragonGamingController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/debit")]
-    public async Task<DebitCreditRefundResponse_DragonGaming> DebitAsync(DebitRequest_DragonGaming request)
+    public async Task<CommonResponse_DragonGaming> DebitAsync(DebitRequest_DragonGaming request)
     {
         return await _dragonGamingBll.Debit(request);
     }
@@ -71,7 +71,7 @@ public class DragonGamingController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/credit")]
-    public async Task<DebitCreditRefundResponse_DragonGaming> CreditAsync(CreditRequest_DragonGaming request)
+    public async Task<CommonResponse_DragonGaming> CreditAsync(CreditRequest_DragonGaming request)
     {
         return await _dragonGamingBll.Credit(request);
     }
@@ -82,7 +82,7 @@ public class DragonGamingController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/refund")]
-    public async Task<DebitCreditRefundResponse_DragonGaming> RefundAsync(RefundRequest_DragonGaming request)
+    public async Task<CommonResponse_DragonGaming> RefundAsync(RefundRequest_DragonGaming request)
     {
         return await _dragonGamingBll.Refund(request);
     }

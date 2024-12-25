@@ -28,13 +28,25 @@ namespace ThirdPartyWager.Service.DAL
         {
             return _mainDbClient.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId });
         }
+
         public IEnumerable<int> GetSiteByTpGameType(int gameType)
         {
             return _mainDbClient.Query<int>("Service_SiteByTpGameType_Get", new { TpGameType = gameType });
         }
+
         public Task<IEnumerable<FincanceDailySummary>> GetWagerSummary(string spName, long beginTime, long endTime)
         {
             return _wagerDbClient.QueryAsync<FincanceDailySummary>(spName, new DynamicParameters(new { _BeginTime = beginTime, _EndTime = endTime }));
+        }
+
+        public Task<IEnumerable<FincanceDailySummary>> GetWagerSummaryBySiteIds(string spName, long beginTime, long endTime, string siteIds)
+        {
+            return _wagerDbClient.QueryAsync<FincanceDailySummary>(spName, new DynamicParameters(new { _BeginTime = beginTime, _EndTime = endTime, _SiteIds = siteIds }));
+        }
+
+        public Task<IEnumerable<FincanceDailySummary>> GetWagerSummaryBySiteId(string spName, long beginTime, long endTime, string siteId)
+        {
+            return _wagerDbClient.QueryAsync<FincanceDailySummary>(spName, new DynamicParameters(new { _BeginTime = beginTime, _EndTime = endTime, _SiteIds = siteId }));
         }
 
         public Task<IEnumerable<FincanceDailySummary>> GetBettransSummary(string spName, long beginTime, long endTime)

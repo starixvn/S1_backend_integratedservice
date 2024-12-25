@@ -2,33 +2,39 @@
 using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service
+namespace ThirdPartyWager.Service.BLL
 {
-    public class TicketOne789BLL
+    public class TicketOne789BLL : ITpRefundBLL
     {
         private readonly ApiOne789BLL _apiOne789BLL;
         private readonly WagerOne789Service _wagerOne789Service;
         private readonly ILogger<TicketOne789BLL> _logger;
         private readonly One789Config _siteConfig;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly int _timeRange = 10;
+        private readonly int _timeZone = 0;
+        private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
+        private readonly int _delay = 3600;
+        private readonly int _delayTimeRange = 60;
 
         public TicketOne789BLL(IServiceProvider provider)
         {
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _apiOne789BLL = provider.GetRequiredService<ApiOne789BLL>();
             _wagerOne789Service = provider.GetRequiredService<WagerOne789Service>();
             _logger = provider.GetRequiredService<ILogger<TicketOne789BLL>>();
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<One789Config>(Tp.One789.ToString());
         }
 
-        // TpRefundWorker
-        public IEnumerable<BettransDataOne789> GetPendingList(int gameType)
+        public IEnumerable<dynamic> GetPendingList(int gameType, TimeCast ticketTime)
         {
-            return _wagerOne789Service.GetPendingList(gameType);
+            return _wagerOne789Service.GetPendingList(ticketTime, gameType);
         }
 
-        // TpRefundWorker
-        public async Task<bool> CheckTicketStatusAsync(dynamic pending, int gameType)
+        public async Task<bool> CheckTicketStatus(dynamic pending, int gameType)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
             var func = "CheckTicketStatusAsync";
@@ -51,7 +57,7 @@ namespace ThirdPartyWager.Service
             if (ticketData.ErrorCode != null)
             {
                 msg = $"{func} THIRD_PARTY_ERROR";
-                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(ticketData)}");
+                _logger.LogError($"{msg} {(int)gameType}\r\n{JsonConvert.SerializeObject(ticketData)}");
                 return false;
             }
 
@@ -61,11 +67,11 @@ namespace ThirdPartyWager.Service
                 // call sw api
                 try
                 {
-                    var response = _apiOne789BLL.callSeamlessApi("Refund", pending).Result;
+                    var response = _apiOne789BLL.CallSeamlessApi("Refund", pending).Result;
                     if (response == null)
                     {
                         msg = $"{func} SEAMLESS_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(pending)}\r\nresponse={JsonConvert.SerializeObject(response)}");
+                        _logger.LogError($"{msg} {(int)gameType}\r\n{JsonConvert.SerializeObject(pending)}\r\nresponse={JsonConvert.SerializeObject(response)}");
                         return false;
                     }
 
@@ -73,7 +79,7 @@ namespace ThirdPartyWager.Service
                     if (result == null || result.ErrorCode != null)
                     {
                         msg = $"{func} SEAMLESS_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(pending)}\r\nresult={JsonConvert.SerializeObject(result)}");
+                        _logger.LogError($"{msg} {(int)gameType}\r\n{JsonConvert.SerializeObject(pending)}\r\nresult={JsonConvert.SerializeObject(result)}");
                         return false;
                     }
                     else if (result.Tx == pending.Source)
@@ -83,7 +89,7 @@ namespace ThirdPartyWager.Service
                     else
                     {
                         msg = $"{func} UNKNOW_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(pending)}\r\nresult={JsonConvert.SerializeObject(result)}");
+                        _logger.LogError($"{msg} {(int)gameType}\r\n{JsonConvert.SerializeObject(pending)}\r\nresult={JsonConvert.SerializeObject(result)}");
                     }
                 }
                 catch (Exception ex)
@@ -98,6 +104,26 @@ namespace ThirdPartyWager.Service
             }
 
             return true;
+        }
+
+        public TimeCast GetTicketTime(DateTime startTime, int lockPeriod, out bool exec)
+        {
+            exec = true;
+            var ticketTime = _dateTimeHelper.GetTimeByMinute(_timeRange, _timeZone, _timeFormat, startTime);
+            var cvTime = DateTimeOffset.UtcNow.AddMinutes(lockPeriod).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+            if (ticketTime.endUnix > cvTime)
+            {
+                exec = false;
+            }
+            else
+            {
+                var diff = cvTime - ticketTime.endUnix;
+                if (diff >= _delay)
+                {
+                    ticketTime = _dateTimeHelper.GetTimeByMinute(_delayTimeRange, _timeZone, _timeFormat, startTime);
+                }
+            }
+            return ticketTime;
         }
     }
 }

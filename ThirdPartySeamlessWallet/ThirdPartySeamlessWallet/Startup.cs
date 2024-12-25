@@ -122,11 +122,6 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<KMHeaderFilter>();
             services.AddSingleton<MGHeaderFilter>();
             services.AddSingleton<MGExceptionFilter>();
-            services.AddControllers()
-                .AddJsonOptions(options =>
-                    {
-                        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-                    });
 
             services.AddOptionListByDB<SabaSportTypeOption>("Service_SabaSportType_Get");
             //設定SiteConfig

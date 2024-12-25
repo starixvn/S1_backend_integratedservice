@@ -14,12 +14,12 @@ namespace ThirdParty.Joker
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly JokerConfig _siteConfig;
+        private readonly Dictionary<int, JokerConfig> _siteConfigDic;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<JokerConfig>(TpEnum.Joker.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<JokerConfig>(TpEnum.Joker.ToString());
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Joker).ToDictionary(d => d.AppId, d => d.Name);
         }
 
@@ -76,10 +76,10 @@ namespace ThirdParty.Joker
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
-            var currencyData = _siteConfig.CurrencyData[tpCustInfo.TpCurrencyId];
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var currencyData = config.CurrencyData[tpCustInfo.TpCurrencyId];
 
-            string gameUrl = _siteConfig.GameUrl;
+            string gameUrl = config.GameUrl;
             string appId = currencyData.AppID;
             string secret = currencyData.Secret;
 
@@ -124,10 +124,10 @@ namespace ThirdParty.Joker
         {
             try
             {
-                var config = _siteConfig;
-                var currencyData = _siteConfig.CurrencyData[tpCustInfo.TpCurrencyId];
+                var config = _siteConfigDic[tpCustInfo.SiteId];
+                var currencyData = config.CurrencyData[tpCustInfo.TpCurrencyId];
 
-                string apiUrl = _siteConfig.ApiUrl;
+                string apiUrl = config.ApiUrl;
                 string appId = currencyData.AppID;
                 string secret = currencyData.Secret;
 

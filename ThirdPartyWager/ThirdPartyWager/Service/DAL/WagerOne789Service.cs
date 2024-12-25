@@ -1,5 +1,4 @@
 ﻿using Dapper;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -19,64 +18,61 @@ namespace ThirdPartyWager.Service.DAL
 
         public bool InsertWagerOne789(BetOne789 bet, int gameType)
         {
-            var game = "";
+            var sp = "";
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
-                    game = "LT";
+                    sp = "Service_TpWagerOne789_LT_Ins_V2";
                     break;
                 case (int)GameType.One789_Lottery_789:
-                    game = "LT_789";
+                    sp = "Service_TpWagerOne789_LT_789_Ins_V2";
                     break;
                 case (int)GameType.One789_LiveCasino:
-                    game = "LC";
+                    sp = "Service_TpWagerOne789_LC_Ins_V2";
                     break;
                 default:
                     break;
             }
-            var sp = $"Service_TpWagerOne789_{game}_Ins_V2";
             return _wagerDbClient.Execute(sp, new DynamicParameters(bet));
         }
 
-        public IEnumerable<BettransDataOne789> GetPendingList(int gameType)
+        public IEnumerable<BettransDataOne789> GetPendingList(TimeCast ticketTime, int gameType)
         {
-            var game = "";
+            var sp = "";
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
-                    game = "LT_One789";
+                    sp = "Service_BettransLT_One789_Bet_Pending_Get";
                     break;
                 case (int)GameType.One789_Lottery_789:
-                    game = "LT_One789_789";
+                    sp = "Service_BettransLT_One789_789_Bet_Pending_Get";
                     break;
                 case (int)GameType.One789_LiveCasino:
-                    game = "LC_One789";
+                    sp = "Service_BettransLC_One789_Bet_Pending_Get";
                     break;
                 default:
                     break;
             }
-            var sp = $"Service_Bettrans{game}_Bet_Pending_Get";
-            return _mainDbClient.Query<BettransDataOne789>(sp);
+            return _mainDbClient.Query<BettransDataOne789>(sp, parameters: new { _BeginTime = ticketTime.startUnix, _EndTime = ticketTime.endUnix });
         }
 
         public BettransDataOne789 GetBettransData(int gameType, string tx)
         {
-            var game = "";
+            var sp = "";
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
-                    game = "LT_One789";
+                    sp = "Service_BettransLT_One789_Get";
                     break;
                 case (int)GameType.One789_Lottery_789:
-                    game = "LT_One789_789";
+                    sp = "Service_BettransLT_One789_789_Get";
                     break;
                 case (int)GameType.One789_LiveCasino:
-                    game = "LC_One789";
+                    sp = "Service_BettransLC_One789_Get";
                     break;
                 default:
                     break;
             }
-            var sp = $"Service_Bettrans{game}_Get";
             return _mainDbClient.QueryFirst<BettransDataOne789>(sp, new DynamicParameters(new { Source = tx }));
         }
     }

@@ -11,23 +11,20 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerPegasusService _wagerPegasusService;
         private readonly ILogger<WagerPegasusBLL> _logger;
         private readonly CommonBLL _commonBll;
-        private readonly Dictionary<string, string> _setting;
-        private readonly List<TpCurrencyConfig> _currencyConfigList = new();
-        
-        
+
         public WagerPegasusBLL(IServiceProvider provider)
         {
             _apiPegasusBll = provider.GetRequiredService<ApiPegasusBLL>();
             _wagerPegasusService = provider.GetRequiredService<WagerPegasusService>();
             _logger = provider.GetRequiredService<ILogger<WagerPegasusBLL>>();
             _commonBll = provider.GetRequiredService<CommonBLL>();
-            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.Pegasus.ToString());
-            PegasusConfig(_setting);
         }
-        
-        public async Task<bool> GetWagersAsync(string startTime, string endTime)
+
+        public async Task<bool> GetWagersAsync(string startTime, string endTime, int siteId, Dictionary<string, string> setting)
         {
-            foreach (var currencyConfig in _currencyConfigList)
+            PegasusConfig(setting, out List<TpCurrencyConfig> currencyConfigList);
+
+            foreach (var currencyConfig in currencyConfigList)
             {
                 string msg;
                 try
@@ -38,9 +35,7 @@ namespace ThirdPartyWager.Service.BLL
                     while (page <= totalPage)
                     {
                         // get wager
-                        var dataWager = await _apiPegasusBll.GetBetListByTime(
-                            _setting["ApiUrl"], currencyConfig.SecretKey, currencyConfig.MerchantID, 
-                            startTime, endTime, page);
+                        var dataWager = await _apiPegasusBll.GetBetListByTime(setting["ApiUrl"], currencyConfig.SecretKey, currencyConfig.MerchantID, startTime, endTime, page);
 
                         // error condition
                         var errorCode = dataWager.Code;
@@ -48,16 +43,17 @@ namespace ThirdPartyWager.Service.BLL
                         if (errorCode != 0)
                         {
                             msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\nCurrncy:{currencyConfig.Currency}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            _logger.LogError($"{msg}\r\nSiteId={siteId},Currncy:{currencyConfig.Currency}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             return false;
                         }
 
                         var totalNum = dataWager.Data.TotalCount;
                         totalPage = dataWager.Data.TotalPage;
+
                         if (totalNum == 0)
                         {
                             msg = "NO_DATA";
-                            _logger.LogInformation($"{msg}\r\nCurrncy:{currencyConfig.Currency}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            _logger.LogInformation($"{msg}\r\nSiteId={siteId},Currncy:{currencyConfig.Currency}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             continue;
                         }
 
@@ -70,7 +66,7 @@ namespace ThirdPartyWager.Service.BLL
                             catch (Exception ex)
                             {
                                 msg = $"INSERT_WAGER(WAGERID: {bet.TransactionNo} )";
-                                _logger.LogError($"{msg}\r\nCurrncy:{currencyConfig.Currency}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                                _logger.LogError($"{msg}\r\nSiteId={siteId},Currncy:{currencyConfig.Currency}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                                 return false;
                             }
                         }
@@ -78,29 +74,32 @@ namespace ThirdPartyWager.Service.BLL
                     }
 
                     msg = "FINISH";
-                    _logger.LogInformation($"GetWagersAsync {msg}\r\nCurrncy:{currencyConfig.Currency}\r\n{startTime} ~ {endTime}");
+                    _logger.LogInformation($"GetWagersAsync {msg}\r\nSiteId={siteId},Currncy:{currencyConfig.Currency}\r\n{startTime} ~ {endTime}");
                 }
                 catch (Exception ex)
                 {
                     msg = "FATAL_ERROR";
-                    _logger.LogError(ex, $"GetWagersAsync {msg}\r\nCurrncy:{currencyConfig.Currency}\r\n{ex.Message}");
+                    _logger.LogError(ex, $"GetWagersAsync {msg}\r\nSiteId={siteId},Currncy:{currencyConfig.Currency}\r\n{ex.Message}");
                     return false;
                 }
             }
             return true;
         }
-        
+
         #region private
 
-        private void PegasusConfig(IReadOnlyDictionary<string, string> inputs)
+        private void PegasusConfig(Dictionary<string, string> inputs, out List<TpCurrencyConfig> currencyConfigList)
         {
-            foreach (var tpCurrencyId in _commonBll.GetTpCurrencyList((int)Tp.Pegasus))
+            var currencyData = _commonBll.GetTpCurrencyList((int)Tp.Pegasus);
+            currencyConfigList = new List<TpCurrencyConfig>();
+
+            foreach (var tpCurrencyId in currencyData)
             {
                 var currencyConfig = JsonConvert.DeserializeObject<TpCurrencyConfig>(inputs[$"Currency_{tpCurrencyId.TpCurrencyId}"]);
                 if (currencyConfig is not null)
                 {
                     currencyConfig.Currency = tpCurrencyId.TpCurrencyId;
-                    _currencyConfigList.Add(currencyConfig);
+                    currencyConfigList.Add(currencyConfig);
                 }
             }
         }
