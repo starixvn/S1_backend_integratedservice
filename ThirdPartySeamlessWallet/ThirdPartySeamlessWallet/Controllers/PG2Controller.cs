@@ -8,7 +8,6 @@ using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using Ubiety.Dns.Core;
 
 namespace ThirdPartySeamlessWallet.Controllers;
 
