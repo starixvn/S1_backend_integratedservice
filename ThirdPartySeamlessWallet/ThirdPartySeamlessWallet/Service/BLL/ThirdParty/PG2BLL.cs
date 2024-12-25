@@ -404,22 +404,19 @@ public class PG2BLL : IPG2BLL
             }
         }
 
-        if (data.amount != 0)
+        result = _settledService.SetBalance_PG2(tpCustInfo, data, TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
+        if (!result)
         {
-            result = _settledService.SetBalance_PG2(tpCustInfo, data, TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
-            if (!result)
+            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+            _logger.LogError("Settlement - Payout failed");
+            return new SettleResponse_PG2()
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
-                _logger.LogError("Settlement - Payout failed");
-                return new SettleResponse_PG2()
+                status = new Status_PG2()
                 {
-                    status = new Status_PG2()
-                    {
-                        code = PG2ErrorCode.ServiceNotAvailable,
-                        message = PG2ErrorCode.ServiceNotAvailable.GetEnumDescription()
-                    }
-                };
-            }
+                    code = PG2ErrorCode.ServiceNotAvailable,
+                    message = PG2ErrorCode.ServiceNotAvailable.GetEnumDescription()
+                }
+            };
         }
 
         if (data.isEndRound)
