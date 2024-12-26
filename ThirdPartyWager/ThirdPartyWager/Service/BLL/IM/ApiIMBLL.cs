@@ -117,7 +117,7 @@ public class ApiIMBLL
         string proxyHost;
         int proxyPort;
 
-        if (_tokyoProxy != null)
+        if (!string.IsNullOrEmpty(_tokyoProxy.ProxyHost))
         {
             handler.UseProxy = true;
             proxyHost = _tokyoProxy.ProxyHost;
