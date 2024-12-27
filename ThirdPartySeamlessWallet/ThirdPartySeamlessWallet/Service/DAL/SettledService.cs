@@ -104,10 +104,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
             bonusId = 0;
-            int result;
+            var result = 0;
             try
             {
-                result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out var custId, out bonusId);
+                var tpBonus = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out var custId, out bonusId);
 
                 if (bonusId > 0 || transType == TransType.Prize)
                 {
@@ -115,12 +115,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         return 0;
                     }
-
-                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount):#,##0.##}", refId, out var afterBonus, ref bonusId, conn, trans);
-
-                    if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0 || bonusId == -1)
+                    
+                    var setBonusAmount = amount;
+                    var diffAmount = 0m; 
+                    // Refund需依照各自錢包實際使用的金額，退回各自錢包
+                    if (transType ==  TransType.Refunds)
                     {
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus):#,##0.##}", refId, out afterAmount, conn, trans, allowNegative);
+                        diffAmount = amount - tpBonus.UseBonus; //派彩金額與實際使用bonus的差額
+                        setBonusAmount = diffAmount > 0  ? tpBonus.UseBonus : amount;
+                    }
+
+                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, setBonusAmount, tpId, transType, $"{memoHead}: {Math.Abs(amount):#,##0.##}", refId, out var afterBonus, ref bonusId, conn, trans);
+
+                    if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0 || bonusId == -1 || diffAmount > 0)
+                    {
+                        var setBalanceAmount = diffAmount > 0 ? diffAmount : afterBonus;
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, setBalanceAmount, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus):#,##0.##}", refId, out afterAmount, conn, trans, allowNegative);
                     }
                     else
                     {
@@ -213,28 +223,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
+        public UseTpSeamlessBonus GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
         {
-            return GetTpSeamlessBonus(tpId, tpTransId, gameType, out CustId, out BonusId, getTpSeamlessBonusType);
+            return GetUseTpSeamlessBonus(tpId, tpTransId, gameType, out CustId, out BonusId, getTpSeamlessBonusType);
         }
 
-        private int GetTpSeamlessBonus(int TpId, string TransId, int GameType, out int CustId, out int BonusId, GetTpSeamlessBonusType getTpSeamlessBonusType)
+        private UseTpSeamlessBonus GetUseTpSeamlessBonus(int TpId, string TransId, int GameType, out int CustId, out int BonusId, GetTpSeamlessBonusType getTpSeamlessBonusType)
         {
             CustId = 0;
             BonusId = 0;
             var spName = getTpSeamlessBonusType == GetTpSeamlessBonusType.ByGameTypeAndTransId ?
-                "Service_TpSeamlessBonus_Get" : "Service_TpSeamlessBonus_GetByTransID";
+                "Service_TpSeamlessBonus_Get_V2" : "Service_TpSeamlessBonus_GetByTransID_V2";
             var p = new DynamicParameters(new { TpId, TransId, GameType });
-            p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            var result = _mainDbClient.Execute(spName, parameters: p);
-            if (result > 0)
+
+            var useTpSeamlessBonus =  _mainDbClient.QueryFirst<UseTpSeamlessBonus>(spName, parameters: p);
+            if (useTpSeamlessBonus != null)
             {
-                CustId = p.Get<int>("CustId");
-                BonusId = p.Get<int>("BonusId");
+                CustId = useTpSeamlessBonus.CustId;
+                BonusId = useTpSeamlessBonus.BonusId;
             }
 
-            return result;
+            return useTpSeamlessBonus;
         }
 
         public SettlementType GetSettlementType(GameType gameType, string gameId)
@@ -259,10 +268,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             // 1.先用TransId去TpSeamlessBonus取得BonusId
             // 2.取不到改用ReferenceNo再去TpSeamlessBonus檢查一次
-            GetTpSeamlessBonus(betRecordInfo.TpId, betRecordInfo.TransId, gameType, out int custId, out bonusId, getTpSeamlessBonusType);
+            GetUseTpSeamlessBonus(betRecordInfo.TpId, betRecordInfo.TransId, gameType, out int custId, out bonusId, getTpSeamlessBonusType);
             if (bonusId == 0 && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
             {
-                GetTpSeamlessBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, out custId, out bonusId, getTpSeamlessBonusType);
+                GetUseTpSeamlessBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, out custId, out bonusId, getTpSeamlessBonusType);
             }
 
             betRecordInfo.BonusId = bonusId;
