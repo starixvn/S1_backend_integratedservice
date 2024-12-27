@@ -1030,5 +1030,96 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         
         #endregion
+        
+        #region EdayLT
+        
+        public int BetRequest_Eday(TpCustInfo tpCustInfo, EdayBetRequestData bettingDataLT_Eday, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpId = Tp.Eday;
+            var tpGameType = GameType.Eday_Lottery;
+            var tpCategory = TpCategory.Lottery;
+            var InsSpName = "Service_BettransLT_Eday_Ins";
+            var CheckSpName = "Service_BettransLT_Eday_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            
+            try
+            {
+                // 檢查是否重複
+                var bettrans = _mainDbClient.Query<BettransLTEdayDAL>(CheckSpName,
+                    commandType: CommandType.StoredProcedure,new { billId = bettingDataLT_Eday.billId, player = tpCustInfo.TpUserName });
+                if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.billId == bettingDataLT_Eday.billId))
+                {
+                    return -1;
+                }
+                
+                //確認TxId是否重複
+                if (bettrans.Any(i => i.txId == bettingDataLT_Eday.txId))
+                {
+                    return -2;
+                }
+                
+                var edayBetId = $"{bettingDataLT_Eday.billId}_{bettingDataLT_Eday.roundCode}";
+                var refTransId = $"{bettingDataLT_Eday.roundCode}_{bettingDataLT_Eday.player}" ;
+                bettingDataLT_Eday.player = tpCustInfo.TpUserName;
+                bettingDataLT_Eday.amount *= -1;
+                var p = new DynamicParameters(bettingDataLT_Eday);
+                p.Add("transId",edayBetId);
+                p.Add("ticketCount", 0);
+                p.Add("eventId", 0);
+                p.Add("betTotal", 0.00m);
+                p.Add("winTotal", 0.00m);
+                p.Add("UTCSettleTime", bettingDataLT_Eday.UTCBetTime);
+                p.Add("SettleFlag", (int)SettleFlag.Running);
+                
+                result = _mainDbClient.Execute(InsSpName , p , conn , trans);
+                if (result > 0 && bettingDataLT_Eday.amount != 0)
+                {
+                    result = PlaceBet(
+                        tpCustInfo,
+                        bettingDataLT_Eday.amount,
+                        (int)tpId,
+                        edayBetId,
+                        (int)tpGameType,
+                        refTransId,
+                        out afterAmount,
+                        ref bonusId,
+                        out _,
+                        conn,
+                        trans
+                    );
+                }
+            
+                if (result > 0)
+                {
+                    //下注完先送去未結算，因為抓單的Wager是用settledTime去抓，若是下注到較晚開獎的遊戲要等到開獎才會有STATEMENT回來
+                    _ = _tpUnsettleService.InsertTpUnsettle(tpId, tpGameType, edayBetId, trans);
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+        
+        #endregion
     }
 }

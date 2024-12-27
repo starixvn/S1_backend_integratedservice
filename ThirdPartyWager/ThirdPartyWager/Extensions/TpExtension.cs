@@ -68,7 +68,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.GA, AddGA},
                 { Tp.WonCasino, AddWonCasino},
                 { Tp.DragonGaming, AddDragonGaming},
-                { Tp.PG2, AddPG2}
+                { Tp.PG2, AddPG2},
+                { Tp.Eday, AddEday},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -815,6 +816,21 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<FinancePG2BLL>();
 
             services.AddHostedService<FinancePG2>();
+        
+        	return services;
+        }
+        
+        private IServiceCollection AddEday(IServiceCollection services)
+        {
+            services.AddSingleton<WagerEdayService>();
+
+            services.AddSingleton<WagerEdayBLL>();
+            services.AddSingleton<FinanceEdayBLL>();
+            services.AddSingleton<ApiEdayBLL>();
+
+            services.AddHostedService<WagerEday>();
+            services.AddHostedService<FinanceEday>();
+            services.AddHostedService<WagerEdayUpdate>();
 
             return services;
         }
