@@ -16,5 +16,12 @@
         public decimal Stake { get; set; }
         public int BonusId { get; set; }
     }
+    
+    public class UseTpSeamlessBonus
+    {
+        public int CustId { get; set; }
+        public int BonusId { get; set; }
+        public decimal UseBonus { get; set; }
+    }
 
 }

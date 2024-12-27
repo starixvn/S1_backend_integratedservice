@@ -557,18 +557,20 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         private decimal GetUseBonus(GetTpSeamlessBonusType getTpSeamlessBonusType)
         {
+            var useBonus = 0m;
             var spName = getTpSeamlessBonusType == GetTpSeamlessBonusType.ByGameTypeAndTransId ?
-               "Service_TpSeamlessBonus_UseBonus_Get" : "Service_TpSeamlessBonus_UseBonus_GetByTransID";
+                "Service_TpSeamlessBonus_Get_V2" : "Service_TpSeamlessBonus_GetByTransID_V2";
             var p = new DynamicParameters(new { 
                 BetRecord.TpId, 
                 TransId = string.IsNullOrEmpty(BetRecord.ReferenceNo) ? BetRecord.TransId : BetRecord.ReferenceNo, 
                 GameType = (int)BetRecord.GameType
             });
-            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            p.Add("UseBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            _mainDbClient.Execute(spName, parameters: p);
-
-            return p.Get<decimal>("UseBonus");
+            var useTpSeamlessBonus =  _mainDbClient.QueryFirst<UseTpSeamlessBonus>(spName, parameters: p);
+            if (useTpSeamlessBonus != null)
+            {
+                useBonus = useTpSeamlessBonus.UseBonus;
+            }
+            return useBonus;
         }
 
         private int SetWithdrawalLimitTurnOver(decimal turnOver, string memo)
