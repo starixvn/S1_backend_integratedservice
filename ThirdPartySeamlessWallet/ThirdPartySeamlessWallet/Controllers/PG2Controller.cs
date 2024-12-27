@@ -373,24 +373,46 @@ public class PG2Controller : ControllerBase
 
     private static string JsonParamForSign(SettlementRequest_PG2 request)
     {
+        //對方QA測試時的參數與排序
+        //var sign = new
+        //{
+        //    username = request.UserName,
+        //    agent = request.Agent,
+        //    type = request.Type,
+        //    amount = request.Amount,
+        //    product = request.Product,
+        //    category = request.Category,
+        //    gameName = request.GameName,
+        //    roundId = request.RoundId,
+        //    refId = request.RefId,
+        //    timestamp = request.Timestamp,
+        //    isFeatureBuy = request.IsFeatureBuy,
+        //    isFreespin = request.IsFreeSpin,
+        //    betAmount = request.BetAmount,
+        //    isEndRound = request.IsEndRound,
+        //    parentRoundId = request.ParentRoundId,
+        //    isOnlyPayout = request.IsOnlyPayout,
+        //};
+
+        //對方UAT環境送的參數與排序
         var sign = new
         {
-            username = request.UserName,
             agent = request.Agent,
-            type = request.Type,
-            amount = request.Amount,
+            username = request.UserName,
             product = request.Product,
-            category = request.Category,
             gameName = request.GameName,
+            category = request.Category,
             roundId = request.RoundId,
             refId = request.RefId,
             timestamp = request.Timestamp,
             isFeatureBuy = request.IsFeatureBuy,
-            isFreespin = request.IsFreeSpin,
+            type = request.Type,
+            amount = request.Amount,
             betAmount = request.BetAmount,
             isEndRound = request.IsEndRound,
             parentRoundId = request.ParentRoundId,
             isOnlyPayout = request.IsOnlyPayout,
+            //isFreespin = request.IsFreeSpin,
         };
 
         var jObject = JObject.FromObject(sign);
