@@ -100,6 +100,8 @@ builder.Services
     .AddHostedService<GAWorker>()
     .AddHostedService<WonCasinoWorker>()
     .AddHostedService<DragonGamingWorker>();
+    .AddHostedService<PG2Worker>();
+    
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
@@ -131,8 +133,8 @@ void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
 
 string[] GetRemoteUrls()
 {
-    // 如果有 Runtime Environment Variable 優先使用
-    // 沒有則使用預設 AppSetting
+    // 嚙緘嚙瘦嚙踝蕭 Runtime Environment Variable 嚙線嚙踝蕭嚙誕伐蕭
+    // 嚙磅嚙踝蕭嚙篁嚙誕用預嚙稽 AppSetting
     return Environment.GetEnvironmentVariable("ConfigServiceUrl") is null
         ? builder.Configuration.GetSection("ConfigService").Get<string[]>()
         : new List<string>() { Environment.GetEnvironmentVariable("ConfigServiceUrl") }.ToArray();

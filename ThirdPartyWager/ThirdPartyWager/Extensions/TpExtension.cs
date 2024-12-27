@@ -68,6 +68,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.GA, AddGA},
                 { Tp.WonCasino, AddWonCasino},
                 { Tp.DragonGaming, AddDragonGaming},
+                { Tp.PG2, AddPG2}
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -804,6 +805,16 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerDragonGaming>();
             services.AddHostedService<WagerRedoDragonGaming>();
             services.AddHostedService<FinanceDragonGaming>();
+            return services;
+        }
+        
+        private IServiceCollection AddPG2(IServiceCollection services)
+        {
+            services.AddSingleton<WagerPG2Service>();
+            services.AddSingleton<ApiPG2BLL>();
+            services.AddSingleton<FinancePG2BLL>();
+
+            services.AddHostedService<FinancePG2>();
 
             return services;
         }

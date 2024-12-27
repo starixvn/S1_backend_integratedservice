@@ -7546,7 +7546,95 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.Execute("Service_BettransRng_DragonGaming_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = transId });
         }
+        
+        #endregion
 
+        #region PG2
+        
+        public bool InsertBettrans_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
+        {
+            var p = new DynamicParameters(data);
+
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_Ins", trans, p);
+
+            return result != 0;
+        }
+
+        public bool SetBalance_PG2(TpCustInfo tpCustInfo, BettingDataRNG_PG2 data, TransType transType, string memo,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = 0;
+            data.amount = data.amount + data.betAmount;//用winloss+bet反推payout
+            if (bonusId > 0)
+            {
+                result = PayoutWithBonusId(
+                    tpCustInfo, 
+                    data.amount, 
+                    (int)Tp.PG2, 
+                    data.roundId, 
+                    (int)GameType.PG2_RNG,
+                    TpCategory.Slots, 
+                    data.refId, 
+                    transType, 
+                    out afterAmount, 
+                    memo, 
+                    bonusId, 
+                    conn, 
+                    trans
+                );
+            }
+            else
+            {
+                result = PayoutV2(
+                    tpCustInfo, 
+                    data.amount, 
+                    (int)Tp.PG2, 
+                    data.roundId, 
+                    (int)GameType.PG2_RNG,
+                    TpCategory.Slots, 
+                    data.refId, 
+                    transType, 
+                    null,
+                    out afterAmount, 
+                    memo, 
+                    out bonusId, 
+                    conn, 
+                    trans
+                );
+            }
+            return result != 0;
+        }
+
+        public bool CancelBettrans_PG2(int sq, MySqlTransaction trans)
+        {
+            var query = new { SQ = sq, TicketType = BettransType.CancelBet, TicketStatus = TicketStatus.Refund };
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_CancelBet_Set",trans,query);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool InsertBettrans_BetAndPayout_PG2(BettingDataRNG_PG2 data, MySqlTransaction trans)
+        {
+            var p = new DynamicParameters(data);
+
+            var result = _mainDbClient.Execute("Service_BettransRng_PG2_BetAndPayout_Ins", trans, p);
+            return result != 0;
+        }
+
+        public bool InsertUnsettle_PG2(DateTime partitionTime, string transactionId, MySqlTransaction trans)
+        {
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.PG2, GameType.PG2_RNG, transactionId, trans, partitionTime);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
         #endregion
     }
 }

@@ -138,13 +138,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.NTConnect", "Thi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.WonCasino", "ThirdParty.WonCasino\ThirdParty.WonCasino.csproj", "{13A4920A-7A5A-4547-A214-D686194504E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.SabaPlay", "ThirdParty.SabaPlay\ThirdParty.SabaPlay.csproj", "{0CBDCF7B-3507-4BE5-9A0F-6BFA02D09D82}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SabaPlay", "ThirdParty.SabaPlay\ThirdParty.SabaPlay.csproj", "{0CBDCF7B-3507-4BE5-9A0F-6BFA02D09D82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.UuSlots", "ThirdParty.UuSlots\ThirdParty.UuSlots.csproj", "{E9151C24-8D2D-4353-BC7B-FBD6FE1A2093}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.UuSlots", "ThirdParty.UuSlots\ThirdParty.UuSlots.csproj", "{E9151C24-8D2D-4353-BC7B-FBD6FE1A2093}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Live22", "ThirdParty.Live22\ThirdParty.Live22.csproj", "{52738DF4-4F56-4EE6-B2BA-CFAD2E586867}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Live22", "ThirdParty.Live22\ThirdParty.Live22.csproj", "{52738DF4-4F56-4EE6-B2BA-CFAD2E586867}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.FastSpin", "ThirdParty.FastSpin\ThirdParty.FastSpin.csproj", "{75DED446-2113-4EB3-804F-093B8C96E0B0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.FastSpin", "ThirdParty.FastSpin\ThirdParty.FastSpin.csproj", "{75DED446-2113-4EB3-804F-093B8C96E0B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.PG2", "ThirdParty.PG2\ThirdParty.PG2.csproj", "{E877034A-BA89-4752-8AC3-38F425C599F9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.DragonGaming", "ThirdParty.DragonGaming\ThirdParty.DragonGaming.csproj", "{ACC8CCAB-12D0-4400-A299-C86FA419923C}"
 EndProject
@@ -430,6 +432,10 @@ Global
 		{75DED446-2113-4EB3-804F-093B8C96E0B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75DED446-2113-4EB3-804F-093B8C96E0B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75DED446-2113-4EB3-804F-093B8C96E0B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E877034A-BA89-4752-8AC3-38F425C599F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E877034A-BA89-4752-8AC3-38F425C599F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E877034A-BA89-4752-8AC3-38F425C599F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E877034A-BA89-4752-8AC3-38F425C599F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -501,6 +507,7 @@ Global
 		{E9151C24-8D2D-4353-BC7B-FBD6FE1A2093} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{52738DF4-4F56-4EE6-B2BA-CFAD2E586867} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{75DED446-2113-4EB3-804F-093B8C96E0B0} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{E877034A-BA89-4752-8AC3-38F425C599F9} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}

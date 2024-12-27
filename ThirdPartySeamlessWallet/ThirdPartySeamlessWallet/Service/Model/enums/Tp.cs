@@ -70,7 +70,8 @@
         UuSlots = 67,
         Live22 = 68,
         FastSpin = 69,
-        DragonGaming = 70
+        DragonGaming = 70,
+        PG2 = 71
     }
 
 }
