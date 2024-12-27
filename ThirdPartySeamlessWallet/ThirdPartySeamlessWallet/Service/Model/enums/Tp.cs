@@ -71,7 +71,8 @@
         Live22 = 68,
         FastSpin = 69,
         DragonGaming = 70,
-        PG2 = 71
+        PG2 = 71,
+        Eday = 72,
     }
 
 }
