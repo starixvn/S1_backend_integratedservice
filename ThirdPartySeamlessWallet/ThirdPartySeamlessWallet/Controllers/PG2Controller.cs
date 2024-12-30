@@ -344,7 +344,9 @@ public class PG2Controller : ControllerBase
         }
         
         var jsonParam = JsonParamForSign(request);
-        if (!CheckHeader(jsonParam,request.UserName,header,logName))
+        var jsonParamQA = JsonParamForSignQA(request);
+        if (!CheckHeader(jsonParam,request.UserName,header,logName) &&
+            !CheckHeader(jsonParamQA, request.UserName, header, logName))
         {
             return new SettleResponse_PG2()
             {
@@ -373,27 +375,6 @@ public class PG2Controller : ControllerBase
 
     private static string JsonParamForSign(SettlementRequest_PG2 request)
     {
-        //對方QA測試時的參數與排序
-        //var sign = new
-        //{
-        //    username = request.UserName,
-        //    agent = request.Agent,
-        //    type = request.Type,
-        //    amount = request.Amount,
-        //    product = request.Product,
-        //    category = request.Category,
-        //    gameName = request.GameName,
-        //    roundId = request.RoundId,
-        //    refId = request.RefId,
-        //    timestamp = request.Timestamp,
-        //    isFeatureBuy = request.IsFeatureBuy,
-        //    isFreespin = request.IsFreeSpin,
-        //    betAmount = request.BetAmount,
-        //    isEndRound = request.IsEndRound,
-        //    parentRoundId = request.ParentRoundId,
-        //    isOnlyPayout = request.IsOnlyPayout,
-        //};
-
         //對方UAT環境送的參數與排序
         var sign = new
         {
@@ -413,6 +394,47 @@ public class PG2Controller : ControllerBase
             parentRoundId = request.ParentRoundId,
             isOnlyPayout = request.IsOnlyPayout,
             //isFreespin = request.IsFreeSpin,
+        };
+
+        var jObject = JObject.FromObject(sign);
+
+        // 處理 amount 和 betAmount 格式
+        foreach (var property in jObject.Properties())
+        {
+            if ((property.Name == "amount" || property.Name == "betAmount") && property.Value.Type == JTokenType.Float)
+            {
+                var value = property.Value.ToObject<double>();
+                if (value % 1 == 0) // 如果是整數
+                {
+                    property.Value = (int)value; // 顯示為整數
+                }
+            }
+        }
+
+        var jsonParam = jObject.ToString(Formatting.None);
+        return jsonParam;
+    }
+    private static string JsonParamForSignQA(SettlementRequest_PG2 request)
+    {
+        //對方QA測試時的參數與排序
+        var sign = new
+        {
+            username = request.UserName,
+            agent = request.Agent,
+            type = request.Type,
+            amount = request.Amount,
+            product = request.Product,
+            category = request.Category,
+            gameName = request.GameName,
+            roundId = request.RoundId,
+            refId = request.RefId,
+            timestamp = request.Timestamp,
+            isFeatureBuy = request.IsFeatureBuy,
+            isFreespin = request.IsFreeSpin,
+            betAmount = request.BetAmount,
+            isEndRound = request.IsEndRound,
+            parentRoundId = request.ParentRoundId,
+            isOnlyPayout = request.IsOnlyPayout,
         };
 
         var jObject = JObject.FromObject(sign);
