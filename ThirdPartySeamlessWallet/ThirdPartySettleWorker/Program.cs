@@ -135,8 +135,9 @@ void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
 
 string[] GetRemoteUrls()
 {
-    // �p�G�� Runtime Environment Variable �u���ϥ�
-    // �S���h�ϥ� AppSetting
+
+    // 如果有 Runtime Environment Variable 優先使用
+    // 沒有則使用 AppSetting
     return Environment.GetEnvironmentVariable("ConfigServiceUrl") is null
         ? builder.Configuration.GetSection("ConfigService").Get<string[]>()
         : new List<string>() { Environment.GetEnvironmentVariable("ConfigServiceUrl") }.ToArray();
