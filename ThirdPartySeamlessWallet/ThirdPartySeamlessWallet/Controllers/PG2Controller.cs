@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -54,6 +57,7 @@ public class PG2Controller : ControllerBase
     public BalanceResponse_PG2 GetBalanceAsync(CommonRequest_PG2 request)
     {
         string logName = $"{_thisTp}_balance";
+        Request.Headers.TryGetValue("x-amb-signature", out var header);
         string message;
 
         if (request == null)
@@ -103,6 +107,18 @@ public class PG2Controller : ControllerBase
                 {
                     code = PG2ErrorCode.InvalidAgent,
                     message = PG2ErrorCode.InvalidAgent.GetEnumDescription()
+                }
+            };
+        }
+        var jsonParam = JsonConvert.SerializeObject(request);
+        if (!CheckHeader(jsonParam, request.UserName, header, logName))
+        {
+            return new BalanceResponse_PG2()
+            {
+                status = new Status_PG2()
+                {
+                    code = PG2ErrorCode.InvalidRequest,
+                    message = PG2ErrorCode.InvalidRequest.GetEnumDescription()
                 }
             };
         }
@@ -299,6 +315,7 @@ public class PG2Controller : ControllerBase
     public async Task<SettleResponse_PG2> SettlementAsync(SettlementRequest_PG2 request)
     {
         string logName = $"{_thisTp}_settlement";
+        Request.Headers.TryGetValue("x-amb-signature", out var header);
         string message;
 
         if (request == null)
@@ -325,6 +342,19 @@ public class PG2Controller : ControllerBase
                 }
             };
         }
+        
+        var jsonParam = JsonParamForSign(request);
+        if (!CheckHeader(jsonParam,request.UserName,header,logName))
+        {
+            return new SettleResponse_PG2()
+            {
+                status = new Status_PG2()
+                {
+                    code = PG2ErrorCode.InvalidRequest,
+                    message = PG2ErrorCode.InvalidRequest.GetEnumDescription()
+                }
+            };
+        }
 
         if (!CheckThirdParty(request.UserName, logName))
         {
@@ -339,6 +369,47 @@ public class PG2Controller : ControllerBase
         }
 
         return await _PG2Bll.Settlement(request);
+    }
+
+    private static string JsonParamForSign(SettlementRequest_PG2 request)
+    {
+        var sign = new
+        {
+            username = request.UserName,
+            agent = request.Agent,
+            type = request.Type,
+            amount = request.Amount,
+            product = request.Product,
+            category = request.Category,
+            gameName = request.GameName,
+            roundId = request.RoundId,
+            refId = request.RefId,
+            timestamp = request.Timestamp,
+            isFeatureBuy = request.IsFeatureBuy,
+            isFreespin = request.IsFreeSpin,
+            betAmount = request.BetAmount,
+            isEndRound = request.IsEndRound,
+            parentRoundId = request.ParentRoundId,
+            isOnlyPayout = request.IsOnlyPayout,
+        };
+
+        var jObject = JObject.FromObject(sign);
+
+        // 處理 amount 和 betAmount 格式
+        foreach (var property in jObject.Properties())
+        {
+            if ((property.Name == "amount" || property.Name == "betAmount") && property.Value.Type == JTokenType.Float)
+            {
+                var value = property.Value.ToObject<double>();
+                if (value % 1 == 0) // 如果是整數
+                {
+                    property.Value = (int)value; // 顯示為整數
+                }
+            }
+        }
+
+        var jsonParam = jObject.ToString(Formatting.None);
+        return jsonParam;
     }
 
     private bool CheckAgentId(string agentId, string username, string logName)
@@ -463,5 +534,25 @@ public class PG2Controller : ControllerBase
             _log2File.Error($"CheckThirdParty Exception:{ex.Message}", logName, ex);
             return false;
         }
+    }
+
+    private bool CheckHeader(string input, string username, string header, string logName)
+    {
+        var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, username);
+        if (tpCustInfo == null || tpCustInfo.CustId == 0)
+        {
+            _log2File.Error($"CheckHeader Fail: tpCustInfo error", logName);
+            return false;
+        }
+        var key = _siteConfigDic[tpCustInfo.SiteId].CurrencyData[tpCustInfo.TpCurrencyId].ApiKey;
+
+        var salt = Encoding.UTF8.GetBytes(key);
+        var HASH_SIZE = 64;
+        var ITERATIONS = 1000;
+
+        // Generate the hash
+        var pbkdf2 = new Rfc2898DeriveBytes(input, salt, ITERATIONS, HashAlgorithmName.SHA512);
+        var data = pbkdf2.GetBytes(HASH_SIZE);
+        return Convert.ToBase64String(data) == header;
     }
 }

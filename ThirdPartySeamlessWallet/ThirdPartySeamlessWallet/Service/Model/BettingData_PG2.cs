@@ -47,10 +47,10 @@ public class SettleDataRNG_PG2 : SettleData
 
 public class CommonRequest_PG2
 {
-    [JsonProperty("username")]
-    public string UserName { get; set; }
     [JsonProperty("agent")]
     public string Agent { get; set; }
+    [JsonProperty("username")]
+    public string UserName { get; set; }
 }
 
 public class BetRequest_PG2 : CommonRequest_PG2
@@ -146,6 +146,8 @@ public class SettlementRequest_PG2 : CommonRequest_PG2
 
     [JsonProperty("isFeatureBuy")]
     public bool IsFeatureBuy { get; set; }
+    [JsonProperty("isFreespin")]
+    public bool IsFreeSpin { get; set; }
 
     [JsonProperty("betAmount")]
     public decimal BetAmount { get; set; }
