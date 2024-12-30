@@ -27,6 +27,14 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly Dictionary<int, List<SabaSportTypeOption>> _tpGameTypeConfig;
         private readonly ILogger<SBSWWorker> _logger;
+        private readonly Dictionary<OddsTypeEnum, decimal> _notRolloverOdd = new()
+        {
+            { OddsTypeEnum.MalayOdds, 0.5m },
+            { OddsTypeEnum.ChinaOdds, 0.5m },
+            { OddsTypeEnum.DecimalOdds, 1.5m },
+            { OddsTypeEnum.IndoOdds, -2.0m },
+            { OddsTypeEnum.AmericanOdds, -200m }
+        };
 
         public SBSWWorker(IServiceProvider provider)
         {
@@ -331,14 +339,15 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
-        public enum BetType
+        private enum BetType
         {
             [Description("串关(其他)")] Parlay = 29,
             [Description("单场串关(足球)")] SingleMatchParlay = 38,
             [Description("比分让球盘(足球)")] FootballScoreHandicap = 468,
             [Description("比分大小盘(足球)")] FootballScoreOverUnder = 469
         }
-        public enum OddsTypeEnum
+
+        private enum OddsTypeEnum
         {
             [Description("不属于任何一种市场盘口(仅出现于 sport_type=245，165，200，168，bet_type=468，469)")]
             None = 0,
@@ -413,30 +422,31 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             case (int)OddsTypeEnum.MalayOdds:
                                 IsEbvValidBet(betDetial, betRecordInfo, isEBV);
-
-                                betRecordInfo.SettlementType = betDetial.odds is > 0 and < 0.5m ? SettlementType.SettledForValidNotRollover : SettlementType.SettledForValid;
+                                betRecordInfo.SettlementType =
+                                    OddsSettlementType(IsBelowOdds(betDetial, OddsTypeEnum.MalayOdds));
                                 break;
                             case (int)OddsTypeEnum.ChinaOdds:
-                                betRecordInfo.SettlementType = betDetial.odds < 0.5m ? SettlementType.SettledForValidNotRollover : SettlementType.SettledForValid;
+                                betRecordInfo.SettlementType =
+                                    OddsSettlementType(IsBelowOdds(betDetial, OddsTypeEnum.ChinaOdds));
                                 break;
                             case (int)OddsTypeEnum.DecimalOdds:
-                                betRecordInfo.SettlementType = betDetial.odds < 1.5m ? SettlementType.SettledForValidNotRollover : SettlementType.SettledForValid;
+                                betRecordInfo.SettlementType =
+                                    OddsSettlementType(IsBelowOdds(betDetial, OddsTypeEnum.DecimalOdds));
                                 break;
                             case (int)OddsTypeEnum.IndoOdds:
                                 IsEbvValidBet(betDetial, betRecordInfo, isEBV);
 
-                                betRecordInfo.SettlementType = betDetial.odds < -2m ? SettlementType.SettledForValidNotRollover : SettlementType.SettledForValid;
+                                betRecordInfo.SettlementType = OddsSettlementType(IsBelowOdds(betDetial, OddsTypeEnum.IndoOdds));
                                 break;
                             case (int)OddsTypeEnum.AmericanOdds:
-                            {
-                                if (betDetial.odds < 0)
                                 {
-                                    betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds) / 100;
-                                }
+                                    if (betDetial.odds < 0)
+                                        betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds) / 100;
 
-                                betRecordInfo.SettlementType = betDetial.odds < -200m ? SettlementType.SettledForValidNotRollover : SettlementType.SettledForValid;
-                                break;
-                            }
+                                    betRecordInfo.SettlementType =
+                                        OddsSettlementType(IsBelowOdds(betDetial, OddsTypeEnum.AmericanOdds));
+                                    break;
+                                }
                             default:
                                 betRecordInfo.SettlementType = SettlementType.SettledForValid;
                                 break;
@@ -481,12 +491,21 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
+        private static SettlementType OddsSettlementType(bool isBelowOdds)
+        {
+            return isBelowOdds ? SettlementType.SettledForValidNotRollover : SettlementType.SettledForValid;
+        }
+
+        private bool IsBelowOdds(ISabaBet betDetial, OddsTypeEnum oddsType)
+        {
+            if (oddsType == OddsTypeEnum.MalayOdds && betDetial.odds > 0 &&
+                betDetial.odds < _notRolloverOdd[oddsType]) return true;
+            return betDetial.odds < _notRolloverOdd[oddsType];
+        }
+
         private static void IsEbvValidBet(ISabaBet betDetial, BetRecordInfo betRecordInfo, bool isEBV)
         {
-            if (betDetial.odds < 0 && isEBV)
-            {
-                betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
-            }
+            if (betDetial.odds < 0 && isEBV) betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
         }
 
         private static bool IsCancelStatus(ISabaBet betDetial)
