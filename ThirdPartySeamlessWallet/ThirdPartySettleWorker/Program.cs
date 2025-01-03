@@ -122,8 +122,8 @@ builder.Services
 var app = builder.Build();
 startup.Configure(app, builder.Environment, builder.Configuration);
 
-const int minWorkers = 500;
-const int minIOCPs = 500;
+const int minWorkers = 32;
+const int minIOCPs = 4;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 
 SentrySdk.CaptureMessage($"Started {nameof(ThirdPartySettleWorker)} at {DateTime.Now}");
