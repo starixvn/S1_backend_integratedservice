@@ -22,7 +22,7 @@ namespace ThirdParty.Nextspin
         public TpHelper(IServiceProvider provider)
         {
             _payloadLogService = provider.GetRequiredService<IPayloadLogger>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(TpEnum.NextSpin.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(TpEnum.Nextspin.ToString());
         }
 
         #region Request

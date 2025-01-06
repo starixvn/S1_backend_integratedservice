@@ -26,17 +26,15 @@ namespace ThirdPartyWager.Helper
             var getReportData =
                 JsonConvert.DeserializeObject<List<PayloadDailySummaryData_MaxGame>>(
                     JsonConvert.SerializeObject(reportData));
-            
+
             return getReportData
                 .Select(i => i.GameTypes)
                 .SelectMany(x => x)
                 .Select(i => i.BettingDate)
-                .SelectMany(x => x)
-                .GroupBy(i => i.CurrencyIso)
-            .Select(g => new
+                .Select(g => new
                 {
-                    CurrencyIso=g.Key,
-                    CurrencyId= GetCurrencyId(currency, g.Key),
+                    CurrencyIso= string.Join(",",g.Select(x => x.CurrencyIso)),
+                    CurrencyId= GetCurrencyId(currency, "THB"),
                     Stake = g.Sum(s => s.Stake),
                     ActualStake = g.Sum(s => s.ActualStake),
                     NetStake = g.Sum(s => s.NetStake),

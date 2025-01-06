@@ -76,9 +76,7 @@
         DragonGaming = 70,
         RNGKeno = 71,
         Lottery = 72,
-        TableGame = 73,
-        // TODO
-        NextSpin
+        TableGame = 73
     }
 
     public enum TpGameType
