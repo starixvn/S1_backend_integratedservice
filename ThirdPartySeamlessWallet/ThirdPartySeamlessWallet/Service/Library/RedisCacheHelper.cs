@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 
 using StackExchange.Redis;
-
+using System.Diagnostics;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Library
@@ -21,16 +21,39 @@ namespace ThirdPartySeamlessWallet.Service.Library
         public TItem TryGetOrCreate<TItem>(string key, TimeSpan timeSpan, Func<TItem> factory,
             RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
             {
                 var db = _multiplexer.GetDatabase((int)redisDataBase);
 
-                if (!db.KeyExists(key))
+                var keyExistStopWatch = new Stopwatch();
+                keyExistStopWatch.Start();
+
+                var isKeyExists = !db.KeyExists(key);
+                keyExistStopWatch.Stop();
+
+                if (keyExistStopWatch.ElapsedMilliseconds > 1000)
                 {
+                    _logger.LogInformation($"KeyExist-{key}: {stopWatch.ElapsedMilliseconds}");
+                }
+
+                if (isKeyExists)
+                {
+                    var dbStopWatch = new Stopwatch();
+                    dbStopWatch.Start();
+
                     var result = factory();
                     if (result != null)
                     {
+                        dbStopWatch.Stop();
+                        if (dbStopWatch.ElapsedMilliseconds > 2000)
+                        {
+                            _logger.LogInformation($"DB-{key}: {stopWatch.ElapsedMilliseconds}");
+                        }
+
                         db.StringSet(key, JsonConvert.SerializeObject(result), timeSpan);
                     }
 
@@ -45,21 +68,52 @@ namespace ThirdPartySeamlessWallet.Service.Library
                 _logger.LogError(ex, $"{key} | {ex.Message}");
                 return factory();
             }
+            finally
+            {
+                stopWatch.Stop();
+                if (stopWatch.ElapsedMilliseconds > 2000)
+                {
+                    _logger.LogInformation($"{key}: {stopWatch.ElapsedMilliseconds}");
+                }
+            }
         }
 
         public async Task<TItem> TryGetOrCreateAsync<TItem>(string key, TimeSpan? timeSpan, Func<Task<TItem>> factory,
             RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
             {
                 var db = _multiplexer.GetDatabase((int)redisDataBase);
 
-                if (!db.KeyExists(key))
+                var keyExistStopWatch = new Stopwatch();
+                keyExistStopWatch.Start();
+
+                var isKeyExists = !db.KeyExists(key);
+                keyExistStopWatch.Stop();
+
+                if (keyExistStopWatch.ElapsedMilliseconds > 1000)
                 {
+                    _logger.LogInformation($"KeyExist-{key}: {stopWatch.ElapsedMilliseconds}");
+                }
+
+                if (isKeyExists)
+                {
+                    var dbStopWatch = new Stopwatch();
+                    dbStopWatch.Start();
+
                     var result = await factory();
                     if (result != null)
                     {
+                        dbStopWatch.Stop();
+                        if (dbStopWatch.ElapsedMilliseconds > 2000)
+                        {
+                            _logger.LogInformation($"DB-{key}: {stopWatch.ElapsedMilliseconds}");
+                        }
+
                         await db.StringSetAsync(key, JsonConvert.SerializeObject(result), timeSpan);
                     }
 
@@ -73,6 +127,14 @@ namespace ThirdPartySeamlessWallet.Service.Library
             {
                 _logger.LogError(ex, $"{key} | {ex.Message}");
                 return await factory();
+            }
+            finally
+            {
+                stopWatch.Stop();
+                if (stopWatch.ElapsedMilliseconds > 2000)
+                {
+                    _logger.LogInformation($"{key}: {stopWatch.ElapsedMilliseconds}");
+                }
             }
         }
 
@@ -95,6 +157,9 @@ namespace ThirdPartySeamlessWallet.Service.Library
         public bool StringSet(string key, RedisValue value, TimeSpan? timeSpan,
             RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
             {
@@ -106,10 +171,21 @@ namespace ThirdPartySeamlessWallet.Service.Library
                 _logger.LogError(ex, $"{key} | {ex.Message}");
                 return false;
             }
+            finally
+            {
+                stopWatch.Stop();
+                if (stopWatch.ElapsedMilliseconds > 2000)
+                {
+                    _logger.LogInformation($"{key}: {stopWatch.ElapsedMilliseconds}");
+                }
+            }
         }
 
         public bool KeyExists(string key, RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
             {
@@ -121,10 +197,21 @@ namespace ThirdPartySeamlessWallet.Service.Library
                 _logger.LogError(ex, $"{key} | {ex.Message}");
                 return false;
             }
+            finally
+            {
+                stopWatch.Stop();
+                if (stopWatch.ElapsedMilliseconds > 2000)
+                {
+                    _logger.LogInformation($"{key}: {stopWatch.ElapsedMilliseconds}");
+                }
+            }
         }
 
         public async Task<TItem> StringGetAsync<TItem>(string key, RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
             {
@@ -136,6 +223,14 @@ namespace ThirdPartySeamlessWallet.Service.Library
             {
                 _logger.LogError(ex, $"{key} | {ex.Message}");
                 return default;
+            }
+            finally
+            {
+                stopWatch.Stop();
+                if (stopWatch.ElapsedMilliseconds > 2000)
+                {
+                    _logger.LogInformation($"{key}: {stopWatch.ElapsedMilliseconds}");
+                }
             }
         }
 
@@ -231,6 +326,9 @@ namespace ThirdPartySeamlessWallet.Service.Library
         public List<TItem> GetListByRange<TItem>(string key, long startIndex, long endIndex,
             RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             try
             {
                 var result = new List<TItem>();
@@ -257,6 +355,14 @@ namespace ThirdPartySeamlessWallet.Service.Library
             {
                 _logger.LogError(ex, $"{key} | {ex.Message}");
                 return default;
+            }
+            finally
+            {
+                stopWatch.Stop();
+                if (stopWatch.ElapsedMilliseconds > 2000)
+                {
+                    _logger.LogInformation($"{key}: {stopWatch.ElapsedMilliseconds}");
+                }
             }
         }
 

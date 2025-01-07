@@ -1,6 +1,6 @@
 ﻿using System.Data;
 using System.Diagnostics;
-
+using System.Xml.Linq;
 using Dapper;
 
 using MySql.Data.MySqlClient;
@@ -53,6 +53,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{spName} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {spName}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result.ToList();
         }
 
@@ -77,6 +83,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {name}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
         }
 
@@ -96,6 +108,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {name}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
         }
 
@@ -118,6 +136,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{spName} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {spName}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
         }
 
@@ -137,6 +161,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {name}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
         }
 
@@ -159,6 +189,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {name}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
         }
 
@@ -182,6 +218,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {name}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
         }
 
@@ -204,6 +246,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {name}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
         }
 
@@ -223,6 +271,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {name}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
         }
 
@@ -242,8 +296,14 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {name}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
-        }   
+        }
 
         public async Task<int> ExecuteAsync(string name, IDbTransaction transaction, object parameters = null)
         {
@@ -261,6 +321,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogInformation($"{name} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {name}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
         }
 
@@ -282,6 +348,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{spName} {sw.Elapsed:c}");
+
+            if (sw.ElapsedMilliseconds > 2000)
+            {
+                _logger.LogInformation($"SP: {spName}, duration = {sw.ElapsedMilliseconds}");
+            }
+
             return result;
         }
 

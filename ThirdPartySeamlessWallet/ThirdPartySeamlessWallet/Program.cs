@@ -37,7 +37,7 @@ builder.Host.UseSerilog((context, Configuration) =>
             builder.Configuration.GetValue<string>("OpenSearch:Uri"),
             builder.Configuration.GetValue<int>("OpenSearch:Port"),
             new Serilog.Formatting.Json.JsonFormatter())
-        //.WriteTo.Console()
+        .WriteTo.Console()
         .WriteTo.Sentry(o =>
         {
             // Debug and higher are stored as breadcrumbs (default is Information)
@@ -60,8 +60,8 @@ startup.ConfigureServices(builder.Services);
 var app = builder.Build();
 startup.Configure(app, builder.Environment, builder.Configuration);
 
-const int minWorkers = 96;
-const int minIOCPs = 4;
+const int minWorkers = 128;
+const int minIOCPs = 32;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 
 SentrySdk.CaptureMessage($"Started {nameof(ThirdPartySeamlessWallet)} api at {DateTime.Now}");
