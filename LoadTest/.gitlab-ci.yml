@@ -1,0 +1,41 @@
+include:
+  - project: ci/core-cicd
+    ref: main
+    file: nexcel.gitlab-ci.yml
+
+.performance:
+  stage: post-deploy
+  image:
+    name: grafana/k6:latest
+    entrypoint: ['']
+  before_script: ['']
+  after_script: []
+  resource_group: "performance-test"
+  rules:
+    - if: $ENV_NAME != "LOCAL"
+      when: never
+    - !reference [.cd_rules, deploy_k8s]
+    - !reference [.cd_rules, deploy]
+  artifacts:
+    paths:
+      - summary.html
+    when: always
+
+performance-smoke-test:
+  extends: .performance
+  script: ["k6 run LoadTests/smoke.js"] 
+
+performance-constant-arrived-test:
+  extends: .performance
+  needs: ['performance-smoke-test']
+  script: ["k6 run -e RUN_MODE=CONSTANT_RATE --summary-export=summary.json LoadTests/script.js"] 
+
+performance-ramping-test:
+  stage: ".post"
+  extends: .performance
+  script: ["k6 run -e RUN_MODE=RAMPING_RATE LoadTests/script.js"] 
+  rules:
+    - if: $ENV_NAME == "LOCAL"
+      when: manual
+    - !reference [.cd_rules, cleanup]
+
