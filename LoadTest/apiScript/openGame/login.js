@@ -7,7 +7,7 @@ const login = async (userName) => {
     isPersistent: false,
     platform: "Win32",
     screen: "1920:1080:24",
-    url: "https://player1.vgamesuat.com",
+    url: "https://s1-player-site.starixnet.com",
     userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
     userName: userName,
     userpwd: "1234aaAA",
@@ -15,7 +15,7 @@ const login = async (userName) => {
 
   try {
     const response = await fetch(
-      `https://player1.vgamesuat.com/api/Site/SignIn`,
+      `https://s1-player-site.starixnet.com/api/Site/SignIn`,
       {
         method: "POST",
         headers: {
@@ -23,10 +23,10 @@ const login = async (userName) => {
           "Accept-Encoding": "gzip, deflate, br, zstd",
           "Accept-Language": "en-US,en;q=0.9",
           "Content-Type": "application/json",
-          Host: "player1.vgamesuat.com",
-          Origin: "https://player1.vgamesuat.com/",
-          "Origin-Host": "https://player1.vgamesuat.com/",
-          Referer: "https://player1.vgamesuat.com/en",
+          Host: "s1-player-site.starixnet.com",
+          Origin: "https://s1-player-site.starixnet.com/",
+          "Origin-Host": "https://s1-player-site.starixnet.com/",
+          Referer: "https://s1-player-site.starixnet.com/en",
         },
         body: JSON.stringify(requestParams),
         credentials: "include",

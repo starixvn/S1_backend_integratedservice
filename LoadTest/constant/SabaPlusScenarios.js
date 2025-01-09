@@ -60,9 +60,9 @@ const Scenarios = {
     CONSTANT_RATE_DEAD_LOCK: {
       constant_rate_test: {
         executor: "constant-arrival-rate",
-        rate: 400,
+        rate: 167,
         timeUnit: "10s",
-        duration: "2m",
+        duration: "5m",
         preAllocatedVUs: 10,
         maxVUs: 300,
         env: { MY_CROC_ID: "1" },

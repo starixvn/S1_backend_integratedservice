@@ -31,6 +31,7 @@ export const sendSabaSportWithBetDetailRequest = (request, url) => {
   const jsonRequest = JSON.stringify(request);
   let res = http.post(url, jsonRequest, {
     headers: { "Content-Type": "application/json" },
+    timeout: "300s"
   });
 
   updateBetDetail(url, jsonRequest);
@@ -43,6 +44,7 @@ export const sendNewSabaSportWithBetDetailRequest = (request, url) => {
 
   let res = http.post(url, JSON.stringify(request), {
     headers: { "Content-Type": "application/json" },
+    timeout: "300s"
   });
 
   return { request: request, response: ParseBodyToJson(res), fullRequest: res };
@@ -62,6 +64,7 @@ export const sendSabaPlusRequest = (request, url) => {
     headers: {
       "Content-Type": "application/json",
       "operator-sign": encryptWithOperatorKey(jsonRequest, request.OperatorKey),
+      timeout: "300s"
     },
   });
 

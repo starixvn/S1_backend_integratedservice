@@ -4,7 +4,10 @@ import { sleep, check, fail } from "k6";
 import { GetSapaSportUserId } from "../../data-generator/userGenerator.js";
 import { useOptions } from "../../data-generator/optionGenerator.js";
 import SabaSportApi from "../../api/new-saba-sport/index.js";
-import { GetSingleConfirmBetDetail, GetSingleSettleBetDetail } from "../../data-generator/betDetailGenerator.js";
+import {
+  GetSingleConfirmBetDetail,
+  GetSingleSettleBetDetail,
+} from "../../data-generator/betDetailGenerator.js";
 import { BetDetailApiUrl } from "../../constant/api.js";
 
 const options = useOptions("settleTest");
@@ -41,9 +44,15 @@ function scenario() {
     confirmBetResult.request
   );
 
-  http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify([confirmBetBetDetailRequest]), {
-    headers: { "Content-Type": "application/json" },
-  });
+  http.post(
+    BetDetailApiUrl.AddBetDetail,
+    JSON.stringify([confirmBetBetDetailRequest]),
+    {
+      headers: { "Content-Type": "application/json" },
+      tags: { noMetrics: 'true' },
+      //responseCallback: (req, res) => {},
+    }
+  );
 
   sleep(60);
 
@@ -58,19 +67,25 @@ function scenario() {
   }
 
   const balanceResult = SabaSportApi.getBalance(userId);
-  check(balanceResult.response, {
-    "[Settle]GetBalance content status is 0": (r) =>
-      r?.status && r.status == "0",
-  });
+  if (
+    !check(balanceResult.response, {
+      "[Settle]GetBalance content status is 0": (r) =>
+        r?.status && r.status == "0",
+    })
+  ) {
+    console.log(balanceResult.fullRequest)
+  }
 
-    const betDetailRequest = GetSingleSettleBetDetail(
-      confirmBetBetDetailRequest,
-      settledResult.request
-    );
-  
-    http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify([betDetailRequest]), {
-      headers: { "Content-Type": "application/json" },
-    });
+  const betDetailRequest = GetSingleSettleBetDetail(
+    confirmBetBetDetailRequest,
+    settledResult.request
+  );
+
+  http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify([betDetailRequest]), {
+    headers: { "Content-Type": "application/json" },
+    tags: { noMetrics: 'true' },
+    //responseCallback: (req, res) => {},
+  });
 }
 
 export default { options, scenario };

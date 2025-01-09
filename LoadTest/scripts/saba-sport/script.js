@@ -6,6 +6,10 @@ import placebetparlayConfirmbetparlayScenario from "../../scenarios/saba-sport/p
 import settleScenario from "../../scenarios/saba-sport/settle-scenario.js";
 import SabaSportApi from "../../api/saba-sport/index.js";
 
+export function setup() {
+  console.log(`Begin test: Saba_Sport_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`);
+}
+
 export const options = extractOptions(
   // placebetConfirmbetScenario.options,
   // placebetConfirmbetSettleScenario.options,

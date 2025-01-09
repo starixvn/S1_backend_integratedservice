@@ -19,8 +19,7 @@ export const GetParlayConfirmBetDetail = (
         ],
       };
 
-      // Check if comboInfoDetail is a SingleBetDetail
-      if (comboInfoDetail.Type === "SingleBetDetail") {
+      if (transaction.ParlayType.split('_')[0] == "SingleBet") {
         const match = placeBetParlayRequest.message.TicketDetail.find(
           (x) => x.MatchId === comboInfoDetail.MatchId
         );
@@ -49,8 +48,7 @@ export const GetParlayConfirmBetDetail = (
         return;
       }
 
-      // Check if comboInfoDetail is a ParlayDetail
-      if (comboInfoDetail.Type === "ParlayDetail") {
+      if (transaction.ParlayType.split('_')[0] === "Parlay") {
         Object.assign(ticket, {
           odds: comboInfoDetail.Odds || 0,
           stake: comboInfoDetail.Stake,

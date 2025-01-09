@@ -1,49 +1,43 @@
 {
-  "remote_ip": "10.17.200.41",
+  "remote_ip": "210.57.28.114",
   "remote_port": 443,
-  "url": "https://third-party-sw.starixnet.com/maxgame/nova88/PlaceBetAndSettle",
-  "status": 200,
-  "status_text": "200 OK",
-  "proto": "HTTP/2.0",
-  "headers": {
-    "Date": "Mon, 30 Dec 2024 09:37:01 GMT",
-    "Server": "Kestrel",
-    "Alt-Svc": "h3=\":443\";ma=60;",
-    "Content-Type": "application/json; charset=utf-8"
-  },
+  "url": "https://tp.vgamesuat.com/sbsw/NSDemo1SW/settle",
+  "status": 0,
+  "status_text": "",
+  "proto": "",
+  "headers": {},
   "cookies": {},
-  "body": "{\"seq\":\"36b24e83-0fb3-40d0-8b5c-b20d713349c3\",\"errorCode\":2001,\"errorMessage\":\"Login validation failed. Login name or password is incorrect\",\"timeStamp\":\"2024-12-30T09:37:00.8913903Z\"}",
+  "body": null,
   "timings": {
-    "duration": 2714.791,
-    "blocked": 5.1792,
+    "duration": 7.9956,
+    "blocked": 0,
     "looking_up": 0,
-    "connecting": 1.0208,
-    "tls_handshaking": 4.0733,
-    "sending": 0.0851,
-    "waiting": 2714.7059,
+    "connecting": 0,
+    "tls_handshaking": 0,
+    "sending": 0,
+    "waiting": 7.9956,
     "receiving": 0
   },
-  "tls_version": "tls1.3",
-  "tls_cipher_suite": "TLS_AES_256_GCM_SHA384",
+  "tls_version": "",
+  "tls_cipher_suite": "",
   "ocsp": {
     "produced_at": 0,
     "this_update": 0,
     "next_update": 0,
     "revoked_at": 0,
     "revocation_reason": "",
-    "status": "unknown"
+    "status": ""
   },
-  "error": "",
-  "error_code": 0,
+  "error": "EOF",
+  "error_code": 1000,
   "request": {
     "method": "POST",
-    "url": "https://third-party-sw.starixnet.com/maxgame/nova88/PlaceBetAndSettle",
+    "url": "https://tp.vgamesuat.com/sbsw/NSDemo1SW/settle",
     "headers": {
       "User-Agent": ["k6/0.54.0 (https://k6.io/)"],
-      "Content-Type": ["application/json"],
-      "Operator-Sign": ["9be1b4c7ec8556d9873136a8e331f160"]
+      "Content-Type": ["application/json"]
     },
-    "body": "{\"TimeStamp\":\"2024/12/30 09:36:59.409\",\"OperatorKey\":\"ck03ijvk\",\"Seq\":\"Xqg8xAe_-NJDN-Veq5-qM7U-lwZSTnu1\",\"Payload\":{\"OperatorCustId\":\"DNova88_654912\",\"WalletSideToken\":\"SABAPLUS-ALLBET@7600001@8a16e864-415d-41e1-80c8-e15bbcf5ea57\",\"GameType\":\"AllBet\",\"IpAddress\":\"120.72.109.34\",\"BetDataSet\":[{\"TicketNo\":\"4458|$|DNova88_654912|$|loadtest_4458_18960984\",\"GameId\":\"4458\",\"GameRoundId\":\"loadtest_4458_18960984\",\"TransactionId\":null,\"Stake\":58,\"ActualStake\":58,\"NetStake\":0.3,\"Payout\":0,\"SettleDate\":\"2024/12/30 05:36:59.410\",\"BetChoice\":\"1\",\"SettleDateWithTz\":\"2024-12-30T05:36:59-04:00\"}],\"GameProviderCode\":\"SABAPLUS-ALLBET\",\"S1GameId\":\"8200054\"}}",
+    "body": "",
     "cookies": {}
   }
 }

@@ -4,11 +4,14 @@ import placebetConfirmbetScenario from "../../scenarios/grafana/saba-sport/place
 import placebetConfirmbetSettleScenario from "../../scenarios/grafana/saba-sport/placebet-confirmbet-settle-scenario.js";
 import placebetparlayConfirmbetparlayScenario from "../../scenarios/grafana/saba-sport/placebetparlay-confirmbetparlay-scenario.js";
 import settleScenario from "../../scenarios/grafana/saba-sport/settle-scenario.js";
-import SabaSportApi from "../../api/saba-sport/index.js";
 import gotogameGetbalanceGetinfoScenario from "../../scenarios/grafana/saba-plus/gotogame-getbalance-getinfo-scenario..js";
 import placebetEndgameScenario from "../../scenarios/grafana/saba-plus/placebet-endgame-scenario..js";
 import placebetsettleScenario from "../../scenarios/grafana/saba-plus/placebetsettle-scenario..js";
 import freespinScenario from "../../scenarios/grafana/saba-plus/freespin-scenario.js";
+
+export function setup() {
+  console.log(`Begin test: Saba_Mixed_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}.html.html`);
+}
 
 export const options = extractOptions(
   placebetConfirmbetScenario.options,
@@ -21,14 +24,10 @@ export const options = extractOptions(
   freespinScenario.options
 );
 
-export function setup() {
-  const clearLoadTestDataRes = SabaSportApi.clearLoadTestData();
-  console.log("Loadtest data cleared");
-}
 
 export function handleSummary(data) {
   return {
-    [`Saba_Mixed_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}.html.html`]: htmlReport(data),
+    [`Saba_Mixed_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}.html`]: htmlReport(data),
   };
 }
 

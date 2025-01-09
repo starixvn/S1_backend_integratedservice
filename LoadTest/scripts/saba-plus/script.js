@@ -5,6 +5,10 @@ import placebetEndgameScenario from "../../scenarios/saba-plus/placebet-endgame-
 import freespinScenario from "../../scenarios/saba-plus/freespin-scenario.js";
 import placebetsettleScenario from "../../scenarios/saba-plus/placebetsettle-scenario..js";
 
+export function setup() {
+  console.log(`Begin test: Saba_Plus_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`);
+}
+
 export const options = extractOptions(
   //gotogameGetbalanceGetinfoScenario.options,
   placebetEndgameScenario.options,

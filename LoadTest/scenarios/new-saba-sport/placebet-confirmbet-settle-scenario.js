@@ -52,6 +52,8 @@ function scenario() {
   
   http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify([confirmBetBetDetailRequest]), {
     headers: { "Content-Type": "application/json" },
+    tags: { noMetrics: 'true' },
+    //responseCallback: (req, res) => {},
   });
 
   sleep(10);
@@ -74,12 +76,12 @@ function scenario() {
     confirmBetBetDetailRequest,
     settledResult.request
   );
-  console.log(betDetailRequest)
+  
   http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify([betDetailRequest]), {
     headers: { "Content-Type": "application/json" },
+    tags: { noMetrics: 'true' },
+    //responseCallback: (req, res) => {},
   });
-
-  console.log('Parlay', betDetailRequest)
 }
 
 export default { options, scenario };

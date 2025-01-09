@@ -28,6 +28,7 @@ export const apiHost = () => {
       return {
         ...defaultHost,
         sabaSport: "https://tp.vgamesuat.com/sbsw/NSDemo1SW",
+        sabaSportBetDetail: "https://localhost:7079/api/SabaSport",
         sabaPlus: "https://tp.vgamesuat.com/maxgame/nsDemo",
         playerSite: "https://player1.vgamesuat.com"
       };
@@ -37,7 +38,8 @@ export const apiHost = () => {
 };
 
 export const BetDetailApiUrl = {
-  AddBetDetail: `${apiHost().sabaSportBetDetail}/BetDetail`
+  AddBetDetail: `${apiHost().sabaSportBetDetail}/BetDetail`,
+  Root: apiHost().sabaSportBetDetail,
 }
 
 export const PlayerSiteApiUrl = {

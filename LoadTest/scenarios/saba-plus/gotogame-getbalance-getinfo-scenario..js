@@ -5,7 +5,11 @@ import SabaPlusApi from "../../api/saba-plus/index.js";
 import { GetGameOption } from "../../data-generator/gameGenerator.js";
 import PlayerSiteApi from "../../api/player-site/index.js";
 
-const options = useOptions("playerInfoTest");
+const options = useOptions("playerInfoTest", {
+  scenario: (defaultScenario) => ({
+    rate: defaultScenario.rate*3
+  })
+});
 
 function scenario() {
   const user = GetLoginUser();

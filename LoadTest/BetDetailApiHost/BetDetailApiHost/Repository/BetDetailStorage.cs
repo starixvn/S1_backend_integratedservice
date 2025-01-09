@@ -41,6 +41,9 @@ public class BetDetailStorage : IBetDetailStorage
         await IsUpdated.UpdateValueAsync(async _ =>
         {
             value.version_key = await LastVersionKey.GetValueAsync();
+            value.transaction_time = string.IsNullOrEmpty(value.transaction_time) ? string.Empty : DateTime.Parse(value.transaction_time).ToUniversalTime().AddHours(-4).ToString();
+            value.settlement_time = string.IsNullOrEmpty(value.settlement_time) ? string.Empty : DateTime.Parse(value.settlement_time).ToUniversalTime().AddHours(-4).ToString();
+
             Storage.AddOrUpdate($"{value.operator_id}_{value.ref_id}", value, (_, _) => value);
 
             return true;
@@ -81,7 +84,6 @@ public class BetDetailStorage : IBetDetailStorage
     public List<BetDetail> GetBetDetailsListAsync()
     {
         var result = Storage.Values.ToList();
-
 
         return result;
     }

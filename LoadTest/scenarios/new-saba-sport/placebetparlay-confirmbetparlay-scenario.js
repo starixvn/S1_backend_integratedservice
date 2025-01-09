@@ -35,6 +35,7 @@ function scenario() {
     placebetResult.request,
     placebetResult.response
   );
+  
   const confirmBetCheck = check(confirmBetResult.response, {
     "[PlacebetParlay-ConfirmbetParlay]ConfirmbetParlay content status is 0": (
       r
@@ -56,6 +57,8 @@ function scenario() {
 
   http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify(betDetailRequest), {
     headers: { "Content-Type": "application/json" },
+    tags: { noMetrics: 'true' },
+    //responseCallback: (req, res) => {},
   });
 }
 

@@ -1,3 +1,4 @@
+import { SabaMixedScenarios } from "../constant/SabaMixedScenarios.js";
 import { SabaPlusScenarios } from "../constant/SabaPlusScenarios.js";
 import { SabaSportScenarios } from "../constant/SabaSportScenarios.js";
 
@@ -34,6 +35,7 @@ export const useOptions = (execName, options = {}) => {
 const Scenarios = {
   SabaPlus: SabaPlusScenarios,
   SabaSport: SabaSportScenarios,
+  SabaMixed: SabaMixedScenarios
 }
 
 export const useScenarios = (execName, options = {}) => {
@@ -41,12 +43,15 @@ export const useScenarios = (execName, options = {}) => {
   const scenarios = defaultScenarios[__ENV.RUN_MODE] ?? defaultScenarios.local;
   const result = { ...scenarios };
 
-  const scenario = options.scenario ?? {};
+  let getCustomScenario = options.scenario;
+  if (!getCustomScenario) {
+    getCustomScenario = () => {};
+  }
 
   Object.keys(result).forEach((testType) => {
     const newTestType = `${execName}-${testType}`;
 
-    result[newTestType] = { ...result[testType], ...scenario };
+    result[newTestType] = { ...result[testType], ...getCustomScenario(result[testType]) };
     result[newTestType]["exec"] = execName;
 
     delete result[testType];
@@ -78,5 +83,5 @@ export function formatDateToCustomFormat() {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');
 
-  return `${year}${month}${day}_${hours}:${minutes}:${seconds}`;
+  return `${year}${month}${day}_${hours}_${minutes}_${seconds}`;
 }
