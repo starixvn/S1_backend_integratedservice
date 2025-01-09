@@ -60,7 +60,7 @@ namespace ThirdPartySettleWorker.Workers
             var forContinue = false;
             var isError = false;
             var gametype = (GameType)state;
-            var tpCategory = gametype == GameType.PP_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
+           
             var type = gametype == GameType.PP_RNG ? "Rng" : "LC";
             var logName = $"Settle_PP_{type}";
             var getSP = $"Service_Bettrans{type}_PP_Settle_Get";
@@ -96,17 +96,6 @@ namespace ThirdPartySettleWorker.Workers
                         var settledTime = bettranList.Max(x => x.SettleTime);
                         var transTime = bettranList.Min(x => x.TransTime);
 
-                        if (gametype == GameType.PP_LiveCasino)
-                        {
-                            if (winLostAmount >= 0 && winLostAmount < stake)
-                            {
-                                validBet = winLostAmount;
-                            }
-                            else if (winLostAmount < 0)
-                            {
-                                validBet = Math.Abs(winLostAmount);
-                            }
-                        }
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
 
                         var betRecordInfo = new BetRecordInfo
