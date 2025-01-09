@@ -237,6 +237,8 @@ namespace ThirdParty.PP
             var gameType = GetGameTypeBasedOnTpGameType(tpGameType, config);
             var key = ApplyToken(tpCustInfo);
             var currentDateTime = GetCurrentDateTime();
+            var betLimitGroup = inputs.ContainsKey("betLimitGroup") && !string.IsNullOrEmpty(inputs["betLimitGroup"]) ? inputs["betLimitGroup"] : "A";
+
             var input = new
             {
                 Timestamp = GetCurrentTimeFormat(currentDateTime),
@@ -260,6 +262,10 @@ namespace ThirdParty.PP
                         WalletSideToken = key,
                     },
                     HomeUrl = homeUrl,
+                    Additional = new
+                    {
+                        BetLimit = betLimitGroup
+                    }
                 }
             };
             var postdata = JsonConvert.SerializeObject(input, Formatting.None);
