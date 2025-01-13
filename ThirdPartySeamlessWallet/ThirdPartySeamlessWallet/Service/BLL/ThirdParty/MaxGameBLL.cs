@@ -63,7 +63,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.AESexy_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PG_RNG, WalletKind.BonusWallet },
             { (int)GameType.WE_LiveCasino, WalletKind.BonusWallet },
-            { (int)GameType.TableGame_RNG, WalletKind.BonusWallet }
+            { (int)GameType.TableGame_RNG, WalletKind.BonusWallet },
+            { (int)GameType.Nextspin_RNG, WalletKind.BonusWallet }
         };
 
         private readonly Dictionary<int, TpCategory> _gameOfTpCategory = new()
@@ -83,7 +84,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.AESexy_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.PG_RNG, TpCategory.Slots },
             { (int)GameType.WE_LiveCasino, TpCategory.LiveCasino },
-            { (int)GameType.TableGame_RNG, TpCategory.Lottery }
+            { (int)GameType.TableGame_RNG, TpCategory.Lottery },
+            { (int)GameType.Nextspin_RNG, TpCategory.Slots },
         };
 
         public MaxGameBLL(IServiceProvider provider)
@@ -893,7 +895,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 case (int)GameType.PG_RNG:
                     GetTicketNoSpName = "Service_BettransRng_PG_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransRng_PG_Ins";
-                    CancelBettransSpName = "Service_BettransRng_PG_CancelBet_Set";
+                    CancelBettransSpName = "Service_BettransRng_PG_CancelBet_Set"; 
+                    break;
+                case (int)GameType.Nextspin_RNG:
+                    GetTicketNoSpName = "Service_BettransRng_Nextspin_TicketNo_Get";
+                    InsertBettransSpName = "Service_BettransRng_Nextspin_Ins";
+                    CancelBettransSpName = "Service_BettransRng_Nextspin_CancelBet_Set";
                     break;
 
                 default:
