@@ -350,7 +350,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 case (int)Tp.WE:
                     gameType = GameType.WE_LiveCasino;
                     break;
-
+                case (int)Tp.Nextspin:
+                    gameType = GameType.Nextspin_RNG;
+                    break;
                 default:
                     break;
             }

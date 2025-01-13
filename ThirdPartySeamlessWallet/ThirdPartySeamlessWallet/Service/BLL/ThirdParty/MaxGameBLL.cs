@@ -42,7 +42,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { "fachai", Tp.FaChai },
             { "sexycasino", Tp.AESexy },
             { "worldentertainment", Tp.WE },
-            { "tablegame", Tp.RNGTableGame }
+            { "tablegame", Tp.RNGTableGame },
+            {"nextspin", Tp.Nextspin}
         };
 
         private readonly Dictionary<int, WalletKind> _gameOfWalletKind = new()

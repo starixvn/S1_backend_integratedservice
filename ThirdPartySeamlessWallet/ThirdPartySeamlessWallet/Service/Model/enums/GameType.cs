@@ -84,7 +84,6 @@
         SBSW_CardClub = 96,
         TFG_Esports = 97,
         Endorphina_RNG = 98,
-        Nextspin_RNG = 99,
         PlayTech_RNG = 100,
         PlayTech_LiveCasino = 101,
         IM_ESports = 102,
@@ -110,6 +109,7 @@
         FastSpin_RNG = 122,
         RNG_Keno = 124,
         Lottery = 125,
-        TableGame_RNG = 126
+        TableGame_RNG = 126,
+        Nextspin_RNG = 127,
     }
 }
