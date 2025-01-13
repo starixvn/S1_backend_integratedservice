@@ -30,5 +30,5 @@ function scenario() {
     console.log('[Placebet-Endgame]Endgame', endgameResult.fullRequest)
   }
 }
-``
+
 export default { options, scenario };

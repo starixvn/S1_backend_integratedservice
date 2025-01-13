@@ -18,5 +18,5 @@ function scenario() {
     fail("[Placebet]Placebet failed")
   }
 }
-``
+
 export default { options, scenario };

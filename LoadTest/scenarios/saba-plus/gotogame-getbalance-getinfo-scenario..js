@@ -6,9 +6,9 @@ import { GetGameOption } from "../../data-generator/gameGenerator.js";
 import PlayerSiteApi from "../../api/player-site/index.js";
 
 const options = useOptions("playerInfoTest", {
-  scenario: (defaultScenario) => ({
-    rate: defaultScenario.rate*3
-  })
+  // scenario: (defaultScenario) => ({
+  //   rate: defaultScenario.rate ?? defaultScenario.rate*3
+  // })
 });
 
 function scenario() {

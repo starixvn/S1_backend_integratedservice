@@ -57,6 +57,13 @@ const Scenarios = {
         iterations: 2,
       },
     },
+    SUPER_RAMPAGE_RATE: {
+      constant_rate_test: {
+        executor: "per-vu-iterations",
+        vus: 400, 
+        iterations: 1, 
+      },
+    },
     CONSTANT_RATE_DEAD_LOCK: {
       constant_rate_test: {
         executor: "constant-arrival-rate",

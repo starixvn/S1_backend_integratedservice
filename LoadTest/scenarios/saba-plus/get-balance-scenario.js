@@ -4,9 +4,9 @@ import { GetSabaPlusCustId } from "../../data-generator/userGenerator.js";
 import SabaPlusApi from "../../api/saba-plus/index.js";
 
 const options = useOptions("sabaplusgetBalanceTest", {
-  scenario: (defaultScenario) => ({
-    rate: defaultScenario.rate*3
-  })
+  // scenario: (defaultScenario) => ({
+  //   rate: defaultScenario.rate ? defaultScenario.rate * 3 : null
+  // })
 });
 
 function scenario() {

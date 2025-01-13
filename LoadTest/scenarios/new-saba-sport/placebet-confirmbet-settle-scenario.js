@@ -11,9 +11,9 @@ import {
 import { BetDetailApiUrl } from "../../constant/api.js";
 
 const options = useOptions("placebetConfirmbetSettleTest", {
-  scenario: (defaultScenario) => ({
-    preAllocatedVUs: defaultScenario.preAllocatedVUs * 2,
-  }),
+  // scenario: (defaultScenario) => ({
+  //   preAllocatedVUs: defaultScenario.preAllocatedVUs * 2,
+  // }),
 });
 
 function scenario() {

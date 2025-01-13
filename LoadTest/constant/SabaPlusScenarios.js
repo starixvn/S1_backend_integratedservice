@@ -53,8 +53,8 @@ const Scenarios = {
     DEV: {
       per_vus_iterations_test: {
         executor: "per-vu-iterations",
-        vus: 3,
-        iterations: 2,
+        vus: 3, 
+        iterations: 2, 
       },
     },
     CONSTANT_RATE_DEAD_LOCK: {

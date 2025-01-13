@@ -11,10 +11,10 @@ import {
 import { BetDetailApiUrl } from "../../constant/api.js";
 
 const options = useOptions("settleTest", {
-  scenario: (defaultScenario) => ({
-    preAllocatedVUs: defaultScenario.preAllocatedVUs * 5,
-    maxVUs: defaultScenario.maxVUs * 2,
-  }),
+  // scenario: (defaultScenario) => ({
+  //   preAllocatedVUs: defaultScenario.preAllocatedVUs * 5,
+  //   maxVUs: defaultScenario.maxVUs * 2,
+  // }),
 });
 
 function scenario() {
