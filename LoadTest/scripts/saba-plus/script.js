@@ -5,8 +5,10 @@ import placebetEndgameScenario from "../../scenarios/saba-plus/placebet-endgame-
 import freespinScenario from "../../scenarios/saba-plus/freespin-scenario.js";
 import placebetsettleScenario from "../../scenarios/saba-plus/placebetsettle-scenario..js";
 
+const suffix = `${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`;
+
 export function setup() {
-  console.log(`Begin test: Saba_Plus_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`);
+  console.log(`Begin test: Saba_Plus_${suffix}`);
 }
 
 export const options = extractOptions(
@@ -18,7 +20,7 @@ export const options = extractOptions(
 
 export function handleSummary(data) {
   return {
-    [`Saba_Plus_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}.html`]: htmlReport(data),
+    [`Saba_Plus_${suffix}.html`]: htmlReport(data),
   };
 }
 

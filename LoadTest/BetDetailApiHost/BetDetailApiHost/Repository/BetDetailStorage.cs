@@ -13,8 +13,6 @@ public interface IBetDetailStorage
     public Task TryAddBatchBetDetailAsync(List<BetDetail> value);
 
     public int Count();
-
-    public Task RemoveUnusedBetDetail();
 }
 
 public class BetDetailStorage : IBetDetailStorage
@@ -50,10 +48,8 @@ public class BetDetailStorage : IBetDetailStorage
         });
     }
 
-    public async Task RemoveUnusedBetDetail()
+    public void RemoveUnusedBetDetail(int lastVersionKey)
     {
-        var lastVersionKey = await LastVersionKey.GetValueAsync();
-
         foreach (var item in Storage)
         {
             if (item.Value.version_key < lastVersionKey)
@@ -66,13 +62,18 @@ public class BetDetailStorage : IBetDetailStorage
     public async Task<List<BetDetail>> GetBetDetailsAsync()
     {
         var lastVersionKey = await LastVersionKey.GetValueAsync();
+        RemoveUnusedBetDetail(lastVersionKey);
+
         var result = Storage.Values.Where(betDetail => betDetail.version_key >= lastVersionKey).ToList();
 
         await IsUpdated.UpdateValueAsync(async isUpdated =>
         {
             if (isUpdated)
             {
-                await LastVersionKey.UpdateValueAsync(lastVersionKey => lastVersionKey + 1);
+                await LastVersionKey.UpdateValueAsync(lastVersionKey =>
+                {
+                    return lastVersionKey + 1;
+                });
             }
 
             return false;

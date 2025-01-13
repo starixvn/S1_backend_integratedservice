@@ -12,7 +12,7 @@ const options = useOptions("sabaplusgetBalanceTest", {
 function scenario() {
   const custId = GetSabaPlusCustId();
   const getbalanceResult = SabaPlusApi.getbalance(custId)
-
+  
   const getbalanceCheck = check(getbalanceResult.response, {
     "[GetBalance]GetBalance content status is 0": (r) => r?.ErrorCode != null && r.ErrorCode == 0,
   });
@@ -22,5 +22,5 @@ function scenario() {
     fail("[GetBalance]GetBalance failed")
   }
 }
-``
+
 export default { options, scenario };

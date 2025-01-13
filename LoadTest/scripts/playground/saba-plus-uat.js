@@ -6,8 +6,10 @@ import freespinScenario from "../../scenarios/saba-plus/freespin-scenario.js";
 import placebetsettleScenario from "../../scenarios/saba-plus/placebetsettle-scenario..js";
 import getBalanceScenario from "../../scenarios/saba-plus/get-balance-scenario.js";
 
+const suffix = `${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`;
+
 export function setup() {
-  console.log(`Begin test: SabaPlus_Custom_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`)
+  console.log(`Begin test: SabaPlus_Custom_${suffix}`)
 }
 
 export const options = extractOptions(
@@ -20,7 +22,7 @@ export const options = extractOptions(
 
 export function handleSummary(data) {
   return {
-    [`SabaPlus_Custom_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}.html`]: htmlReport(data),
+    [`SabaPlus_Custom_${suffix}.html`]: htmlReport(data),
   };
 }
 

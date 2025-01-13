@@ -10,7 +10,12 @@ import {
 } from "../../data-generator/betDetailGenerator.js";
 import { BetDetailApiUrl } from "../../constant/api.js";
 
-const options = useOptions("settleTest");
+const options = useOptions("settleTest", {
+  scenario: (defaultScenario) => ({
+    preAllocatedVUs: defaultScenario.preAllocatedVUs * 5,
+    maxVUs: defaultScenario.maxVUs * 2,
+  }),
+});
 
 function scenario() {
   const userId = GetSapaSportUserId();
@@ -49,12 +54,12 @@ function scenario() {
     JSON.stringify([confirmBetBetDetailRequest]),
     {
       headers: { "Content-Type": "application/json" },
-      tags: { noMetrics: 'true' },
+      tags: { noMetrics: "true" },
       //responseCallback: (req, res) => {},
     }
   );
 
-  sleep(60);
+  sleep(50);
 
   const settledResult = SabaSportApi.settle(userId, confirmBetResult.request);
   const settleCheck = check(settledResult.response, {
@@ -73,7 +78,7 @@ function scenario() {
         r?.status && r.status == "0",
     })
   ) {
-    console.log(balanceResult.fullRequest)
+    console.log(balanceResult.fullRequest);
   }
 
   const betDetailRequest = GetSingleSettleBetDetail(
@@ -83,7 +88,7 @@ function scenario() {
 
   http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify([betDetailRequest]), {
     headers: { "Content-Type": "application/json" },
-    tags: { noMetrics: 'true' },
+    //tags: { noMetrics: "true" },
     //responseCallback: (req, res) => {},
   });
 }

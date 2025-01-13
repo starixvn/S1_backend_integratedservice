@@ -10,7 +10,11 @@ import {
 } from "../../data-generator/betDetailGenerator.js";
 import { BetDetailApiUrl } from "../../constant/api.js";
 
-const options = useOptions("placebetConfirmbetSettleTest");
+const options = useOptions("placebetConfirmbetSettleTest", {
+  scenario: (defaultScenario) => ({
+    preAllocatedVUs: defaultScenario.preAllocatedVUs * 2,
+  }),
+});
 
 function scenario() {
   const userId = GetSapaSportUserId();
@@ -52,8 +56,7 @@ function scenario() {
   
   http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify([confirmBetBetDetailRequest]), {
     headers: { "Content-Type": "application/json" },
-    tags: { noMetrics: 'true' },
-    //responseCallback: (req, res) => {},
+    tags: {  scenario: 'unknow-ignore'  },
   });
 
   sleep(10);
@@ -79,8 +82,7 @@ function scenario() {
   
   http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify([betDetailRequest]), {
     headers: { "Content-Type": "application/json" },
-    tags: { noMetrics: 'true' },
-    //responseCallback: (req, res) => {},
+    tags: {  scenario: 'unknow-ignore'  },
   });
 }
 

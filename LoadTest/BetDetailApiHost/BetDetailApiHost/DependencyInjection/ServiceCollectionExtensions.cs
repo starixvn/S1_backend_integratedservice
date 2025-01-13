@@ -10,9 +10,9 @@ namespace BetDetailApiHost.DependencyInjection
     {
         public static IServiceCollection AddHostCore(this IServiceCollection services)
         => services.AddSingleton<IMemoryDb, MemoryDb>()
+                    //.AddHostedService<SendBetDetailToSimulator>()
                     .AddSingleton<IBetDetailStorage, BetDetailStorage>()
-                    .AddHostedService<SendBetDetailToLocalJob>()
-                    .AddHostedService<SendBetDetailToSimulator>();
+                    .AddHostedService<SendBetDetailToLocalJob>();
 
         public static IServiceCollection AddApiClients(this IServiceCollection services, ConfigurationManager configuration)
         {

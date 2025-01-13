@@ -4,22 +4,23 @@ import placebetConfirmbetScenario from "../../scenarios/new-saba-sport/placebet-
 import placebetConfirmbetSettleScenario from "../../scenarios/new-saba-sport/placebet-confirmbet-settle-scenario.js";
 import placebetparlayConfirmbetparlayScenario from "../../scenarios/new-saba-sport/placebetparlay-confirmbetparlay-scenario.js";
 import settleScenario from "../../scenarios/new-saba-sport/settle-scenario.js";
-import SabaSportApi from "../../api/new-saba-sport/index.js";
+
+const suffix = `${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`;
 
 export function setup() {
-  console.log(`Begin test: SabaSport_Custom_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`)
+  console.log(`Begin test: SabaSport_Custom_${suffix}`)
 }
 
 export const options = extractOptions(
-  // placebetConfirmbetScenario.options,
-  // placebetConfirmbetSettleScenario.options,
-  // placebetparlayConfirmbetparlayScenario.options,
+  placebetConfirmbetScenario.options,
+  placebetConfirmbetSettleScenario.options,
+  placebetparlayConfirmbetparlayScenario.options,
   settleScenario.options
 );
 
 export function handleSummary(data) {
   return {
-    [`SabaSport_Custom_${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}.html`]: htmlReport(data),
+    [`SabaSport_Custom_${suffix}.html`]: htmlReport(data),
   };
 }
 

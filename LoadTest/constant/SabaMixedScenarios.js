@@ -65,6 +65,7 @@ const Scenarios = {
         duration: "2m",
         preAllocatedVUs: 10,
         maxVUs: 300,
+        gracefulStop: '90s',
         env: { MY_CROC_ID: "1" },
         tags: {
           test_type: "api_load_test",
@@ -74,11 +75,12 @@ const Scenarios = {
     CONSTANT_RATE: {
       constant_rate_test: {
         executor: "constant-arrival-rate",
-        rate: 600,
+        rate: 50,
         timeUnit: "10s",
         duration: "1m",
         preAllocatedVUs: 10,
         maxVUs: 300,
+        gracefulStop: '90s',
         env: { MY_CROC_ID: "1" },
         tags: {
           test_type: "api_load_test",

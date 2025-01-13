@@ -5,7 +5,7 @@ namespace BetDetailApiHost.CronJob
 {
     public class SendBetDetailToLocalJob(IConfiguration configuration, IBetDetailStorage betDetailStorage, ISabaSportApi sabaSportApi) : BackgroundService, IDisposable
     {
-        private readonly int _intervalInSeconds = 30;
+        private readonly int _intervalInSeconds = 25;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -25,11 +25,10 @@ namespace BetDetailApiHost.CronJob
             try
             {
                 var betDetails = await betDetailStorage.GetBetDetailsAsync();
+                Console.WriteLine($"Ticket Count: {betDetails.Count}");
                 if (betDetails.Count > 0)
                 {
-                    Console.WriteLine($"Ticket Count: {betDetails.Count}");
                     var result = await sabaSportApi.BatchBetDetails(betDetails);
-                    await betDetailStorage.RemoveUnusedBetDetail();
                 }
 
                 Console.WriteLine($"SendBetDetailToLocalJob done at: {DateTime.Now}");

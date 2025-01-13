@@ -44,13 +44,28 @@ const Scenarios = {
         iterations: 2, // The user will send 2 requests
       },
     },
+    CONSTANT_RATE_DEAD_LOCK: {
+      constant_rate_test: {
+        executor: "constant-arrival-rate",
+        rate: 200,
+        timeUnit: "10s",
+        duration: "5m",
+        preAllocatedVUs: 120,
+        maxVUs: 1000,
+        gracefulStop: '90s',
+        env: { MY_CROC_ID: "1" },
+        tags: {
+          test_type: "api_load_test",
+        },
+      },
+    },
     CONSTANT_RATE: {
       constant_rate_test: {
         executor: "constant-arrival-rate",
-        rate: 400,
+        rate: 300,
         timeUnit: "10s",
         duration: "2m",
-        preAllocatedVUs: 200,
+        preAllocatedVUs: 120,
         maxVUs: 1000,
         gracefulStop: '90s',
         env: { MY_CROC_ID: "1" },

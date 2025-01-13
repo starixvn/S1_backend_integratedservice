@@ -8,13 +8,14 @@ const SabaSportUserInfos = __ENV.RUN_ENV?.toLowerCase() == 'local' ? UserInfos.s
 const getSabaSportScenarioRangeIds = (scenarioRange) => {
   switch (true){
     case scenarioRange == 'placeBetConfirmBetParlayTest':
-      return SabaSportUserInfos.slice(0, 200)
-    case scenarioRange == 'placebetConfirmbetTest':
-      return SabaSportUserInfos.slice(201, 500)
+      return SabaSportUserInfos.slice(0, 100)
     case scenarioRange == 'placebetConfirmbetSettleTest':
-      return SabaSportUserInfos.slice(501, 1000)
+      return SabaSportUserInfos.slice(101, 500)
+    case scenarioRange == 'placebetConfirmbetTest':
+      return SabaSportUserInfos.slice(501, 600)
+
     case scenarioRange == 'settleTest':
-        return SabaSportUserInfos.slice(1001, 2000)
+        return SabaSportUserInfos.slice(601, 2000)
     default:
        return UserInfos
   }
@@ -25,7 +26,8 @@ export const GetSapaSportUserId = () => {
   return getTpCustId(scenarioRange[exec.scenario.iterationInInstance % scenarioRange.length].CustId)
 }
 
-const SabaPlusUserInfos = UserInfos.slice(0, 2000);
+// TODO: Remove when run SabaMixed
+const SabaPlusUserInfos = UserInfos.slice(0, 4000);
 const RapidSabaPlusUserInfos = UserInfos.slice(2801, 3000);
 const getSabaPlusScenarioRangeIds = (scenarioRange, isRapidUserId) => {
   if (isRapidUserId) {
@@ -34,17 +36,35 @@ const getSabaPlusScenarioRangeIds = (scenarioRange, isRapidUserId) => {
 
   switch (true){
     case scenarioRange == 'placebetEndgameTest':
-        return SabaPlusUserInfos.slice(0, 500)
+        return SabaPlusUserInfos.slice(0, 1000)
     case scenarioRange == 'placebetAndSettleTest':
-      return SabaPlusUserInfos.slice(501, 1000)
+      return SabaPlusUserInfos.slice(1001, 2000)
     case scenarioRange == 'freeSpinTest':
-        return SabaPlusUserInfos.slice(1001, 1500)
-    case scenarioRange == 'playerInfoTest':
-        return SabaPlusUserInfos.slice(1501, 1999)
+        return SabaPlusUserInfos.slice(2001, 3000)
+    case scenarioRange == 'playerInfoTest' || scenarioRange == 'sabaplusgetBalanceTest':
+        return SabaPlusUserInfos.slice(3001, 4000)
     default:
        return SabaPlusUserInfos
   }
 }
+
+// TODO: Use when run SabaMixed
+// const SabaPlusUserInfos = UserInfos.slice(2001, 4000);
+// const getSabaPlusScenarioRangeIds = (scenarioRange, isRapidUserId) => {
+
+//   switch (true){
+//     case scenarioRange == 'placebetEndgameTest':
+//         return SabaPlusUserInfos.slice(0, 1000)
+//     case scenarioRange == 'placebetAndSettleTest':
+//       return SabaPlusUserInfos.slice(1001, 1400)
+//     case scenarioRange == 'freeSpinTest':
+//         return SabaPlusUserInfos.slice(1401, 1800)
+//     case scenarioRange == 'playerInfoTest' || scenarioRange == 'sabaplusgetBalanceTest':
+//         return SabaPlusUserInfos.slice(1801, 2000)
+//     default:
+//        return SabaPlusUserInfos
+//   }
+// }
 
 export const GetSabaPlusCustId = () => {
   const isRapidUserId = __ENV.RAPID_USER_ID ?? false;

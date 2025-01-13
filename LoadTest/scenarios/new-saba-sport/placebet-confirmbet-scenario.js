@@ -47,7 +47,7 @@ function scenario() {
 
   http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify([betDetailRequest]), {
     headers: { "Content-Type": "application/json" },
-    tags: { noMetrics: 'true' },
+    tags: {  scenario: 'unknow-ignore'  },
     //responseCallback: (req, res) => {},
   });
 }
