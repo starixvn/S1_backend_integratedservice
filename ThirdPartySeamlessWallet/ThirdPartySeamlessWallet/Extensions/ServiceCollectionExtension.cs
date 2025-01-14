@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using ThirdPartySeamlessWallet.Service.DAL;
+﻿using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -39,7 +38,7 @@ namespace ThirdPartySeamlessWallet.Extensions
         {
             var provider = services.BuildServiceProvider();
             // 準備ServerInfo
-            var serverInfoList = new List<ServerInfo>() { new ServerInfo() { SiteId = 0, SiteName = "default" } };
+            var serverInfoList = new List<ServerInfo>() { new() { SiteId = 0, SiteName = "default" }, new() { SiteId = -1, SiteName = "S1" } };
             serverInfoList.AddRange(provider.GetRequiredService<IEnumerable<ServerInfo>>());
 
             // 準備Config
@@ -56,7 +55,8 @@ namespace ThirdPartySeamlessWallet.Extensions
             return services;
         }
 
-        public static IServiceCollection AddPayloadLog(this IServiceCollection services, IConfiguration configuration) {
+        public static IServiceCollection AddPayloadLog(this IServiceCollection services, IConfiguration configuration)
+        {
             const string PayloadLogConfigPath = "PayloadLog";
             return services
                 .Configure<PayloadLogConfig>(configuration.GetSection(PayloadLogConfigPath))

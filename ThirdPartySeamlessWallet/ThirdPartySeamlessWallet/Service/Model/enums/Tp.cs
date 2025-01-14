@@ -2,6 +2,7 @@
 {
     public enum Tp
     {
+        S1 = -1,
         None = 0,
         Saba = 1,
         SA = 2,
