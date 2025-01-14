@@ -117,7 +117,8 @@ builder.Services
 .AddHostedService<SBSWWorker>()
 .AddHostedService<MaxGameWorker>()
 .AddHostedService<LotteryWorker>()
-.AddHostedService<TableGameWorker>();
+.AddHostedService<TableGameWorker>()
+    .AddHostedService<NextspinWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment, builder.Configuration);
