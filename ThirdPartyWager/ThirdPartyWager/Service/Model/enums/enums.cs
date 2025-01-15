@@ -118,7 +118,6 @@
         Yeebet_LiveCasino = 93,
         BG_LiveCasino = 94,
         TFG_Esports = 97,
-        Nextspin_RNG = 99,
         IM_ESports = 102,
         IM_Sports = 103,
         FaChai_RNG = 106,
@@ -135,7 +134,8 @@
         FastSpin_RNG = 122,
         RNG_Keno = 124,
         Lottery = 125,
-        TableGame = 126
+        TableGame = 126,
+        Nextspin_RNG = 127
     }
 
     public enum SettlementType

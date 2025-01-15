@@ -6,6 +6,7 @@ using ThirdPartyWager.Service.BLL.JILI;
 using ThirdPartyWager.Service.BLL.Live22;
 using ThirdPartyWager.Service.BLL.Lottery;
 using ThirdPartyWager.Service.BLL.MaxGame;
+using ThirdPartyWager.Service.BLL.Nextspin;
 using ThirdPartyWager.Service.BLL.PG;
 using ThirdPartyWager.Service.BLL.PP;
 using ThirdPartyWager.Service.BLL.SabaPlay;
@@ -22,6 +23,7 @@ using ThirdPartyWager.Workers.JILI;
 using ThirdPartyWager.Workers.Live22;
 using ThirdPartyWager.Workers.Lottery;
 using ThirdPartyWager.Workers.MaxGame;
+using ThirdPartyWager.Workers.Nextspin;
 using ThirdPartyWager.Workers.PG;
 using ThirdPartyWager.Workers.PP;
 using ThirdPartyWager.Workers.SabaPlay;
@@ -53,7 +55,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.AESexy, AddAESexy},
                 { Tp.WE, AddWE},
                 { Tp.TableGame, AddTableGame},
-                { Tp.PG, AddPG}
+                { Tp.PG, AddPG},
 
                 //Loki comment:
                 //{ Tp.Pegasus, AddPegasus},
@@ -61,7 +63,7 @@ namespace ThirdPartyWager.Extensions
                 //{ Tp.SA, AddSA},
                 //{ Tp.SG, AddSG},
                 //{ Tp.MG, AddMG},
-                //{ Tp.Nextspin, AddNextspin},
+                { Tp.Nextspin, AddNextspin},
 
                 //{ Tp.AG, AddAG},
                 //{ Tp.DG, AddDG},
@@ -596,14 +598,11 @@ namespace ThirdPartyWager.Extensions
 
         private IServiceCollection AddNextspin(IServiceCollection services)
         {
-            services.AddSingleton<IWagerNextspinService, WagerNextspinService>();
-
-            services.AddSingleton<INextspinApi, NextspinApi>();
-            services.AddSingleton<INextspinBLL, NextspinBLL>();
-            services.AddSingleton<INextspinFinancBLL, NextspinFinancBLL>();
-
-            services.AddHostedService<WagerNextspin>();
-            services.AddHostedService<FinanceNextspin>();
+            services.AddSingleton<WagerNextspinService>();
+            services.AddSingleton<TicketNextspinBll>();
+            services.AddHostedService<TicketNextspin>();
+            //services.AddSingleton<FinancePPBLL>();
+            //services.AddHostedService<FinancePP>();
             return services;
         }
 

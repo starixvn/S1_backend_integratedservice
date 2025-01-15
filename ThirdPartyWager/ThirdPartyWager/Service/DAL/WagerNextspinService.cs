@@ -1,29 +1,22 @@
-﻿using Newtonsoft.Json;
-
-using ThirdPartyWager.Service.Library;
+﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
-    public interface IWagerNextspinService
+    
+    public class WagerNextspinService 
     {
-        Task<int> InsertWager(IList<NextspinBetInfo> wagers);
-    }
+        private readonly MySqlClient _mainDbClient;
 
-    public class WagerNextspinService : IWagerNextspinService
-    {
-        private readonly MySqlClient _sqlClient;
-
-        public WagerNextspinService(IEnumerable<MySqlClient> sqlClients)
+        public WagerNextspinService(IServiceProvider provider)
         {
-            _sqlClient = sqlClients.FirstOrDefault(a => a.DataBase == DataBase.Wager);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
-        public async Task<int> InsertWager(IList<NextspinBetInfo> wagers)
+        public IEnumerable<BettransData_MaxGame> GetPendingList(TimeCast ticketTime)
         {
-            return await _sqlClient.ExecuteAsync("Service_TpWagerRngNextspin_Ins",
-                new { _NextspinWager = JsonConvert.SerializeObject(wagers) });
+            return _mainDbClient.Query<BettransData_MaxGame>("Service_BettransRng_Nextspin_Bet_Pending_Get", parameters: new { _BeginTime = ticketTime.startUnix, _EndTime = ticketTime.endUnix });
         }
     }
 }
