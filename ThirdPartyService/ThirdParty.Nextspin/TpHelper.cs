@@ -330,7 +330,7 @@ namespace ThirdParty.Nextspin
 
         private static string GetGameName(string gameId)
         {
-            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.TableGame, gameId, "en");
+            var gameInfo = TpBetRecordProvider.GetGameNameInfo((int)TpEnum.Nextspin, gameId, "en");
             return gameInfo is null
                 ? gameId
                 : gameInfo.Name;
