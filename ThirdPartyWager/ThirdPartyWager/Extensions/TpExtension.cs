@@ -601,8 +601,8 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerNextspinService>();
             services.AddSingleton<TicketNextspinBll>();
             services.AddHostedService<TicketNextspin>();
-            //services.AddSingleton<FinancePPBLL>();
-            //services.AddHostedService<FinancePP>();
+            services.AddSingleton<FinanceNextspinBLL>();
+            services.AddHostedService<FinanceNextspin>();
             return services;
         }
 

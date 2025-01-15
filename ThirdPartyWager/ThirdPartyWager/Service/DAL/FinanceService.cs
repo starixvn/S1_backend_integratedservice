@@ -22,7 +22,6 @@ namespace ThirdPartyWager.Service.DAL
 
         public int SetFinanceTpDailySummary(FincanceDailySummary dailySummary)
         {
-            // TODO
             return _mainDbClient.Execute("Finance_Tp_DailySummary_Set", dailySummary);
         }
     }

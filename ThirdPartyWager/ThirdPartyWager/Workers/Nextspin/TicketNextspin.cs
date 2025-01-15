@@ -18,7 +18,6 @@ namespace ThirdPartyWager.Workers.Nextspin
         private readonly string _tpName = Tp.Nextspin.ToString();
         private readonly int _tpType = (int)WagerTimerType.UnSettle;
         private readonly int _lockPeriod = -30;// 近30分資料不處理
-        private readonly int _deductTime = -1;
 
         public TicketNextspin(IServiceProvider provider)
         {
