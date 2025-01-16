@@ -8,6 +8,7 @@ import gotogameGetbalanceGetinfoScenario from "../../scenarios/saba-plus/gotogam
 import placebetEndgameScenario from "../../scenarios/saba-plus/placebet-endgame-scenario..js";
 import placebetsettleScenario from "../../scenarios/saba-plus/placebetsettle-scenario..js";
 import freespinScenario from "../../scenarios/saba-plus/freespin-scenario.js";
+import getBalanceScenario from "../../scenarios/saba-plus/get-balance-scenario.js";
 
 const suffix = `${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`;
 
@@ -19,13 +20,12 @@ export const options = extractOptions(
   placebetConfirmbetScenario.options,
   placebetConfirmbetSettleScenario.options,
   placebetparlayConfirmbetparlayScenario.options,
-  //settleScenario.options,
-  gotogameGetbalanceGetinfoScenario.options,
+  settleScenario.options,
+  getBalanceScenario.options,
   placebetEndgameScenario.options,
   placebetsettleScenario.options,
   freespinScenario.options
 );
-
 
 export function handleSummary(data) {
   return {

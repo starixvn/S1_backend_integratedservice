@@ -60,7 +60,7 @@ const Scenarios = {
     CONSTANT_RATE_DEAD_LOCK: {
       constant_rate_test: {
         executor: "constant-arrival-rate",
-        rate: 133,
+        rate: 100,
         timeUnit: "10s",
         duration: "5m",
         preAllocatedVUs: 100,
@@ -71,26 +71,76 @@ const Scenarios = {
         },
       },
     },
-    CONSTANT_RATE: {
+    CONSTANT_RATE_120: {
+      constant_rate_test: {
+        executor: "constant-arrival-rate",
+        rate: 400,
+        timeUnit: "10s",
+        duration: "5m",
+        preAllocatedVUs: 100,
+        maxVUs: 300,
+      },
+    },
+    CONSTANT_RATE_130: {
+      constant_rate_test: {
+        executor: "constant-arrival-rate",
+        rate: 433,
+        timeUnit: "10s",
+        duration: "5m",
+        preAllocatedVUs: 100,
+        maxVUs: 300,
+      },
+    },
+    CONSTANT_RATE_140: {
+      constant_rate_test: {
+        executor: "constant-arrival-rate",
+        rate: 467,
+        timeUnit: "10s",
+        duration: "5m",
+        preAllocatedVUs: 100,
+        maxVUs: 300,
+      },
+    },
+    CONSTANT_RATE_150: {
+      constant_rate_test: {
+        executor: "constant-arrival-rate",
+        rate: 500,
+        timeUnit: "10s",
+        duration: "5m",
+        preAllocatedVUs: 100,
+        maxVUs: 300,
+      },
+    },
+    CONSTANT_RATE_180: {
       constant_rate_test: {
         executor: "constant-arrival-rate",
         rate: 600,
         timeUnit: "10s",
-        duration: "1m",
-        preAllocatedVUs: 10,
+        duration: "5m",
+        preAllocatedVUs: 100,
+        maxVUs: 300,
+      },
+    },
+    CONSTANT_RATE_240: {
+      constant_rate_test: {
+        executor: "constant-arrival-rate",
+        rate: 800,
+        timeUnit: "10s",
+        duration: "5m",
+        preAllocatedVUs: 100,
         maxVUs: 300,
       },
     },
     RAMPING_RATE: {
       ramping_rate_test: {
         executor: "ramping-arrival-rate",
-        startRate: 30,
+        startRate: 20,
         timeUnit: "1s",
         preAllocatedVUs: 100,
         maxVUs: 800,
         stages: [
-          { target: 40, duration: "30s" },
-          { target: 40, duration: "15m" },
+          { target: 30, duration: "30s" },
+          { target: 30, duration: "2m" },
           { target: 0, duration: "30s" },
         ],
       },

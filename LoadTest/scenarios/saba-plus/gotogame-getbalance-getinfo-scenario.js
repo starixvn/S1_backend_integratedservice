@@ -1,6 +1,6 @@
 import { check, fail } from "k6";
 import { useOptions } from "../../data-generator/optionGenerator.js";
-import { GetLoginUser, getTpCustId } from "../../data-generator/userGenerator.js";
+import { GetUser, getTpCustId } from "../../data-generator/userGenerator.js";
 import SabaPlusApi from "../../api/saba-plus/index.js";
 import { GetGameOption } from "../../data-generator/gameGenerator.js";
 import PlayerSiteApi from "../../api/player-site/index.js";
@@ -12,7 +12,7 @@ const options = useOptions("playerInfoTest", {
 });
 
 function scenario() {
-  const user = GetLoginUser();
+  const user = GetUser();
   const gameOption = GetGameOption();
 
   const loginResult = PlayerSiteApi.login(user.UserName);

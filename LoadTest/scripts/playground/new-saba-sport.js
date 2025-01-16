@@ -1,3 +1,5 @@
+import { sleep } from "k6";
+
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 import { extractOptions, formatDateToCustomFormat } from "../../data-generator/optionGenerator.js";
 import placebetConfirmbetScenario from "../../scenarios/new-saba-sport/placebet-confirmbet-scenario.js";
@@ -9,6 +11,10 @@ const suffix = `${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`
 
 export function setup() {
   console.log(`Begin test: SabaSport_Custom_${suffix}`)
+  placebetConfirmbetSettleScenario.scenario({isSmokeTest: true});
+  placebetparlayConfirmbetparlayScenario.scenario({isSmokeTest: true});
+  sleep(1)
+  console.log(`Setup test: SabaSport_Custom_${suffix} Done`)
 }
 
 export const options = extractOptions(

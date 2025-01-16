@@ -5,8 +5,8 @@ import SabaPlusApi from "../../api/saba-plus/index.js";
 
 const options = useOptions("freeSpinTest");
 
-function scenario() {
-  const custId = GetSabaPlusCustId();
+function scenario(config = {}) {
+  const custId = GetSabaPlusCustId(config);
   const placeBetResult = SabaPlusApi.freespin(custId)
 
   const placeBetCheck = check(placeBetResult.response, {

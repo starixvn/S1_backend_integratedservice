@@ -1,82 +1,99 @@
 import exec from 'k6/execution';
-import { randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
 import { UserInfos } from '../constant/userInfos.js';
 
 export const getTpCustId = (id) => __ENV.RUN_ENV?.toLowerCase() == 'local' ? 'DNova88_' + id : 'uNsDemo_' + id
 
-const SabaSportUserInfos = __ENV.RUN_ENV?.toLowerCase() == 'local' ? UserInfos.slice(0, 2000) : UserInfos.slice(2001, 4000);
-const getSabaSportScenarioRangeIds = (scenarioRange) => {
-  switch (true){
-    case scenarioRange == 'placeBetConfirmBetParlayTest':
-      return SabaSportUserInfos.slice(0, 100)
-    case scenarioRange == 'placebetConfirmbetSettleTest':
-      return SabaSportUserInfos.slice(101, 500)
-    case scenarioRange == 'placebetConfirmbetTest':
-      return SabaSportUserInfos.slice(501, 600)
+const UatSabaSportScenarioRangeIds = () => {
+  const userRange = UserInfos.slice(0, 2000)
 
-    case scenarioRange == 'settleTest':
-        return SabaSportUserInfos.slice(601, 2000)
-    default:
-       return UserInfos
+  return {
+    placeBetConfirmBetParlayTest: () => userRange.slice(0, 150),
+    placebetConfirmbetSettleTest: () => userRange.slice(101, 500),
+    placebetConfirmbetTest: () => userRange.slice(501, 800),
+    settleTest: () => userRange.slice(801, 2000),
+    defautTest: () => userRange
   }
 }
 
-export const GetSapaSportUserId = () => {
-  const scenarioRange = getSabaSportScenarioRangeIds(exec.scenario.name.split('-')[0])
+const LocalSabaSportScenarioRangeIds = () => {
+  const userRange = UserInfos.slice(0, 1500);
+  
+  return {
+    placeBetConfirmBetParlayTest: () => userRange.slice(0, 150),
+    placebetConfirmbetSettleTest: () => userRange.slice(101, 400),
+    placebetConfirmbetTest: () => userRange.slice(401, 700),
+    settleTest: () => userRange.slice(701, 1500),
+    defautTest: () => userRange
+  }
+}
+
+const getSabaSportScenarioRangeIds = (scenarioRange) => {
+  const env = __ENV.RUN_ENV?.toLowerCase() ?? 'local'
+  if (env == 'uat') {
+    const userIdRange = UatSabaSportScenarioRangeIds();
+    return userIdRange[scenarioRange] ?? userIdRange.defautTest
+  }
+
+  const userIdRange = LocalSabaSportScenarioRangeIds();
+  return userIdRange[scenarioRange] ?? userIdRange.defautTest
+}
+
+export const GetSapaSportUserId = (config = {}) => {
+  const { isSmokeTest } = config;
+  if (isSmokeTest) {
+    return getTpCustId(UserInfos[0].CustId)
+  }
+
+  const scenarioRange = getSabaSportScenarioRangeIds(exec.scenario.name.split('-')[0])()
   return getTpCustId(scenarioRange[exec.scenario.iterationInInstance % scenarioRange.length].CustId)
 }
 
-// TODO: Remove when run SabaMixed
-const SabaPlusUserInfos = UserInfos.slice(0, 4000);
-const RapidSabaPlusUserInfos = UserInfos.slice(2801, 3000);
-const getSabaPlusScenarioRangeIds = (scenarioRange, isRapidUserId) => {
-  if (isRapidUserId) {
-    return RapidSabaPlusUserInfos
-  }
+const UatSabaPlusScenarioRangeIds = () => {
+  const userRange = UserInfos.slice(2001, 4000)
 
-  switch (true){
-    case scenarioRange == 'placebetEndgameTest':
-        return SabaPlusUserInfos.slice(0, 1000)
-    case scenarioRange == 'placebetAndSettleTest':
-      return SabaPlusUserInfos.slice(1001, 2000)
-    case scenarioRange == 'freeSpinTest':
-        return SabaPlusUserInfos.slice(2001, 3000)
-    case scenarioRange == 'playerInfoTest' || scenarioRange == 'sabaplusgetBalanceTest':
-        return SabaPlusUserInfos.slice(3001, 4000)
-    default:
-       return SabaPlusUserInfos
+  return {
+    placebetEndgameTest: () => userRange.slice(0, 500),
+    placebetAndSettleTest: () => userRange.slice(501, 750),
+    freeSpinTest: () => userRange.slice(751, 1000),
+    playerInfoTest: () => userRange.slice(1001, 1500),
+    defautTest: () => userRange
   }
 }
 
-// TODO: Use when run SabaMixed
-// const SabaPlusUserInfos = UserInfos.slice(2001, 4000);
-// const getSabaPlusScenarioRangeIds = (scenarioRange, isRapidUserId) => {
+const LocalSabaPlusScenarioRangeIds = () => {
+  const userRange = UserInfos.slice(1501, 3000);
+  
+  return {
+    placebetEndgameTest: () => userRange.slice(0, 500),
+    placebetAndSettleTest: () => userRange.slice(501, 1000),
+    freeSpinTest: () => userRange.slice(1001, 1300),
+    playerInfoTest: () => userRange.slice(1301, 1500),
+    defautTest: () => userRange
+  }
+}
 
-//   switch (true){
-//     case scenarioRange == 'placebetEndgameTest':
-//         return SabaPlusUserInfos.slice(0, 1000)
-//     case scenarioRange == 'placebetAndSettleTest':
-//       return SabaPlusUserInfos.slice(1001, 1400)
-//     case scenarioRange == 'freeSpinTest':
-//         return SabaPlusUserInfos.slice(1401, 1800)
-//     case scenarioRange == 'playerInfoTest' || scenarioRange == 'sabaplusgetBalanceTest':
-//         return SabaPlusUserInfos.slice(1801, 2000)
-//     default:
-//        return SabaPlusUserInfos
-//   }
-// }
+const getSabaPlusScenarioRangeIds = (scenarioRange) => {
+  const env = __ENV.RUN_ENV?.toLowerCase() ?? 'local'
+  if (env == 'uat') {
+    const userIdRange = UatSabaPlusScenarioRangeIds();
+    return userIdRange[scenarioRange] ?? userIdRange.defautTest
+  }
 
-export const GetSabaPlusCustId = () => {
-  const isRapidUserId = __ENV.RAPID_USER_ID ?? false;
-  const scenarioRange = isRapidUserId ? RapidSabaPlusUserInfos : getSabaPlusScenarioRangeIds(exec.scenario.name.split('-')[0], isRapidUserId)
-  const userIndex = isRapidUserId ? randomIntBetween(0, scenarioRange.length - 1) : exec.scenario.iterationInInstance % scenarioRange.length
+  const userIdRange = LocalSabaPlusScenarioRangeIds();
+  return userIdRange[scenarioRange] ?? userIdRange.defautTest
+}
+
+export const GetSabaPlusCustId = (config = {}) => {
+  const { isSmokeTest } = config;
+  if (isSmokeTest) {
+    return getTpCustId(UserInfos[0].CustId)
+  }
+  
+  const scenarioRange = getSabaPlusScenarioRangeIds(exec.scenario.name.split('-')[0])()
+  const userIndex = exec.scenario.iterationInInstance % scenarioRange.length
 
   const id = getTpCustId(scenarioRange[userIndex].CustId);
   return id;
-}
-
-export const GetLoginUser = () => {
-  return RapidSabaPlusUserInfos[exec.scenario.iterationInInstance % RapidSabaPlusUserInfos.length]
 }
 
 export const GetUser = () => {

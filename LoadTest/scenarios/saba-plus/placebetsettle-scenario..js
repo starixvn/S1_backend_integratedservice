@@ -5,8 +5,8 @@ import SabaPlusApi from "../../api/saba-plus/index.js";
 
 const options = useOptions("placebetAndSettleTest");
 
-function scenario() {
-  const custId = GetSabaPlusCustId();
+function scenario(config = {}) {
+  const custId = GetSabaPlusCustId(config);
   const placeBetResult = SabaPlusApi.placebetAndSettle(custId)
 
   const placebetCheck = check(placeBetResult.response, {
