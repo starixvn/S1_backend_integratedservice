@@ -52,8 +52,8 @@ const login = async (userName) => {
     console.log(`[${i}]`,"user", UserInfos[i].UserName, "loggin success");
   } 
 
-  // for (let i = 0; i < UatAccounts.length; i++) {
-  //   const account = UatAccounts[i].UserName;
+  // for (let i = 0; i < UserInfos.length; i++) {
+  //   const account = UserInfos[i].UserName;
   //   const response = await login(account);
 
   //   console.log(`[${i}]`,"user", account, "loggin success");
@@ -82,11 +82,11 @@ const GameOptions = [
   //   TpGameType: "UuSlots",
   //   GameId: "120",
   // },
-  // {
-  //   TpId: "68",
-  //   TpGameType: "FastSpin",
-  //   GameId: "122",
-  // },
+  {
+    TpId: "69",
+    TpGameType: "FastSpin",
+    GameId: "122",
+  },
   // {
   //   TpId: "14",
   //   TpGameType: "PocketGames",
@@ -157,12 +157,12 @@ const GameOptions = [
   //   TpId: "18",
   //   TpGameType: "WorldEntertainment",
   //   GameId: "28",
+  // },
+  // {
+  //   TpId: "41",
+  //   TpGameType: "69",
+  //   GameId: "997",
   // }
-  ,{
-    TpId: "41",
-    TpGameType: "69",
-    GameId: "997",
-  }
 ];
 
 const throttlePromises = async (

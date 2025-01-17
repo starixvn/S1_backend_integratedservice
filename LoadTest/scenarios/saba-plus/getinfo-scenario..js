@@ -5,9 +5,16 @@ import SabaPlusApi from "../../api/saba-plus/index.js";
 import { GetGameOption } from "../../data-generator/gameGenerator.js";
 
 const options = useOptions("getPlayerInfoTest", {
-  scenario: (defaultScenario) => ({
-    rate: defaultScenario.rate ?? defaultScenario.rate*3
-  })
+  scenario: (defaultScenario) => {
+    switch (defaultScenario.executor) {
+      case 'constant-arrival-rate': 
+        return { rate: defaultScenario.rate * 3 }
+      case 'ramping-arrival-rate':
+        return { stages: defaultScenario.stages.map(stage => ({...stage, target: stage.target * 3})) }
+      default:
+        return {}
+    }
+  }
 });
 
 function scenario(config = {}) {

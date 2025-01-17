@@ -1,6 +1,6 @@
 import http from "k6/http";
 import crypto from "k6/crypto";
-import { check, fail } from "k6";
+import { check, fail, group } from "k6";
 import updateBetDetail from "../api/saba-sport/updateBetDetail.js";
 
 export const encryptWithOperatorKey = (jsonRequest, operatorKey) => {
@@ -42,11 +42,11 @@ export const sendSabaSportWithBetDetailRequest = (request, url) => {
 export const sendNewSabaSportWithBetDetailRequest = (request, url) => {
   request.key = SabaSportOperatorKey[__ENV.RUN_ENV?.toLowerCase() ?? 'local'] ?? SabaSportOperatorKey.local;
 
-  let res = http.post(url, JSON.stringify(request), {
+  const res = http.post(url, JSON.stringify(request), {
     headers: { "Content-Type": "application/json" },
     timeout: "300s"
   });
-
+  
   return { request: request, response: ParseBodyToJson(res), fullRequest: res };
 };
 

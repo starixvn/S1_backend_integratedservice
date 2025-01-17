@@ -1117,7 +1117,7 @@ function Tz(M, z, b) {
 function i1(M) {
   return M % 4 === 0 && M % 100 !== 0 || M % 400 === 0;
 }
-var v = 0, o0 = 1, z0 = 2, w = 3, Q = 4, q0 = 5, u0 = 6, mz = 7, hz = 8;
+var x = 0, o0 = 1, z0 = 2, v = 3, Q = 4, q0 = 5, u0 = 6, mz = 7, hz = 8;
 r("Y", 0, 0, function() {
   var M = this.year();
   return M <= 9999 ? b0(M, 4) : "+" + M;
@@ -1133,15 +1133,15 @@ i("YY", _, H);
 i("YYYY", Y1, U1);
 i("YYYYY", d1, e1);
 i("YYYYYY", d1, e1);
-h(["YYYYY", "YYYYYY"], v);
+h(["YYYYY", "YYYYYY"], x);
 h("YYYY", function(M, z) {
-  z[v] = M.length === 2 ? n.parseTwoDigitYear(M) : B(M);
+  z[x] = M.length === 2 ? n.parseTwoDigitYear(M) : B(M);
 });
 h("YY", function(M, z) {
-  z[v] = n.parseTwoDigitYear(M);
+  z[x] = n.parseTwoDigitYear(M);
 });
 h("Y", function(M, z) {
-  z[v] = parseInt(M, 10);
+  z[x] = parseInt(M, 10);
 });
 function v0(M) {
   return i1(M) ? 366 : 365;
@@ -1584,32 +1584,32 @@ i("hmm", S2);
 i("hmmss", g2);
 i("Hmm", S2);
 i("Hmmss", g2);
-h(["H", "HH"], w);
+h(["H", "HH"], v);
 h(["k", "kk"], function(M, z, b) {
   var p = B(M);
-  z[w] = p === 24 ? 0 : p;
+  z[v] = p === 24 ? 0 : p;
 });
 h(["a", "A"], function(M, z, b) {
   b._isPm = b._locale.isPM(M), b._meridiem = M;
 });
 h(["h", "hh"], function(M, z, b) {
-  z[w] = B(M), u(b).bigHour = !0;
+  z[v] = B(M), u(b).bigHour = !0;
 });
 h("hmm", function(M, z, b) {
   var p = M.length - 2;
-  z[w] = B(M.substr(0, p)), z[Q] = B(M.substr(p)), u(b).bigHour = !0;
+  z[v] = B(M.substr(0, p)), z[Q] = B(M.substr(p)), u(b).bigHour = !0;
 });
 h("hmmss", function(M, z, b) {
   var p = M.length - 4, O = M.length - 2;
-  z[w] = B(M.substr(0, p)), z[Q] = B(M.substr(p, 2)), z[q0] = B(M.substr(O)), u(b).bigHour = !0;
+  z[v] = B(M.substr(0, p)), z[Q] = B(M.substr(p, 2)), z[q0] = B(M.substr(O)), u(b).bigHour = !0;
 });
 h("Hmm", function(M, z, b) {
   var p = M.length - 2;
-  z[w] = B(M.substr(0, p)), z[Q] = B(M.substr(p));
+  z[v] = B(M.substr(0, p)), z[Q] = B(M.substr(p));
 });
 h("Hmmss", function(M, z, b) {
   var p = M.length - 4, O = M.length - 2;
-  z[w] = B(M.substr(0, p)), z[Q] = B(M.substr(p, 2)), z[q0] = B(M.substr(O));
+  z[v] = B(M.substr(0, p)), z[Q] = B(M.substr(p, 2)), z[q0] = B(M.substr(O));
 });
 function ib(M) {
   return (M + "").toLowerCase().charAt(0) === "p";
@@ -1723,7 +1723,7 @@ function Nb() {
 }
 function Q1(M) {
   var z, b = M._a;
-  return b && u(M).overflow === -2 && (z = b[o0] < 0 || b[o0] > 11 ? o0 : b[z0] < 1 || b[z0] > G1(b[v], b[o0]) ? z0 : b[w] < 0 || b[w] > 24 || b[w] === 24 && (b[Q] !== 0 || b[q0] !== 0 || b[u0] !== 0) ? w : b[Q] < 0 || b[Q] > 59 ? Q : b[q0] < 0 || b[q0] > 59 ? q0 : b[u0] < 0 || b[u0] > 999 ? u0 : -1, u(M)._overflowDayOfYear && (z < v || z > z0) && (z = z0), u(M)._overflowWeeks && z === -1 && (z = mz), u(M)._overflowWeekday && z === -1 && (z = hz), u(M).overflow = z), M;
+  return b && u(M).overflow === -2 && (z = b[o0] < 0 || b[o0] > 11 ? o0 : b[z0] < 1 || b[z0] > G1(b[x], b[o0]) ? z0 : b[v] < 0 || b[v] > 24 || b[v] === 24 && (b[Q] !== 0 || b[q0] !== 0 || b[u0] !== 0) ? v : b[Q] < 0 || b[Q] > 59 ? Q : b[q0] < 0 || b[q0] > 59 ? q0 : b[u0] < 0 || b[u0] > 999 ? u0 : -1, u(M)._overflowDayOfYear && (z < x || z > z0) && (z = z0), u(M)._overflowWeeks && z === -1 && (z = mz), u(M)._overflowWeekday && z === -1 && (z = hz), u(M).overflow = z), M;
 }
 var lb = /^\s*((?:[+-]\d{6}|\d{4})-(?:\d\d-\d\d|W\d\d-\d|W\d\d|\d\d\d|\d\d))(?:(T| )(\d\d(?::\d\d(?::\d\d(?:[.,]\d+)?)?)?)([+-]\d\d(?::?\d\d)?|\s*Z)?)?$/, Xb = /^\s*((?:[+-]\d{6}|\d{4})(?:\d\d\d\d|W\d\d\d|W\d\d|\d\d\d|\d\d|))(?:(T| )(\d\d(?:\d\d(?:\d\d(?:[.,]\d+)?)?)?)([+-]\d\d(?::?\d\d)?|\s*Z)?)?$/, Tb = /Z|[+-]\d\d(?::?\d\d)?/, Z0 = [
   ["YYYYYY-MM-DD", /[+-]\d{6}-\d\d-\d\d/],
@@ -1888,23 +1888,23 @@ function Pb(M) {
 function J1(M) {
   var z, b, p = [], O, A, o;
   if (!M._d) {
-    for (O = Pb(M), M._w && M._a[z0] == null && M._a[o0] == null && kb(M), M._dayOfYear != null && (o = m0(M._a[v], O[v]), (M._dayOfYear > v0(o) || M._dayOfYear === 0) && (u(M)._overflowDayOfYear = !0), b = U0(o, 0, M._dayOfYear), M._a[o0] = b.getUTCMonth(), M._a[z0] = b.getUTCDate()), z = 0; z < 3 && M._a[z] == null; ++z)
+    for (O = Pb(M), M._w && M._a[z0] == null && M._a[o0] == null && kb(M), M._dayOfYear != null && (o = m0(M._a[x], O[x]), (M._dayOfYear > v0(o) || M._dayOfYear === 0) && (u(M)._overflowDayOfYear = !0), b = U0(o, 0, M._dayOfYear), M._a[o0] = b.getUTCMonth(), M._a[z0] = b.getUTCDate()), z = 0; z < 3 && M._a[z] == null; ++z)
       M._a[z] = p[z] = O[z];
     for (; z < 7; z++)
       M._a[z] = p[z] = M._a[z] == null ? z === 2 ? 1 : 0 : M._a[z];
-    M._a[w] === 24 && M._a[Q] === 0 && M._a[q0] === 0 && M._a[u0] === 0 && (M._nextDay = !0, M._a[w] = 0), M._d = (M._useUTC ? U0 : Yz).apply(
+    M._a[v] === 24 && M._a[Q] === 0 && M._a[q0] === 0 && M._a[u0] === 0 && (M._nextDay = !0, M._a[v] = 0), M._d = (M._useUTC ? U0 : Yz).apply(
       null,
       p
-    ), A = M._useUTC ? M._d.getUTCDay() : M._d.getDay(), M._tzm != null && M._d.setUTCMinutes(M._d.getUTCMinutes() - M._tzm), M._nextDay && (M._a[w] = 24), M._w && typeof M._w.d < "u" && M._w.d !== A && (u(M).weekdayMismatch = !0);
+    ), A = M._useUTC ? M._d.getUTCDay() : M._d.getDay(), M._tzm != null && M._d.setUTCMinutes(M._d.getUTCMinutes() - M._tzm), M._nextDay && (M._a[v] = 24), M._w && typeof M._w.d < "u" && M._w.d !== A && (u(M).weekdayMismatch = !0);
   }
 }
 function kb(M) {
   var z, b, p, O, A, o, q, t, f;
   z = M._w, z.GG != null || z.W != null || z.E != null ? (A = 1, o = 4, b = m0(
     z.GG,
-    M._a[v],
+    M._a[x],
     Y0(y(), 1, 4).year
-  ), p = m0(z.W, 1), O = m0(z.E, 1), (O < 1 || O > 7) && (t = !0)) : (A = M._locale._week.dow, o = M._locale._week.doy, f = Y0(y(), A, o), b = m0(z.gg, M._a[v], f.year), p = m0(z.w, f.week), z.d != null ? (O = z.d, (O < 0 || O > 6) && (t = !0)) : z.e != null ? (O = z.e + A, (z.e < 0 || z.e > 6) && (t = !0)) : O = A), p < 1 || p > e0(b, A, o) ? u(M)._overflowWeeks = !0 : t != null ? u(M)._overflowWeekday = !0 : (q = w2(b, p, O, A, o), M._a[v] = q.year, M._dayOfYear = q.dayOfYear);
+  ), p = m0(z.W, 1), O = m0(z.E, 1), (O < 1 || O > 7) && (t = !0)) : (A = M._locale._week.dow, o = M._locale._week.doy, f = Y0(y(), A, o), b = m0(z.gg, M._a[x], f.year), p = m0(z.w, f.week), z.d != null ? (O = z.d, (O < 0 || O > 6) && (t = !0)) : z.e != null ? (O = z.e + A, (z.e < 0 || z.e > 6) && (t = !0)) : O = A), p < 1 || p > e0(b, A, o) ? u(M)._overflowWeeks = !0 : t != null ? u(M)._overflowWeekday = !0 : (q = w2(b, p, O, A, o), M._a[x] = q.year, M._dayOfYear = q.dayOfYear);
 }
 n.ISO_8601 = function() {
 };
@@ -1925,11 +1925,11 @@ function $1(M) {
     A = O[b], p = (z.match(lz(A, M)) || [])[0], p && (o = z.substr(0, z.indexOf(p)), o.length > 0 && u(M).unusedInput.push(o), z = z.slice(
       z.indexOf(p) + p.length
     ), t += p.length), S0[A] ? (p ? u(M).empty = !1 : u(M).unusedTokens.push(A), Tz(A, p, M)) : M._strict && !p && u(M).unusedTokens.push(A);
-  u(M).charsLeftOver = q - t, z.length > 0 && u(M).unusedInput.push(z), M._a[w] <= 12 && u(M).bigHour === !0 && M._a[w] > 0 && (u(M).bigHour = void 0), u(M).parsedDateParts = M._a.slice(0), u(M).meridiem = M._meridiem, M._a[w] = wb(
+  u(M).charsLeftOver = q - t, z.length > 0 && u(M).unusedInput.push(z), M._a[v] <= 12 && u(M).bigHour === !0 && M._a[v] > 0 && (u(M).bigHour = void 0), u(M).parsedDateParts = M._a.slice(0), u(M).meridiem = M._meridiem, M._a[v] = wb(
     M._locale,
-    M._a[w],
+    M._a[v],
     M._meridiem
-  ), f = u(M).era, f !== null && (M._a[v] = M._locale.erasConvertYear(f, M._a[v])), J1(M), Q1(M);
+  ), f = u(M).era, f !== null && (M._a[x] = M._locale.erasConvertYear(f, M._a[x])), J1(M), Q1(M);
 }
 function wb(M, z, b) {
   var p;
@@ -2150,7 +2150,7 @@ function Z(M, z) {
   } : a0(M) || !isNaN(+M) ? (b = {}, z ? b[z] = +M : b.milliseconds = +M) : (p = Wp.exec(M)) ? (O = p[1] === "-" ? -1 : 1, b = {
     y: 0,
     d: B(p[z0]) * O,
-    h: B(p[w]) * O,
+    h: B(p[v]) * O,
     m: B(p[Q]) * O,
     s: B(p[q0]) * O,
     ms: B(_1(p[u0] * 1e3)) * O
@@ -2575,10 +2575,10 @@ i("yy", _0);
 i("yyy", _0);
 i("yyyy", _0);
 i("yo", c3);
-h(["y", "yy", "yyy", "yyyy"], v);
+h(["y", "yy", "yyy", "yyyy"], x);
 h(["yo"], function(M, z, b, p) {
   var O;
-  b._locale._eraYearOrdinalRegex && (O = M.match(b._locale._eraYearOrdinalRegex)), b._locale.eraYearOrdinalParse ? z[v] = b._locale.eraYearOrdinalParse(M, O) : z[v] = parseInt(M, 10);
+  b._locale._eraYearOrdinalRegex && (O = M.match(b._locale._eraYearOrdinalRegex)), b._locale.eraYearOrdinalParse ? z[x] = b._locale.eraYearOrdinalParse(M, O) : z[x] = parseInt(M, 10);
 });
 function Vp(M, z) {
   var b, p, O, A = this._eras || d0("en")._eras;
@@ -4576,25 +4576,28 @@ const t0 = /* @__PURE__ */ zz(dO), nO = {
   balanceData: fO,
   placeFreeSpin: sO
 };
+var w;
+(function(M) {
+  M.ALLBET = "ALLBET", M.FACHAI = "FACHAI", M.JILI = "JILI", M.LIVE22 = "LIVE22", M.MAXPLAY = "MAXPLAY", M.PP = "PP", M.SBPLAY = "SBPLAY", M.UUSLOTS = "UUSLOTS", M.WE = "WE", M.AESEXY = "AESEXY", M.PG = "PG", M.FASTSPIN = "FASTSPIN", M.LOTTERY = "LOTTERY";
+})(w || (w = {}));
 var I;
 (function(M) {
-  M.ALLBET = "ALLBET", M.FACHAI = "FACHAI", M.JILI = "JILI", M.LIVE22 = "LIVE22", M.MAXPLAY = "MAXPLAY", M.PP = "PP", M.SBPLAY = "SBPLAY", M.UUSLOTS = "UUSLOTS", M.WE = "WE";
+  M.SEXYCASINO = "SexyCasino", M.ALLBET = "AllBet", M.FACHAI = "FaChai", M.FASTSPIN = "FastSpin", M.JILI = "JiLi", M.LIVE22 = "Live22", M.LOTTERY = "Lottery", M.MAXGAME = "MaxGame", M.PG = "PocketGames", M.PRAGMATIC_PLAY = "PragmaticPlay", M.KENO = "Keno", M.SABAPLAY = "SabaPlay", M.TABLEGAME = "TableGame", M.UUSLOTS = "UuSlots", M.WORLDENTERTAINMENT = "WorldEntertainment", M.PRAGMATIC_PLAY_CASINO = "PragmaticPlayCasino";
 })(I || (I = {}));
-var x;
-(function(M) {
-  M.MAXGAME = "MaxGame", M.KENO = "Keno", M.LOTTERY = "Lottery", M.TABLEGAME = "TableGame", M.SABAPLAY = "SabaPlay", M.LIVE22 = "Live22", M.FACHAI = "FaChai", M.FS = "FastSpin", M.PRAGMATIC_PLAY = "PragmaticPlay", M.PRAGMATIC_PLAY_CASINO = "PragmaticPlayCasino", M.UUSLOTS = "UuSlots", M.WORLDENTERTAINMENT = "WorldEntertainment", M.GTLIVE = "GTLive", M.ALLBET = "AllBet", M.JILI = "JiLi", M.SEXYCASINO = "SexyCasino", M.PG = "PocketGames";
-})(x || (x = {}));
 const LO = {
-  [I.ALLBET]: [x.ALLBET],
-  [I.FACHAI]: [x.FACHAI],
-  //[Provider.FS]: [GameType.FS],
-  [I.JILI]: [x.JILI],
-  [I.LIVE22]: [x.LIVE22],
-  [I.MAXPLAY]: [x.KENO, x.LOTTERY, x.MAXGAME, x.TABLEGAME],
-  [I.PP]: [x.PRAGMATIC_PLAY, x.PRAGMATIC_PLAY_CASINO],
-  [I.SBPLAY]: [x.SABAPLAY],
-  [I.UUSLOTS]: [x.UUSLOTS],
-  [I.WE]: [x.WORLDENTERTAINMENT]
+  [w.AESEXY]: [I.SEXYCASINO],
+  [w.ALLBET]: [I.ALLBET],
+  [w.FACHAI]: [I.FACHAI],
+  [w.FASTSPIN]: [I.FASTSPIN],
+  [w.JILI]: [I.JILI],
+  [w.LIVE22]: [I.LIVE22],
+  [w.LOTTERY]: [I.LOTTERY],
+  [w.MAXPLAY]: [I.KENO, I.LOTTERY, I.MAXGAME, I.TABLEGAME],
+  [w.PG]: [I.PG],
+  [w.PP]: [I.PRAGMATIC_PLAY, I.PRAGMATIC_PLAY_CASINO],
+  [w.SBPLAY]: [I.SABAPLAY],
+  [w.UUSLOTS]: [I.UUSLOTS],
+  [w.WE]: [I.WORLDENTERTAINMENT]
 }, L1 = "loadtest_", G0 = () => t0().utcOffset(-240), uO = (M) => {
   const z = { ...E.balanceData };
   return z.Payload.OperatorCustId = M, z.TimeStamp = t0().utcOffset(-240).format("YYYY/MM/DD HH:mm:ss.SSS"), z.Seq = `${R(8)}-${R(4)}-${R(4)}-${R(4)}-${R(8)}`, z;
@@ -4611,7 +4614,7 @@ const LO = {
   const z = f0(4);
   let b = `${L1}${z}_${f0(8)}`;
   const p = `${z}|$|${M}|$|${b}`, O = O2(), A = u1();
-  A.ProviderName == I.PP && (b = b.split("_")[2]);
+  A.ProviderName == w.PP && (b = b.split("_")[2]);
   const o = E.placeBet.Payload.WalletSideToken.split("@");
   o[0] = A.GameProviderCode;
   const q = o.join("@");
@@ -4641,7 +4644,7 @@ const LO = {
   const z = f0(4);
   let b = `${L1}${z}_${f0(8)}`;
   const p = `${z}|$|${M}|$|${b}`, O = u1();
-  O.ProviderName == I.PP && (b = b.split("_")[2]);
+  O.ProviderName == w.PP && (b = b.split("_")[2]);
   const A = E.placeBet.Payload.WalletSideToken.split("@");
   A[0] = O.GameProviderCode;
   const o = A.join("@");
@@ -4671,7 +4674,7 @@ const LO = {
   const z = f0(4);
   let b = `${L1}${z}_${f0(8)}`;
   const p = `${z}|$|${M}|$|${b}`, O = O2(), A = u1();
-  A.ProviderName == I.PP && (b = b.split("_")[2]);
+  A.ProviderName == w.PP && (b = b.split("_")[2]);
   const o = E.placeBet.Payload.WalletSideToken.split("@");
   o[0] = A.GameProviderCode;
   const q = o.join("@");
@@ -4741,7 +4744,7 @@ const LO = {
   const z = f0(4);
   let b = `${L1}${z}_${f0(8)}`;
   const p = `${z}|$|${M}|$|${b}`, O = u1();
-  return O.ProviderName == I.PP && (b = b.split("_")[2]), {
+  return O.ProviderName == w.PP && (b = b.split("_")[2]), {
     ...E.freeSpin,
     Seq: `${R(8)}-${R(4)}-${R(4)}-${R(4)}-${R(8)}`,
     TimeStamp: t0().tz("UTC").format("YYYY/MM/DD HH:mm:ss.SSS"),
@@ -4762,7 +4765,7 @@ const LO = {
     }
   };
 }, f0 = (M) => Math.floor(Math.random() * Math.pow(10, M)).toString().padStart(M, "0"), O2 = () => Math.floor(Math.random() * 9) + 51, u1 = () => {
-  const M = Object.values(I), z = M[Math.floor(Math.random() * M.length)], b = LO[z], p = b[Math.floor(Math.random() * b.length)];
+  const M = Object.values(w), z = M[Math.floor(Math.random() * M.length)], b = LO[z], p = b[Math.floor(Math.random() * b.length)];
   return {
     ProviderName: z,
     GameProviderCode: `SABAPLUS-${z}`,

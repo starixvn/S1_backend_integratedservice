@@ -53,8 +53,8 @@ const Scenarios = {
     DEV: {
       per_vus_iterations_test: {
         executor: "per-vu-iterations",
-        vus: 3, 
-        iterations: 2, 
+        vus: 3,
+        iterations: 2,
       },
     },
     CONSTANT_RATE_DEAD_LOCK: {
@@ -69,6 +69,16 @@ const Scenarios = {
         tags: {
           test_type: "api_load_test",
         },
+      },
+    },
+    CONSTANT_RATE_REDEPLOY: {
+      constant_rate_test: {
+        executor: "constant-arrival-rate",
+        rate: 200,
+        timeUnit: "10s",
+        duration: "5m",
+        preAllocatedVUs: 100,
+        maxVUs: 300,
       },
     },
     CONSTANT_RATE_120: {
@@ -129,6 +139,51 @@ const Scenarios = {
         duration: "5m",
         preAllocatedVUs: 100,
         maxVUs: 300,
+      },
+    },
+    RAMPING_RATE_120: {
+      ramping_rate_test: {
+        executor: "ramping-arrival-rate",
+        startRate: 25,
+        timeUnit: "1s",
+        preAllocatedVUs: 100,
+        maxVUs: 800,
+        stages: [
+          { target: 30, duration: "30s" },
+          { target: 40, duration: "30s" },
+          { target: 40, duration: "5m" },
+          { target: 0, duration: "30s" },
+        ],
+      },
+    },
+    RAMPING_RATE_240: {
+      ramping_rate_test: {
+        executor: "ramping-arrival-rate",
+        startRate: 25,
+        timeUnit: "1s",
+        preAllocatedVUs: 100,
+        maxVUs: 800,
+        stages: [
+          { target: 40, duration: "30s" },
+          { target: 60, duration: "30s" },
+          { target: 60, duration: "5m" },
+          { target: 0, duration: "30s" },
+        ],
+      },
+    },
+    RAMPING_RATE_150: {
+      ramping_rate_test: {
+        executor: "ramping-arrival-rate",
+        startRate: 25,
+        timeUnit: "1s",
+        preAllocatedVUs: 100,
+        maxVUs: 800,
+        stages: [
+          { target: 35, duration: "30s" },
+          { target: 50, duration: "30s" },
+          { target: 40, duration: "5m" },
+          { target: 0, duration: "30s" },
+        ],
       },
     },
     RAMPING_RATE: {

@@ -4,7 +4,15 @@ import { UserInfos } from '../constant/userInfos.js';
 export const getTpCustId = (id) => __ENV.RUN_ENV?.toLowerCase() == 'local' ? 'DNova88_' + id : 'uNsDemo_' + id
 
 const UatSabaSportScenarioRangeIds = () => {
-  const userRange = UserInfos.slice(0, 2000)
+  //const userRange = UserInfos.slice(0, 2000)
+  const userRange = UserInfos
+  return {
+    placeBetConfirmBetParlayTest: () => userRange.slice(0, 300),
+    placebetConfirmbetSettleTest: () => userRange.slice(301, 1000),
+    placebetConfirmbetTest: () => userRange.slice(1001, 1300),
+    settleTest: () => userRange.slice(1301, 4000),
+    defautTest: () => userRange
+  }
 
   return {
     placeBetConfirmBetParlayTest: () => userRange.slice(0, 150),

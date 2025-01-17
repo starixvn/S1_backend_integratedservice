@@ -1,5 +1,6 @@
 import http from "k6/http";
 import { check, fail } from "k6";
+import { Trend } from 'k6/metrics';
 
 import { GetSapaSportUserId } from "../../data-generator/userGenerator.js";
 import { useOptions } from "../../data-generator/optionGenerator.js";
@@ -7,12 +8,19 @@ import SabaSportApi from "../../api/new-saba-sport/index.js";
 import { GetSingleConfirmBetDetail } from "../../data-generator/betDetailGenerator.js";
 import { BetDetailApiUrl } from "../../constant/api.js";
 
+const customTrend = new Trend('placebetConfirmbet_req_duration')
+
 const options = useOptions("placebetConfirmbetTest");
 
 function scenario() {
   const userId = GetSapaSportUserId();
 
   const placebetResult = SabaSportApi.placebet(userId);
+
+  if (placebetResult.fullRequest.timings.duration > 0) {
+    customTrend.add(placebetResult.fullRequest.timings.duration)
+  }
+
   const placebetCheck = check(placebetResult.response, {
     "[Placebet-Confirmbet]Placebet content status is 0": (r) =>
       r?.status && r.status == "0",
@@ -27,6 +35,11 @@ function scenario() {
     userId,
     placebetResult.response
   );
+
+  if (confirmBetResult.fullRequest.timings.duration > 0) {
+    customTrend.add(confirmBetResult.fullRequest.timings.duration)
+  }
+  
   const confirmBetCheck = check(confirmBetResult.response, {
     "[Placebet-Confirmbet]Confirmbet content status is 0": (r) =>
       r?.status && r.status == "0",
@@ -47,8 +60,6 @@ function scenario() {
 
   http.post(BetDetailApiUrl.AddBetDetail, JSON.stringify([betDetailRequest]), {
     headers: { "Content-Type": "application/json" },
-    tags: {  scenario: 'unknow-ignore'  },
-    //responseCallback: (req, res) => {},
   });
 }
 

@@ -10,12 +10,6 @@ const suffix = `${__ENV.RUN_ENV ?? 'development'}_${formatDateToCustomFormat()}`
 
 export function setup() {
   console.log(`Begin test: Saba_Plus_${suffix}`);
-  // placebetEndgameScenario.scenario({isSmokeTest: true});
-  // placebetsettleScenario.scenario({isSmokeTest: true});
-  // freespinScenario.scenario({isSmokeTest: true});
-  // getBalanceScenario.scenario({isSmokeTest: true});
-
-  // sleep(2);
 }
 
 export const options = extractOptions(
