@@ -60,8 +60,8 @@ startup.ConfigureServices(builder.Services);
 var app = builder.Build();
 startup.Configure(app, builder.Environment, builder.Configuration);
 
-const int minWorkers = 96;
-const int minIOCPs = 4;
+const int minWorkers = 2000;
+const int minIOCPs = 200;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 
 SentrySdk.CaptureMessage($"Started {nameof(ThirdPartySeamlessWallet)} api at {DateTime.Now}");
