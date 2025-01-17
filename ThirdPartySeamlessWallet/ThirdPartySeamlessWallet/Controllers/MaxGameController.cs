@@ -358,6 +358,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private bool CheckHeader(IHeaderDictionary header, string param, string siteName, string logName)
         {
+
+            _logger.LogInformation("operator-sign: "+header["operator-sign"]);
             string oSign = header["operator-sign"];
             if (string.IsNullOrEmpty(oSign))
             {
@@ -365,6 +367,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             var serverInfo = _thirdPartyBLL.GetServerInfoBySiteName(siteName);
+           
             if (serverInfo is not { SiteId: > 0 })
             {
                 return false;
@@ -372,8 +375,9 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var siteId = serverInfo.SiteId;
             var operatorKey = _siteConfigDic[siteId].OperatorKey;
-
+            _logger.LogInformation("operatorKey: " + operatorKey);
             var encrypt = _tools.ToMD5(param + operatorKey).ToLower();
+            _logger.LogInformation("encrypt: " + encrypt);
             if (oSign.ToLower() == encrypt)
             {
                 return true;
